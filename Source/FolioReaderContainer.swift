@@ -7,11 +7,6 @@
 //
 
 import UIKit
-import FontBlaster
-
-var readerConfig: FolioReaderConfig!
-var epubPath: String?
-var book: FRBook!
 
 enum SlideOutState {
     case BothCollapsed
@@ -25,135 +20,64 @@ enum SlideOutState {
 
 protocol FolioReaderContainerDelegate: class {
     /**
-    Notifies that the menu was expanded.
-    */
+     Notifies that the menu was expanded.
+     */
     func container(didExpandLeftPanel sidePanel: FolioReaderSidePanel)
     
     /**
-    Notifies that the menu was closed.
-    */
+     Notifies that the menu was closed.
+     */
     func container(didCollapseLeftPanel sidePanel: FolioReaderSidePanel)
     
     /**
-    Notifies when the user selected some item on menu.
-    */
+     Notifies when the user selected some item on menu.
+     */
     func container(sidePanel: FolioReaderSidePanel, didSelectRowAtIndexPath indexPath: NSIndexPath, withTocReference reference: FRTocReference)
 }
 
-class FolioReaderContainer: UIViewController, FolioReaderSidePanelDelegate {
+class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelegate {
     weak var delegate: FolioReaderContainerDelegate!
-    var centerNavigationController: UINavigationController!
-    var centerViewController: FolioReaderCenter!
     var leftViewController: FolioReaderSidePanel!
-    var audioPlayer: FolioReaderAudioPlayer!
     var centerPanelExpandedOffset: CGFloat = 70
     var currentState = SlideOutState()
-    var shouldHideStatusBar = true
-    private var errorOnLoad = false
-    private var shouldRemoveEpub = true
-    
-    // MARK: - Init
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
-    
-    init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
-        readerConfig = configOrNil
-        epubPath = epubPathOrNil
-        shouldRemoveEpub = removeEpub
-        super.init(nibName: nil, bundle: NSBundle.frameworkBundle())
-        
-        // Init with empty book
-        book = FRBook()
-        
-        // Register custom fonts
-        FontBlaster.blast(NSBundle.frameworkBundle())
-        
-        // Register initial defaults
-        FolioReader.defaults.registerDefaults([
-            kCurrentFontFamily: 0,
-            kNightMode: false,
-            kCurrentFontSize: 2,
-            kCurrentAudioRate: 1,
-            kCurrentHighlightStyle: 0,
-            kCurrentMediaOverlayStyle: MediaOverlayStyle.Default.rawValue
-        ])
-    }
     
     // MARK: - View life cicle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        centerViewController = FolioReaderCenter()
-        centerViewController.folioReaderContainer = self
-        FolioReader.sharedInstance.readerCenter = centerViewController
-        
-        centerNavigationController = UINavigationController(rootViewController: centerViewController)
-        centerNavigationController.setNavigationBarHidden(readerConfig.shouldHideNavigationOnTap, animated: false)
-        view.addSubview(centerNavigationController.view)
-        addChildViewController(centerNavigationController)
-        centerNavigationController.didMoveToParentViewController(self)
-        
         // Add gestures
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FolioReaderContainer.handleTapGesture(_:)))
-        tapGestureRecognizer.numberOfTapsRequired = 1
-        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(FolioReaderContainer.handlePanGesture(_:)))
-        centerNavigationController.view.addGestureRecognizer(tapGestureRecognizer)
-        centerNavigationController.view.addGestureRecognizer(panGestureRecognizer)
-
-        // Read async book
-        if (epubPath != nil) {
-            let priority = DISPATCH_QUEUE_PRIORITY_HIGH
-            dispatch_async(dispatch_get_global_queue(priority, 0), { () -> Void in
-                
-                var isDir: ObjCBool = false
-                let fileManager = NSFileManager.defaultManager()
-                
-                if fileManager.fileExistsAtPath(epubPath!, isDirectory:&isDir) {
-                    if isDir {
-                        book = FREpubParser().readEpub(filePath: epubPath!)
-                    } else {
-                        book = FREpubParser().readEpub(epubPath: epubPath!, removeEpub: self.shouldRemoveEpub)
-                    }
-                }
-                else {
-                    print("Epub file does not exist.")
-                    self.errorOnLoad = true
-                }
-                
-                FolioReader.sharedInstance.isReaderOpen = true
-                
-                if !self.errorOnLoad {
-                    // Reload data
-                    dispatch_async(dispatch_get_main_queue(), {
-                        self.centerViewController.reloadData()
-                        self.addLeftPanelViewController()
-                        self.addAudioPlayer()
-                        
-                        // Open panel if does not have a saved point
-                        if FolioReader.defaults.valueForKey(kBookId) == nil {
-                            self.toggleLeftPanel()
-                        }
-                        
-                        FolioReader.sharedInstance.isReaderReady = true
-                    })
-                }
-            })
-        } else {
-            print("Epub path is nil.")
-            errorOnLoad = true
-        }
+        setupTapGestureRecognizer()
+        setupPanGestureRecognizer()
     }
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
-        showShadowForCenterViewController(true)
+    }
+    
+    // MARK: - Book
+    
+    override func ebookDidLoad() {
+        print("[INFO] - FolioReaderContainer::ebookDidLoad()")
+        super.ebookDidLoad()
         
-        if errorOnLoad {
-            dismissViewControllerAnimated(true, completion: nil)
+        self.addLeftPanelViewController()
+        if FolioReader.defaults.valueForKey(kBookId) == nil {
+            self.toggleLeftPanel()
         }
+    }
+    
+    // MARK: - Setup
+    
+    func setupTapGestureRecognizer() {
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FolioReaderContainer.handleTapGesture(_:)))
+        tapGestureRecognizer.numberOfTapsRequired = 1
+        addGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    func setupPanGestureRecognizer() {
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(FolioReaderContainer.handlePanGesture(_:)))
+        addGestureRecognizer(panGestureRecognizer)
     }
     
     // MARK: CenterViewController delegate methods
@@ -227,25 +151,6 @@ class FolioReaderContainer: UIViewController, FolioReaderSidePanelDelegate {
             }, completion: completion)
     }
     
-    func showShadowForCenterViewController(shouldShowShadow: Bool) {
-        if (shouldShowShadow) {
-            centerNavigationController.view.layer.shadowOpacity = 0.2
-            centerNavigationController.view.layer.shadowRadius = 6
-            centerNavigationController.view.layer.shadowPath = UIBezierPath(rect: centerNavigationController.view.bounds).CGPath
-            centerNavigationController.view.clipsToBounds = false
-        } else {
-            centerNavigationController.view.layer.shadowOpacity = 0
-            centerNavigationController.view.layer.shadowRadius = 0
-        }
-    }
-    
-    func addAudioPlayer(){
-        // @NOTE: should the audio player only be initialized if the epub has audio smil?
-        audioPlayer = FolioReaderAudioPlayer()
-
-        FolioReader.sharedInstance.readerAudioPlayer = audioPlayer;
-    }
-
     // MARK: Gesture recognizer
     
     func handleTapGesture(recognizer: UITapGestureRecognizer) {
@@ -292,8 +197,6 @@ class FolioReaderContainer: UIViewController, FolioReaderSidePanelDelegate {
     override func preferredStatusBarStyle() -> UIStatusBarStyle {
         return isNight(.LightContent, .Default)
     }
-    
-    
     
     // MARK: - Side Panel delegate
     

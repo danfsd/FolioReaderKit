@@ -21,7 +21,7 @@ internal let isLargePhone = isPhone6P
 
 // MARK: - Internal constants
 
-internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
+internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
 internal let kCurrentFontFamily = "kCurrentFontFamily"
 internal let kCurrentFontSize = "kCurrentFontSize"
 internal let kCurrentAudioRate = "kCurrentAudioRate"
@@ -32,10 +32,10 @@ internal let kHighlightRange = 30
 internal var kBookId: String!
 
 /**
- `0` Default  
- `1` Underline  
+ `0` Default
+ `1` Underline
  `2` Text Color
-*/
+ */
 enum MediaOverlayStyle: Int {
     case Default
     case Underline
@@ -51,8 +51,8 @@ enum MediaOverlayStyle: Int {
 }
 
 /**
-*  Main Library class with some useful constants and methods
-*/
+ *  Main Library class with some useful constants and methods
+ */
 public class FolioReader : NSObject {
     private override init() {}
     
@@ -60,7 +60,7 @@ public class FolioReader : NSObject {
     static let defaults = NSUserDefaults.standardUserDefaults()
     weak var readerCenter: FolioReaderCenter!
     weak var readerSidePanel: FolioReaderSidePanel!
-    weak var readerContainer: FolioReaderContainer!
+    weak var readerContainer: /*FolioReaderBaseContainer!*/ FolioReaderContainer!
     weak var readerAudioPlayer: FolioReaderAudioPlayer!
     var isReaderOpen = false
     var isReaderReady = false
@@ -96,7 +96,7 @@ public class FolioReader : NSObject {
             FolioReader.defaults.synchronize()
         }
     }
-
+    
     var currentHighlightStyle: Int {
         get { return FolioReader.defaults.valueForKey(kCurrentHighlightStyle) as! Int }
         set (value) {
@@ -122,37 +122,43 @@ public class FolioReader : NSObject {
     public class func getCoverImage(epubPath: String) -> UIImage? {
         return FREpubParser().parseCoverImage(epubPath)
     }
-
+    
     // MARK: - Present Folio Reader
     
     /**
-    Present a Folio Reader for a Parent View Controller.
-    */
+     Present a Folio Reader for a Parent View Controller.
+     */
     public class func presentReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
         let reader = FolioReaderContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
         FolioReader.sharedInstance.readerContainer = reader
         parentViewController.presentViewController(reader, animated: animated, completion: nil)
     }
     
+    //    public class func presentCustomReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
+    //        let reader = FolioReaderBaseContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
+    //        FolioReader.sharedInstance.readerContainer = reader
+    //        parentViewController.presentViewController(reader, animated: animated, completion: nil)
+    //    }
+    
     // MARK: - Application State
     
     /**
-    Called when the application will resign active
-    */
+     Called when the application will resign active
+     */
     public class func applicationWillResignActive() {
         saveReaderState()
     }
     
     /**
-    Called when the application will terminate
-    */
+     Called when the application will terminate
+     */
     public class func applicationWillTerminate() {
         saveReaderState()
     }
     
     /**
-    Save Reader state, book, page and scroll are saved
-    */
+     Save Reader state, book, page and scroll are saved
+     */
     class func saveReaderState() {
         if FolioReader.sharedInstance.isReaderOpen {
             if let currentPage = FolioReader.sharedInstance.readerCenter.currentPage {
@@ -230,10 +236,10 @@ internal extension UIColor {
         }
         self.init(red:red, green:green, blue:blue, alpha:alpha)
     }
-
+    
     /**
      Hex string of a UIColor instance.
-
+     
      - parameter rgba: Whether the alpha should be included.
      */
     // from: https://github.com/yeahdongcn/UIColor-Hex-Swift
@@ -243,55 +249,55 @@ internal extension UIColor {
         var b: CGFloat = 0
         var a: CGFloat = 0
         self.getRed(&r, green: &g, blue: &b, alpha: &a)
-
+        
         if (includeAlpha) {
             return String(format: "#%02X%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255), Int(a * 255))
         } else {
             return String(format: "#%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
         }
     }
-
+    
     // MARK: - color shades
     // https://gist.github.com/mbigatti/c6be210a6bbc0ff25972
-
+    
     func highlightColor() -> UIColor {
-
+        
         var hue : CGFloat = 0
         var saturation : CGFloat = 0
         var brightness : CGFloat = 0
         var alpha : CGFloat = 0
-
+        
         if getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) {
             return UIColor(hue: hue, saturation: 0.30, brightness: 1, alpha: alpha)
         } else {
             return self;
         }
-
+        
     }
-
+    
     /**
      Returns a lighter color by the provided percentage
-
+     
      :param: lighting percent percentage
      :returns: lighter UIColor
      */
     func lighterColor(percent : Double) -> UIColor {
         return colorWithBrightnessFactor(CGFloat(1 + percent));
     }
-
+    
     /**
      Returns a darker color by the provided percentage
-
+     
      :param: darking percent percentage
      :returns: darker UIColor
      */
     func darkerColor(percent : Double) -> UIColor {
         return colorWithBrightnessFactor(CGFloat(1 - percent));
     }
-
+    
     /**
      Return a modified color using the brightness factor provided
-
+     
      :param: factor brightness factor
      :returns: modified color
      */
@@ -300,7 +306,7 @@ internal extension UIColor {
         var saturation : CGFloat = 0
         var brightness : CGFloat = 0
         var alpha : CGFloat = 0
-
+        
         if getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) {
             return UIColor(hue: hue, saturation: saturation, brightness: brightness * factor, alpha: alpha)
         } else {
@@ -327,86 +333,86 @@ internal extension String {
     func stripLineBreaks() -> String {
         return self.stringByReplacingOccurrencesOfString("\n", withString: "", options: .RegularExpressionSearch)
     }
-
+    
     /**
      Converts a clock time such as `0:05:01.2` to seconds (`Double`)
-
+     
      Looks for media overlay clock formats as specified [here][1]
-
+     
      - Note: this may not be the  most efficient way of doing this. It can be improved later on.
-
+     
      - Returns: seconds as `Double`
-
+     
      [1]: http://www.idpf.org/epub/301/spec/epub-mediaoverlays.html#app-clock-examples
-    */
+     */
     func clockTimeToSeconds() -> Double {
-
+        
         let val = self.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
-
+        
         if( val.isEmpty ){ return 0 }
-
+        
         let formats = [
             "HH:mm:ss.SSS"  : "^\\d{1,2}:\\d{2}:\\d{2}\\.\\d{1,3}$",
             "HH:mm:ss"      : "^\\d{1,2}:\\d{2}:\\d{2}$",
             "mm:ss.SSS"     : "^\\d{1,2}:\\d{2}\\.\\d{1,3}$",
             "mm:ss"         : "^\\d{1,2}:\\d{2}$",
             "ss.SSS"         : "^\\d{1,2}\\.\\d{1,3}$",
-        ]
-
+            ]
+        
         // search for normal duration formats such as `00:05:01.2`
         for (format, pattern) in formats {
-
+            
             if val.rangeOfString(pattern, options: .RegularExpressionSearch) != nil {
-
+                
                 let formatter = NSDateFormatter()
                 formatter.dateFormat = format
                 let time = formatter.dateFromString(val)
-
+                
                 if( time == nil ){ return 0 }
-
+                
                 formatter.dateFormat = "ss.SSS"
                 let seconds = (formatter.stringFromDate(time!) as NSString).doubleValue
-
+                
                 formatter.dateFormat = "mm"
                 let minutes = (formatter.stringFromDate(time!) as NSString).doubleValue
-
+                
                 formatter.dateFormat = "HH"
                 let hours = (formatter.stringFromDate(time!) as NSString).doubleValue
-
+                
                 return seconds + (minutes*60) + (hours*60*60)
             }
         }
-
+        
         // if none of the more common formats match, check for other possible formats
-
+        
         // 2345ms
         if val.rangeOfString("^\\d+ms$", options: .RegularExpressionSearch) != nil{
             return (val as NSString).doubleValue / 1000.0
         }
-
+        
         // 7.25h
         if val.rangeOfString("^\\d+(\\.\\d+)?h$", options: .RegularExpressionSearch) != nil {
             return (val as NSString).doubleValue * 60 * 60
         }
-
+        
         // 13min
         if val.rangeOfString("^\\d+(\\.\\d+)?min$", options: .RegularExpressionSearch) != nil {
             return (val as NSString).doubleValue * 60
         }
-
+        
         return 0
     }
-
+    
     func clockTimeToMinutesString() -> String {
-
+        
         let val = clockTimeToSeconds()
-
+        
         let min = floor(val / 60)
         let sec = floor(val % 60)
-
+        
         return String(format: "%02.f:%02.f", min, sec)
     }
-
+    
 }
 
 internal extension UIImage {
