@@ -258,7 +258,8 @@ class FolioReaderFontsMenu: UIViewController, SMSegmentViewDelegate {
         dismissViewControllerAnimated(true, completion: nil)
         
         if readerConfig.shouldHideNavigationOnTap == false {
-            FolioReader.sharedInstance.readerCenter.showBars()
+            FolioReader.sharedInstance.readerContainer.showNavigationBar()
+//            FolioReader.sharedInstance.readerCenter.showBars()
         }
     }
     

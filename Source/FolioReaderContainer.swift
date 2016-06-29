@@ -36,7 +36,7 @@ protocol FolioReaderContainerDelegate: class {
 }
 
 class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelegate {
-    weak var delegate: FolioReaderContainerDelegate!
+    //weak var delegate: FolioReaderContainerDelegate!
     var leftViewController: FolioReaderSidePanel!
     var centerPanelExpandedOffset: CGFloat = 70
     var currentState = SlideOutState()
@@ -132,14 +132,16 @@ class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelega
             }
             
             currentState = .LeftPanelExpanded
-            delegate.container(didExpandLeftPanel: leftViewController)
+//            delegate.container(didExpandLeftPanel: leftViewController)
+            centerViewController.disableUserInteraction()
             animateCenterPanelXPosition(targetPosition: CGRectGetWidth(centerNavigationController.view.frame) - centerPanelExpandedOffset)
             
             // Reload to update current reading chapter
             leftViewController.tableView.reloadData()
         } else {
             animateCenterPanelXPosition(targetPosition: 0) { finished in
-                self.delegate.container(didCollapseLeftPanel: self.leftViewController)
+//                self.delegate.container(didCollapseLeftPanel: self.leftViewController)
+                self.centerViewController.enableUserInteraction()
                 self.currentState = .BothCollapsed
             }
         }
@@ -202,6 +204,7 @@ class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelega
     
     func sidePanel(sidePanel: FolioReaderSidePanel, didSelectRowAtIndexPath indexPath: NSIndexPath, withTocReference reference: FRTocReference) {
         collapseSidePanels()
-        delegate.container(sidePanel, didSelectRowAtIndexPath: indexPath, withTocReference: reference)
+//        delegate.container(sidePanel, didSelectRowAtIndexPath: indexPath, withTocReference: reference)
+        centerViewController.updateCurrentPage(fromIndexPath: indexPath, withTocReference: reference)
     }
 }

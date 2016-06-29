@@ -224,7 +224,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
 
 
 
-class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, FolioPageDelegate, FolioReaderContainerDelegate {
+class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, FolioPageDelegate/*, FolioReaderContainerDelegate*/ {
     
     var collectionView: UICollectionView!
     var loadingView: UIActivityIndicatorView!
@@ -277,9 +277,9 @@ class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectio
         collectionView!.registerClass(FolioReaderPage.self, forCellWithReuseIdentifier: reuseIdentifier)
         
         // Delegate container
-        if folioReaderContainer is FolioReaderContainer {
-            (folioReaderContainer as! FolioReaderContainer).delegate = self
-        }
+//        if folioReaderContainer is FolioReaderContainer {
+//            (folioReaderContainer as! FolioReaderContainer).delegate = self
+//        }
         totalPages = book.spine.spineReferences.count
         
         // Configure navigation bar and layout
@@ -379,35 +379,6 @@ class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectio
             
             // Show minutes indicator
             //            self.pageIndicatorView.minutesLabel.alpha = 0
-        })
-        navigationController?.setNavigationBarHidden(shouldHide, animated: true)
-    }
-    
-    func showBars() {
-        configureNavBar()
-        
-        let shouldHide = false
-        FolioReader.sharedInstance.readerContainer.shouldHideStatusBar = shouldHide
-        
-        UIView.animateWithDuration(0.25, animations: {
-            FolioReader.sharedInstance.readerContainer.setNeedsStatusBarAppearanceUpdate()
-        })
-        navigationController?.setNavigationBarHidden(shouldHide, animated: true)
-    }
-    
-    func toggleBars() {
-        if readerConfig.shouldHideNavigationOnTap == false { return }
-        
-        let shouldHide = !navigationController!.navigationBarHidden
-        if !shouldHide { configureNavBar() }
-        
-        FolioReader.sharedInstance.readerContainer.shouldHideStatusBar = shouldHide
-        
-        UIView.animateWithDuration(0.25, animations: {
-            FolioReader.sharedInstance.readerContainer.setNeedsStatusBarAppearanceUpdate()
-            
-            // Show minutes indicator
-            //            self.pageIndicatorView.minutesLabel.alpha = shouldHide ? 0 : 1
         })
         navigationController?.setNavigationBarHidden(shouldHide, animated: true)
     }
@@ -1022,7 +993,8 @@ class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectio
     func scrollViewDidScroll(scrollView: UIScrollView) {
         
         if !navigationController!.navigationBarHidden {
-            toggleBars()
+            FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+//            toggleBars()
         }
         
         scrollScrubber.scrollViewDidScroll(scrollView)
@@ -1069,12 +1041,19 @@ class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectio
     
     // MARK: - Container delegate
     
-    func container(didExpandLeftPanel sidePanel: FolioReaderSidePanel) {
+    // TODO: rename for disableUserInteraction
+    func disableUserInteraction() {
         collectionView.userInteractionEnabled = false
         FolioReader.saveReaderState()
     }
     
-    func container(didCollapseLeftPanel sidePanel: FolioReaderSidePanel) {
+//    func container(didExpandLeftPanel sidePanel: FolioReaderSidePanel) {
+//        collectionView.userInteractionEnabled = false
+//        FolioReader.saveReaderState()
+//    }
+    
+    // TODO: rename to enableUserInteraction
+    func enableUserInteraction() {
         collectionView.userInteractionEnabled = true
         updateCurrentPage()
         
@@ -1087,7 +1066,21 @@ class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectio
         }
     }
     
-    func container(sidePanel: FolioReaderSidePanel, didSelectRowAtIndexPath indexPath: NSIndexPath, withTocReference reference: FRTocReference) {
+//    func container(didCollapseLeftPanel sidePanel: FolioReaderSidePanel) {
+//        collectionView.userInteractionEnabled = true
+//        updateCurrentPage()
+//        
+//        // Move to #fragment
+//        if tempReference != nil {
+//            if tempReference!.fragmentID != "" && currentPage != nil {
+//                currentPage.handleAnchor(tempReference!.fragmentID!, avoidBeginningAnchors: true, animating: true)
+//            }
+//            tempReference = nil
+//        }
+//    }
+    
+    // TODO: rename to updateAnchor
+    func updateCurrentPage(fromIndexPath indexPath: NSIndexPath, withTocReference reference: FRTocReference) {
         let item = findPageByResource(reference)
         
         if item < totalPages-1 {
@@ -1101,10 +1094,25 @@ class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectio
         }
     }
     
+//    func container(sidePanel: FolioReaderSidePanel, didSelectRowAtIndexPath indexPath: NSIndexPath, withTocReference reference: FRTocReference) {
+//        let item = findPageByResource(reference)
+//        
+//        if item < totalPages-1 {
+//            let indexPath = NSIndexPath(forRow: item, inSection: 0)
+//            changePageWith(indexPath: indexPath, animated: false, completion: { () -> Void in
+//                self.updateCurrentPage()
+//            })
+//            tempReference = reference
+//        } else {
+//            print("Failed to load book because the requested resource is missing.")
+//        }
+//    }
+    
     // MARK: - Fonts Menu
     
     func presentFontsMenu() {
-        hideBars()
+        FolioReader.sharedInstance.readerContainer.hideNavigationBar()
+//        hideBars()
         
         let menu = FolioReaderFontsMenu()
         menu.modalPresentationStyle = .Custom
@@ -1132,7 +1140,8 @@ class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectio
     // MARK: - Audio Player Menu
     
     func presentPlayerMenu() {
-        hideBars()
+        FolioReader.sharedInstance.readerContainer.hideNavigationBar()
+//        hideBars()
         
         let menu = FolioReaderPlayerMenu()
         menu.modalPresentationStyle = .Custom

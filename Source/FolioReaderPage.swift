@@ -248,13 +248,15 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 dispatch_after(dispatchTime, dispatch_get_main_queue(), {
                     
                     if self.shouldShowBar && !menuIsVisibleRef {
-                        FolioReader.sharedInstance.readerCenter.toggleBars()
+                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+//                        FolioReader.sharedInstance.readerCenter.toggleBars()
                     }
                     self.shouldShowBar = true
                 })
             }
         } else if readerConfig.shouldHideNavigationOnTap == true {
-            FolioReader.sharedInstance.readerCenter.hideBars()
+            FolioReader.sharedInstance.readerContainer.hideNavigationBar()
+//            FolioReader.sharedInstance.readerCenter.hideBars()
         }
         
         // Reset menu

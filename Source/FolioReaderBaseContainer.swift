@@ -70,18 +70,14 @@ class FolioReaderBaseContainer: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // TODO: setup center view controller
         setupCenterViewController()
-        // TODO: setup center navigation controller
         setupNavigationController()
-        
-        // TODO: load book asynchrnously
+        setupNavigationBar()
         loadEbook()
     }
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
-        // TODO: show shadow for center view controller
         
         showShadowForCenterViewController(true)
     }
@@ -90,8 +86,6 @@ class FolioReaderBaseContainer: UIViewController {
     
     /**
      Loads the `FREbook` from an **epub file**. If it cannot be found, an the view controller will be dismissed.
-     
-     - postcondition: `book` should be set.
      */
     private func loadEbook() {
         guard let path = epubPath else {
@@ -123,6 +117,11 @@ class FolioReaderBaseContainer: UIViewController {
         
     }
     
+    /**
+     Called when `loadEbook` function finishes getting the file from the disk.
+     
+     - precondition: `book` should be set.
+    */
     func ebookDidLoad() {
         print("[INFO] - FolioReaderBaseContainer::ebookDidLoad()")
         self.centerViewController.reloadData()
@@ -160,6 +159,24 @@ class FolioReaderBaseContainer: UIViewController {
         centerNavigationController.didMoveToParentViewController(self)
     }
     
+    private func setupNavigationBar() {
+        automaticallyAdjustsScrollViewInsets = false
+        extendedLayoutIncludesOpaqueBars = true
+        
+        let navBackground = isNight(readerConfig.nightModeBackground, UIColor.whiteColor())
+        let tintColor = readerConfig.tintColor
+        let navText = isNight(UIColor.whiteColor(), UIColor.blackColor())
+        let font = UIFont(name: "Avenir-Light", size: 17)!
+        setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
+    }
+    
+    private func setupAudioPlayer() {
+        // TODO: verify if audioplayer has SMILS
+        audioPlayer = FolioReaderAudioPlayer()
+        
+        FolioReader.sharedInstance.readerAudioPlayer = audioPlayer
+    }
+    
     func showShadowForCenterViewController(shouldShowShadow: Bool) {
         if (shouldShowShadow) {
             centerNavigationController.view.layer.shadowOpacity = 0.2
@@ -172,15 +189,42 @@ class FolioReaderBaseContainer: UIViewController {
         }
     }
     
+    func hideNavigationBar() {
+        guard readerConfig.shouldHideNavigationOnTap else { return }
+        
+        shouldHideStatusBar = true
+        UIView.animateWithDuration(0.25, animations: {
+            self.setNeedsStatusBarAppearanceUpdate()
+        })
+        navigationController?.setNavigationBarHidden(shouldHideStatusBar, animated: true)
+    }
+    
+    func showNavigationBar() {
+        setupNavigationBar()
+        
+        shouldHideStatusBar = false
+        UIView.animateWithDuration(0.25, animations: {
+            self.setNeedsStatusBarAppearanceUpdate()
+        })
+        navigationController?.setNavigationBarHidden(shouldHideStatusBar, animated: true)
+    }
+    
+    func toggleNavigationBar() {
+        guard readerConfig.shouldHideNavigationOnTap else { return }
+        
+        let shouldHide = !navigationController!.navigationBarHidden
+        if !shouldHide { setupNavigationBar() }
+        
+        shouldHideStatusBar = shouldHide
+        UIView.animateWithDuration(0.25, animations: {
+            self.setNeedsStatusBarAppearanceUpdate()
+        })
+        navigationController?.setNavigationBarHidden(shouldHideStatusBar, animated: true)
+    }
     
     func addGestureRecognizer(gesture: UIGestureRecognizer) {
         centerNavigationController.view.addGestureRecognizer(gesture)
     }
     
-    private func setupAudioPlayer() {
-        // TODO: verify if audioplayer has SMILS
-        audioPlayer = FolioReaderAudioPlayer()
-        
-        FolioReader.sharedInstance.readerAudioPlayer = audioPlayer
-    }
+
 }
