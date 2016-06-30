@@ -196,7 +196,7 @@ class FolioReaderBaseContainer: UIViewController {
         UIView.animateWithDuration(0.25, animations: {
             self.setNeedsStatusBarAppearanceUpdate()
         })
-        navigationController?.setNavigationBarHidden(shouldHideStatusBar, animated: true)
+        centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
     func showNavigationBar() {
@@ -206,20 +206,20 @@ class FolioReaderBaseContainer: UIViewController {
         UIView.animateWithDuration(0.25, animations: {
             self.setNeedsStatusBarAppearanceUpdate()
         })
-        navigationController?.setNavigationBarHidden(shouldHideStatusBar, animated: true)
+        centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
     func toggleNavigationBar() {
         guard readerConfig.shouldHideNavigationOnTap else { return }
         
-        let shouldHide = !navigationController!.navigationBarHidden
+        let shouldHide = !centerNavigationController.navigationBarHidden
         if !shouldHide { setupNavigationBar() }
         
         shouldHideStatusBar = shouldHide
         UIView.animateWithDuration(0.25, animations: {
             self.setNeedsStatusBarAppearanceUpdate()
         })
-        navigationController?.setNavigationBarHidden(shouldHideStatusBar, animated: true)
+        centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
     func addGestureRecognizer(gesture: UIGestureRecognizer) {
