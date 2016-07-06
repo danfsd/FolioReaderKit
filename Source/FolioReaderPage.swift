@@ -15,11 +15,99 @@ import JSQWebViewController
     optional func pageDidLoad(page: FolioReaderPage)
 }
 
+class FolioReaderWebView: UIWebView {
+//    var numberOfPages: Int!
+//    
+//    var destinationPage = 0
+//    var currentPage = 0
+//    var previousPage = 0
+//    
+//    var scrollDirection = FolioReaderWebViewScrollDirection.none
+//    
+//    var lastXContentOffset = CGFloat(0)
+//    var destinationXContentOffset: CGFloat?
+//    
+//    override func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+//        isScrolling = false
+//    }
+//    
+//    override func scrollViewDidScroll(scrollView: UIScrollView) {
+//        let pageWidth = self.bounds.width
+//        let fractionalPage = scrollView.contentOffset.x / pageWidth
+//        let page = lround(Double(fractionalPage))
+//
+//        let currentXContentOffset = scrollView.contentOffset.x
+//        if let destination = destinationXContentOffset where destination != currentXContentOffset {
+//            // didn't reached destination
+//            if currentXContentOffset > lastXContentOffset {
+//                // scrolling right
+//                scrollDirection = .right
+//                
+//                // TODO: scroll to next page horizontal center
+//            } else if currentXContentOffset < lastXContentOffset {
+//                // scrolling left
+//                scrollDirection = .left
+//                
+//                // TODO: scroll to last page horizontal leading
+//            }
+//        } else {
+//            // reached destination
+//            scrollDirection = .none
+//            
+//        }
+//        
+//        if previousPage != page {
+//            print("[INFO] - previous: \(previousPage) page: \(page)")
+//            previousPage = page
+//        
+//            lastXContentOffset = currentXContentOffset
+//            destinationXContentOffset = CGFloat(CGFloat(page) * pageWidth)
+//            let rect = CGRectMake(destinationXContentOffset!, 0, 10, 10)
+//            print("[INFO] - scrolling to \(destinationXContentOffset)")
+//            scrollView.scrollRectToVisible(rect, animated: true)
+//        }
+//        
+//        
+//        
+////        if !isScrolling {
+////            let currentXContentOffset = scrollView.contentOffset.x
+////            print("[INFO] - didScroll")
+////            
+////            if currentXContentOffset > lastXContentOffset {
+////                print("[INFO] - right")
+////                currentPage += 1
+////            } else if currentXContentOffset < lastXContentOffset {
+////                print("[INFO] - left")
+////                currentPage -= 1
+////            }
+////            
+////            lastXContentOffset = currentXContentOffset
+////            destinationXContentOffset = CGFloat(CGFloat(currentPage) * pageWidth)
+////            print("[INFO] - scrolling to x: \(destinationXContentOffset!)")
+////            let rect = CGRectMake(destinationXContentOffset!, 0, 10, 10)
+////            isScrolling = true
+////            scrollView.scrollRectToVisible(rect, animated: true)
+////        }
+//        
+////        scrollView.contentOffset.x = destinationXContentOffset
+//    }
+    
+}
+
 class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate, FolioReaderAudioPlayerDelegate {
     
     var pageNumber: Int!
-    var webView: UIWebView!
+    
+    // TODO: increase/decrease when scrolled
+    var currentSubPageNumber: Int!
+    
+    // TODO: update when font-size changes.
+    var subPageCount: Int!
+    
+    var webView: FolioReaderWebView!
     weak var delegate: FolioPageDelegate!
+    
+    var shouldLoadAtLastPage = false
     private var shouldShowBar = true
     private var menuIsVisible = false
     
@@ -30,9 +118,19 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         self.backgroundColor = UIColor.whiteColor()
         
         if webView == nil {
-            webView = UIWebView(frame: webViewFrame())
+            webView = FolioReaderWebView(frame: webViewFrame())
             webView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
             webView.dataDetectorTypes = [.None, .Link]
+            
+            // Enabling column left-to-right pagination breaking the HTML content into columns
+            // Stated on https://developer.apple.com/library/prerelease/content/releasenotes/General/WhatsNewInSafari/Articles/Safari_7_0.html
+            if readerConfig.scrollOrientation == .horizontal {
+                webView.paginationMode = .LeftToRight
+                webView.paginationBreakingMode = .Column
+                webView.scrollView.pagingEnabled = true
+            }
+
+            
             webView.scrollView.showsVerticalScrollIndicator = false
             webView.backgroundColor = UIColor.clearColor()
             self.contentView.addSubview(webView)
@@ -44,7 +142,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         tapGestureRecognizer.delegate = self
         webView.addGestureRecognizer(tapGestureRecognizer)
     }
-
+    
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
@@ -110,8 +208,11 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 readCurrentSentence()
             }
         }
-
-        webView.scrollView.contentSize = CGSizeMake(pageWidth, webView.scrollView.contentSize.height)
+        
+        // If on `.horizontal` mode, there's no need to limit the horizontal `contentSize` to the page's width
+        if readerConfig.scrollOrientation == FolioReaderScrollOrientation.vertical {
+            webView.scrollView.contentSize = CGSizeMake(pageWidth, webView.scrollView.contentSize.height)
+        }
         
         if scrollDirection == .Down && isScrolling {
             let bottomOffset = CGPointMake(0, webView.scrollView.contentSize.height - webView.scrollView.bounds.height)
@@ -122,14 +223,31 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             }
         }
         
+        if shouldLoadAtLastPage {
+            print("Will try to skip to last page")
+            let pageCount = webView.pageCount
+            print("Page count: \(pageCount)")
+            if pageCount > 1 {
+                let horizontalOffset = CGPointMake(CGFloat(pageCount - 1) * webView.frame.width, 0)
+                print("Changing contentOffset.x to \(horizontalOffset.x)")
+                dispatch_async(dispatch_get_main_queue(), {
+                    webView.scrollView.setContentOffset(horizontalOffset, animated: true)
+                })
+            } else {
+                print("No need for change contentOffset.x")
+            }
+        } else {
+            print("Will not skip to last page")
+        }
+        
         UIView.animateWithDuration(0.2, animations: {webView.alpha = 1}) { finished in
             webView.isColors = false
             self.webView.createMenu(options: false)
         }
-
+        
         delegate.pageDidLoad!(self)
         
-        
+//        webView.scrollView.scrollRectToVisible(CGRectMake(4000.0, 0.0, 10, 10), animated: true)
     }
     
     func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
@@ -265,6 +383,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     
     // MARK: - Scroll positioning
     
+    // TODO: talvez usar isso aqui para fazer scroll vertical/horizontal
     func scrollPageToOffset(offset: String, animating: Bool) {
         let jsCommand = "window.scrollTo(0,\(offset));"
         if animating {

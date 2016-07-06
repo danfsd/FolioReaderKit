@@ -13,9 +13,9 @@ var readerConfig: FolioReaderConfig!
 var epubPath: String?
 var book: FRBook!
 
-class FolioReaderBaseContainer: UIViewController {
-    var centerNavigationController: UINavigationController!
-    var centerViewController: FolioReaderCenter!
+public class FolioReaderBaseContainer: UIViewController {
+    public var centerNavigationController: UINavigationController!
+    public var centerViewController: FolioReaderCenter!
     var audioPlayer: FolioReaderAudioPlayer?
     
     /**
@@ -38,11 +38,11 @@ class FolioReaderBaseContainer: UIViewController {
     
     // MARK: - Init
     
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
+    required public init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
         readerConfig = configOrNil
         epubPath = epubPathOrNil
         shouldRemoveEpub = removeEpub
@@ -67,7 +67,7 @@ class FolioReaderBaseContainer: UIViewController {
     
     // MARK: - View life cicle
     
-    override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
         
         setupCenterViewController()
@@ -76,7 +76,7 @@ class FolioReaderBaseContainer: UIViewController {
         loadEbook()
     }
     
-    override func viewDidAppear(animated: Bool) {
+    override public func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
         showShadowForCenterViewController(true)
@@ -122,7 +122,7 @@ class FolioReaderBaseContainer: UIViewController {
      
      - precondition: `book` should be set.
     */
-    func ebookDidLoad() {
+    public func ebookDidLoad() {
         print("[INFO] - FolioReaderBaseContainer::ebookDidLoad()")
         self.centerViewController.reloadData()
         
@@ -138,7 +138,7 @@ class FolioReaderBaseContainer: UIViewController {
     /**
      Initializes a `FolioReaderCenter`, sets itself as the container, and sets it on the `FolioReader` singleton.
      */
-    private func setupCenterViewController() {
+    public func setupCenterViewController() {
         centerViewController = FolioReaderCenter()
         centerViewController.folioReaderContainer = self
         FolioReader.sharedInstance.readerCenter = centerViewController
@@ -150,23 +150,25 @@ class FolioReaderBaseContainer: UIViewController {
      
      - precondition: `centerViewController` has already been set.
      */
-    private func setupNavigationController() {
+    public func setupNavigationController() {
         // TODO: maybe use customNavigationController
         centerNavigationController = UINavigationController(rootViewController: centerViewController)
         centerNavigationController.setNavigationBarHidden(readerConfig.shouldHideNavigationOnTap, animated: false)
+        
         view.addSubview(centerNavigationController.view)
         addChildViewController(centerNavigationController)
         centerNavigationController.didMoveToParentViewController(self)
     }
     
-    private func setupNavigationBar() {
+    func setupNavigationBar() {
+        print("[INFO] - setupping navigation bar")
         automaticallyAdjustsScrollViewInsets = false
         extendedLayoutIncludesOpaqueBars = true
         
         let navBackground = isNight(readerConfig.nightModeBackground, UIColor.whiteColor())
         let tintColor = readerConfig.tintColor
         let navText = isNight(UIColor.whiteColor(), UIColor.blackColor())
-        let font = UIFont(name: "Avenir-Light", size: 17)!
+        let font = UIFont(name: "Avenir-Light", size: 10)!
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
     }
     
@@ -190,6 +192,7 @@ class FolioReaderBaseContainer: UIViewController {
     }
     
     func hideNavigationBar() {
+        print("[INFO] - hiding navigation bar")
         guard readerConfig.shouldHideNavigationOnTap else { return }
         
         shouldHideStatusBar = true
@@ -200,6 +203,7 @@ class FolioReaderBaseContainer: UIViewController {
     }
     
     func showNavigationBar() {
+        print("[INFO] - showing navigation bar")
         setupNavigationBar()
         
         shouldHideStatusBar = false
@@ -210,10 +214,13 @@ class FolioReaderBaseContainer: UIViewController {
     }
     
     func toggleNavigationBar() {
+        print("[INFO] - toggling navigation bar")
         guard readerConfig.shouldHideNavigationOnTap else { return }
         
         let shouldHide = !centerNavigationController.navigationBarHidden
         if !shouldHide { setupNavigationBar() }
+        
+        print("[INFO] - left bar: \(centerNavigationController.navigationItem.leftBarButtonItem)")
         
         shouldHideStatusBar = shouldHide
         UIView.animateWithDuration(0.25, animations: {

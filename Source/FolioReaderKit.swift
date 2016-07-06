@@ -60,7 +60,7 @@ public class FolioReader : NSObject {
     static let defaults = NSUserDefaults.standardUserDefaults()
     weak var readerCenter: FolioReaderCenter!
     weak var readerSidePanel: FolioReaderSidePanel!
-    weak var readerContainer: /*FolioReaderBaseContainer!*/ FolioReaderContainer!
+    weak var readerContainer: FolioReaderBaseContainer! /*FolioReaderContainer!*/
     weak var readerAudioPlayer: FolioReaderAudioPlayer!
     var isReaderOpen = false
     var isReaderReady = false
@@ -134,11 +134,14 @@ public class FolioReader : NSObject {
         parentViewController.presentViewController(reader, animated: animated, completion: nil)
     }
     
-    //    public class func presentCustomReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
-    //        let reader = FolioReaderBaseContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
-    //        FolioReader.sharedInstance.readerContainer = reader
-    //        parentViewController.presentViewController(reader, animated: animated, completion: nil)
-    //    }
+    public class func presentReaderTeste<T: FolioReaderBaseContainer>(a: T.Type) {
+        let reader = a.init(config: FolioReaderConfig(), epubPath: nil, removeEpub: false)
+    }
+//    public class func presentCustomReader<T: FolioReaderBaseContainer>(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
+//        let reader = T(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
+//        FolioReader.sharedInstance.readerContainer = reader
+//        parentViewController.presentViewController(reader, animated: animated, completion: nil)
+//    }
     
     // MARK: - Application State
     

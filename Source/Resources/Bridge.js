@@ -158,7 +158,6 @@ function getReadingTime() {
     var wordsPerSecond = wordsPerMinute / 60; //define words per second based on words per minute
     var totalReadingTimeSeconds = totalWords / wordsPerSecond; //define total reading time in seconds
     var readingTimeMinutes = Math.round(totalReadingTimeSeconds / 60);
-
     return readingTimeMinutes;
 }
 

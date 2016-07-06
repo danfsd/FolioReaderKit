@@ -41,6 +41,18 @@ class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelega
     var centerPanelExpandedOffset: CGFloat = 70
     var currentState = SlideOutState()
     
+    // MARK: - Initializer
+    
+    override required public init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
+        super.init(config: configOrNil, epubPath: epubPathOrNil, removeEpub: removeEpub)
+        
+        shouldSetupAudioPlayer = true
+    }
+    
+    required public init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
     // MARK: - View life cicle
     
     override func viewDidLoad() {
@@ -69,6 +81,12 @@ class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelega
     
     // MARK: - Setup
     
+    override func setupCenterViewController() {
+        super.setupCenterViewController()
+        
+        centerViewController.delegate = self
+    }
+    
     func setupTapGestureRecognizer() {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FolioReaderContainer.handleTapGesture(_:)))
         tapGestureRecognizer.numberOfTapsRequired = 1
@@ -80,7 +98,33 @@ class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelega
         addGestureRecognizer(panGestureRecognizer)
     }
     
+    func configureNavBarButtons() {
+        
+        // Navbar buttons
+        let shareIcon = UIImage(readerImageNamed: "btn-navbar-share")!.imageTintColor(readerConfig.tintColor).imageWithRenderingMode(.AlwaysOriginal)
+        let audioIcon = UIImage(readerImageNamed: "man-speech-icon")!.imageTintColor(readerConfig.tintColor).imageWithRenderingMode(.AlwaysOriginal)
+        let menuIcon = UIImage(readerImageNamed: "btn-navbar-menu")!.imageTintColor(readerConfig.tintColor).imageWithRenderingMode(.AlwaysOriginal)
+        
+        centerViewController.navigationItem.leftBarButtonItem = UIBarButtonItem(image: menuIcon, style: UIBarButtonItemStyle.Plain, target: self, action:#selector(FolioReaderContainer.toggleMenu(_:)))
+        
+        var rightBarIcons = [UIBarButtonItem]()
+        
+        if readerConfig.allowSharing {
+            rightBarIcons.append(UIBarButtonItem(image: shareIcon, style: UIBarButtonItemStyle.Plain, target: centerViewController, action:#selector(FolioReaderCenter.shareChapter(_:))))
+        }
+        
+        if (book.hasAudio() || readerConfig.enableTTS) && shouldSetupAudioPlayer {
+            rightBarIcons.append(UIBarButtonItem(image: audioIcon, style: UIBarButtonItemStyle.Plain, target: centerViewController, action:#selector(FolioReaderCenter.togglePlay(_:))))
+        }
+        
+        centerViewController.navigationItem.rightBarButtonItems = rightBarIcons
+    }
+    
     // MARK: CenterViewController delegate methods
+    
+    func toggleMenu(notification: NSNotification) {
+        toggleLeftPanel()
+    }
     
     func toggleLeftPanel() {
         let notAlreadyExpanded = (currentState != .LeftPanelExpanded)
@@ -206,5 +250,12 @@ class FolioReaderContainer: FolioReaderBaseContainer, FolioReaderSidePanelDelega
         collapseSidePanels()
 //        delegate.container(sidePanel, didSelectRowAtIndexPath: indexPath, withTocReference: reference)
         centerViewController.updateCurrentPage(fromIndexPath: indexPath, withTocReference: reference)
+    }
+}
+
+extension FolioReaderContainer: FolioReaderCenterDelegate {
+    func center(didReloadData center: FolioReaderCenter) {
+        print("[INFO] - did reload data")
+        self.configureNavBarButtons()
     }
 }
