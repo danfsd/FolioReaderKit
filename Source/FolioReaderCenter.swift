@@ -512,7 +512,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             
             // Adjust collectionView
             self.collectionView.contentSize = CGSizeMake(pageWidth, pageHeight * CGFloat(self.totalPages))
-            self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
+//            self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
             self.collectionView.collectionViewLayout.invalidateLayout()
         })
     }
@@ -576,15 +576,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             if currentIndexPath != NSIndexPath(forRow: 0, inSection: 0) {
                 let lastPage = currentPage
                 currentPage = collectionView.cellForItemAtIndexPath(currentIndexPath) as! FolioReaderPage
-                
-//                print("last: \(lastPage.pageNumber) current: \(currentPage.pageNumber)")
-//                if currentPage.pageNumber < lastPage.pageNumber {
-//                    print("setting load at last page")
-//                    currentPage.shouldLoadAtLastPage = true
-//                } else {
-//                    print("wont load at last page")
-//                    currentPage.shouldLoadAtLastPage = false
-//                }
             }
             
             previousPageNumber = currentIndexPath.row
@@ -596,6 +587,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         // Set navigation title
         if let chapterName = getCurrentChapterName() {
             title = chapterName
+            folioReaderContainer.chapterDidChanged(chapterName)
         } else { title = ""}
         
         // Set pages
@@ -804,12 +796,19 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
      */
     func getCurrentChapter() -> FRResource? {
         if let currentPageNumber = currentPageNumber {
-            for item in FolioReader.sharedInstance.readerSidePanel.tocItems {
+            let toc = book.getTableOfContents()
+            for item in toc {
                 if let reference = book.spine.spineReferences[safe: currentPageNumber-1], resource = item.resource
                     where resource.href == reference.resource.href {
                     return item.resource
                 }
             }
+//            for item in FolioReader.sharedInstance.readerSidePanel.tocItems {
+//                if let reference = book.spine.spineReferences[safe: currentPageNumber-1], resource = item.resource
+//                    where resource.href == reference.resource.href {
+//                    return item.resource
+//                }
+//            }
         }
         return nil
     }
@@ -819,15 +818,25 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
      */
     func getCurrentChapterName() -> String? {
         if let currentPageNumber = currentPageNumber {
-            for item in FolioReader.sharedInstance.readerSidePanel.tocItems {
-                if let reference = book.spine.spineReferences[safe: currentPageNumber-1], resource = item.resource
-                    where resource.href == reference.resource.href {
+            let toc = book.getTableOfContents()
+            for item in toc {
+                if let reference = book.spine.spineReferences[safe: currentPageNumber - 1], resource = item.resource where resource.href == reference.resource.href {
                     if let title = item.title {
                         return title
                     }
                     return nil
                 }
             }
+            
+//            for item in FolioReader.sharedInstance.readerSidePanel.tocItems {
+//                if let reference = book.spine.spineReferences[safe: currentPageNumber-1], resource = item.resource
+//                    where resource.href == reference.resource.href {
+//                    if let title = item.title {
+//                        return title
+//                    }
+//                    return nil
+//                }
+//            }
         }
         return nil
     }
@@ -872,6 +881,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             // Get chapter name
             if let chapter = getCurrentChapterName() {
                 chapterName = chapter
+                // TOOD: maybe do something with the container.chapterTitle
             }
             
             // Get author name
@@ -926,6 +936,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         // Get chapter name
         if let chapter = getCurrentChapterName() {
             chapterName = chapter
+            // TOOD: maybe do something with the container.chapterTitle
         }
         
         // Get author name
@@ -1029,7 +1040,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
                     collectionViewPage = pageForOffset(collectionView.contentOffset.x, pageWidth: pageWidth)
                 }
                 
-//                print("previous: \(pageIndicatorView.currentPage) current: \(webViewPage)")
                 if pageIndicatorView.currentPage != webViewPage {
                     pageIndicatorView.currentPage = webViewPage
                 }

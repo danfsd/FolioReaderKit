@@ -134,14 +134,13 @@ public class FolioReader : NSObject {
         parentViewController.presentViewController(reader, animated: animated, completion: nil)
     }
     
-    public class func presentReaderTeste<T: FolioReaderBaseContainer>(a: T.Type) {
-        let reader = a.init(config: FolioReaderConfig(), epubPath: nil, removeEpub: false)
+    /**
+     Present a Custom Folio Reader for a Parent View Controller.
+    */
+    public class func presentCustomReader(parentViewController: UIViewController, container: FolioReaderBaseContainer) {
+        FolioReader.sharedInstance.readerContainer = container
+        parentViewController.presentViewController(container, animated: true, completion: nil)
     }
-//    public class func presentCustomReader<T: FolioReaderBaseContainer>(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
-//        let reader = T(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
-//        FolioReader.sharedInstance.readerContainer = reader
-//        parentViewController.presentViewController(reader, animated: animated, completion: nil)
-//    }
     
     // MARK: - Application State
     

@@ -14,6 +14,9 @@ var epubPath: String?
 var book: FRBook!
 
 public class FolioReaderBaseContainer: UIViewController {
+    
+    public func chapterDidChanged(name: String) {}
+    
     public var centerNavigationController: UINavigationController!
     public var centerViewController: FolioReaderCenter!
     var audioPlayer: FolioReaderAudioPlayer?
@@ -30,7 +33,7 @@ public class FolioReaderBaseContainer: UIViewController {
     
     private var errorOnLoad = false {
         didSet {
-            // TODO: dismiss view controller animated.
+            print("[WARN] - Error found!")
             dismissViewControllerAnimated(true, completion: nil)
         }
     }
@@ -108,6 +111,7 @@ public class FolioReaderBaseContainer: UIViewController {
                 }
             } else {
                 print("Epub file does not exist.")
+                self.errorOnLoad = true
             }
             
             FolioReader.sharedInstance.isReaderOpen = true
@@ -213,7 +217,7 @@ public class FolioReaderBaseContainer: UIViewController {
         centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
-    func toggleNavigationBar() {
+    public func toggleNavigationBar() {
         print("[INFO] - toggling navigation bar")
         guard readerConfig.shouldHideNavigationOnTap else { return }
         
@@ -229,9 +233,15 @@ public class FolioReaderBaseContainer: UIViewController {
         centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
-    func addGestureRecognizer(gesture: UIGestureRecognizer) {
+    public func addGestureRecognizer(gesture: UIGestureRecognizer) {
+        print("adding gesture base container")
         centerNavigationController.view.addGestureRecognizer(gesture)
     }
     
-
+    public func dismissViewController() {
+        print("[INFO] - deinit called")
+        FolioReader.sharedInstance.isReaderOpen = false
+        FolioReader.sharedInstance.isReaderReady = false
+        FolioReader.sharedInstance.readerAudioPlayer.stop()
+    }
 }

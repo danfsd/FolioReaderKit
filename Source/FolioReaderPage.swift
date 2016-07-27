@@ -98,16 +98,12 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     
     var pageNumber: Int!
     
-    // TODO: increase/decrease when scrolled
-    var currentSubPageNumber: Int!
-    
-    // TODO: update when font-size changes.
-    var subPageCount: Int!
-    
     var webView: FolioReaderWebView!
     weak var delegate: FolioPageDelegate!
     
     var shouldLoadAtLastPage = false
+    
+    // TODO: refactor
     private var shouldShowBar = true
     private var menuIsVisible = false
     
@@ -128,8 +124,10 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 webView.paginationMode = .LeftToRight
                 webView.paginationBreakingMode = .Column
                 webView.scrollView.pagingEnabled = true
+                webView.scrollView.bounces = false
+            } else {
+                webView.scrollView.bounces = true
             }
-
             
             webView.scrollView.showsVerticalScrollIndicator = false
             webView.backgroundColor = UIColor.clearColor()
@@ -337,7 +335,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: Gesture recognizer
     
     func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWithGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        
         if gestureRecognizer.view is UIWebView {
             if otherGestureRecognizer is UILongPressGestureRecognizer {
                 if UIMenuController.sharedMenuController().menuVisible {
@@ -369,6 +366,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                         FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
 //                        FolioReader.sharedInstance.readerCenter.toggleBars()
                     }
+                    // TODO: refactor later
                     self.shouldShowBar = true
                 })
             }
@@ -579,6 +577,7 @@ extension UIWebView {
             let html = js("getHTML()")
             if let highlight = FRHighlight.matchHighlight(html, andId: dic["id"]!) {
                 Highlight.persistHighlight(highlight, completion: nil)
+                // TODO: persist highlight on project
             }
         } catch {
             print("Could not receive JSON")

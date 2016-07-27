@@ -401,9 +401,10 @@ class FolioReaderAudioPlayer: NSObject, AVAudioPlayerDelegate, AVSpeechSynthesiz
         }
         
         // Get chapter name
-        if let chapter = getCurrentChapterName() {
-            songInfo[MPMediaItemPropertyTitle] = chapter
-        }
+        // TODO: uncomment
+//        if let chapter = getCurrentChapterName() {
+//            songInfo[MPMediaItemPropertyTitle] = chapter
+//        }
         
         // Get author name
         if let author = book.metadata.creators.first {

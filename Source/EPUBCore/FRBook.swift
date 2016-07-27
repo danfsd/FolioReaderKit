@@ -27,6 +27,19 @@ class FRBook: NSObject {
         return metadata.titles.first
     }
 
+    // MARK: - Table of Contents
+    // TODO: Refactor to custom get/set
+    func getTableOfContents() -> [FRTocReference]! {
+        var value = [FRTocReference]()
+        
+        for item in tableOfContents {
+            value.append(item)
+            value.appendContentsOf(item.children)
+        }
+        
+        return value
+    }
+    
     // MARK: - Media Overlay Metadata
     // http://www.idpf.org/epub/301/spec/epub-mediaoverlays.html#sec-package-metadata
 
