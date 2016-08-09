@@ -19,7 +19,7 @@ public class FolioReaderBaseContainer: UIViewController {
     
     public var centerNavigationController: UINavigationController!
     // TODO: make it public
-    var centerViewController: FolioReaderCenter!
+    public var centerViewController: FolioReaderCenter!
     var audioPlayer: FolioReaderAudioPlayer?
     
     /**
@@ -30,12 +30,16 @@ public class FolioReaderBaseContainer: UIViewController {
     /**
      Indicates wheter the default navigation bar will be setup
     */
-    var shouldUseDefaultNavigationBar = true
+    public var shouldUseDefaultNavigationBar = true {
+        didSet {
+            readerConfig.shouldHideNavigation = !shouldUseDefaultNavigationBar
+        }
+    }
     
     /**
      Indicates whether the `audioPlayer` will be setup.
      */
-    var shouldSetupAudioPlayer = true
+    public var shouldSetupAudioPlayer = true
     
     /**
      Indicates whether the epub will be removed from the disk after being parsed
@@ -47,6 +51,7 @@ public class FolioReaderBaseContainer: UIViewController {
             if errorOnLoad {
                 print("[INFO] - Error loading container")
                 // TODO: dismissViewControllerAnimated
+                closeReader()
             }
         }
     }
@@ -58,6 +63,7 @@ public class FolioReaderBaseContainer: UIViewController {
     }
     
     required public init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
+        print("BaseContainer.\(#function)")
         readerConfig = configOrNil
         epubPath = epubPathOrNil
         shouldRemoveEpub = removeEpub
@@ -83,20 +89,31 @@ public class FolioReaderBaseContainer: UIViewController {
     // MARK: - View life cycle
     
     public override func viewDidLoad() {
+        print("BaseContainer.\(#function)")
         super.viewDidLoad()
         
-        // TODO: setup center view controller
-        // TODO: setup navigation controller
+        setupReaderCenter()
+        setupReaderNavigationController()
         if shouldUseDefaultNavigationBar {
-            // TODO: setup default navigation bar
+            setupNavigationBar()
         }
-        // TODO: load ebook
+        loadEbook()
+    }
+    
+    public func closeReader(shouldDismiss: Bool = true) {
+        FolioReader.close()
+        if shouldDismiss {
+            dismiss()
+        } else {
+            pop()
+        }
     }
     
     /**
      Reads the epub from `epubPath` and parses it to a `FRBook` instance.
     */
     private func loadEbook() {
+        print("BaseContainer.\(#function)")
         guard let path = epubPath else {
             print("Epub path is nil.")
             errorOnLoad = true
@@ -134,11 +151,11 @@ public class FolioReaderBaseContainer: UIViewController {
      - precondition: `book` should be set.
      */
     public func ebookDidLoad() {
-        print("[INFO] - FolioReaderBaseContainer::ebookDidLoad()")
-        // TODO: reload centerViewController
+        print("BaseContainer.\(#function)")
+        centerViewController.reloadData()
         
         if shouldSetupAudioPlayer {
-            // TODO: setup audioPlayer
+            setupAudioPlayer()
         }
         
         FolioReader.sharedInstance.isReaderReady = true
@@ -149,9 +166,8 @@ public class FolioReaderBaseContainer: UIViewController {
     /**
      Initializes a `FolioReaderCenter`, sets itself as the container, and sets it on the `FolioReader` singleton.
      */
-    func setupReaderCenter() {
+    public func setupReaderCenter() {
         centerViewController = FolioReaderCenter()
-        // TODO: self itself as center's container
         FolioReader.sharedInstance.readerCenter = centerViewController
     }
     
@@ -161,7 +177,7 @@ public class FolioReaderBaseContainer: UIViewController {
      
      - precondition: `centerViewController` has already been set.
      */
-    func setupReaderNavigationController() {
+    public func setupReaderNavigationController() {
         centerNavigationController = UINavigationController(rootViewController: centerViewController)
         centerNavigationController.setNavigationBarHidden(readerConfig.shouldHideNavigationOnTap, animated: false)
         
@@ -175,7 +191,7 @@ public class FolioReaderBaseContainer: UIViewController {
      
      - precondition: `shouldUseDefaultNavigationBar` must be true.
     */
-    func setupNavigationBar() {
+    public func setupNavigationBar() {
         print("[INFO] - setupping navigation bar")
         automaticallyAdjustsScrollViewInsets = false
         extendedLayoutIncludesOpaqueBars = true
@@ -229,7 +245,7 @@ public class FolioReaderBaseContainer: UIViewController {
     /**
      Called to toggle the `centerNavigationController` navigation bar.
      */
-    func toggleNavigationBar() {
+    public func toggleNavigationBar() {
         guard readerConfig.shouldHideNavigationOnTap else { return }
         
         let shouldHide = !centerNavigationController.navigationBarHidden
@@ -240,4 +256,9 @@ public class FolioReaderBaseContainer: UIViewController {
         }
         centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
+    
+    /**
+     Called when the chapter changes.
+    */
+    public func chapterDidChanged(chapter: String) {}
 }
