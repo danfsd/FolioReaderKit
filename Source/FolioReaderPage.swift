@@ -32,6 +32,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
+        print("Page.\(#function)")
         super.init(frame: frame)
         self.backgroundColor = UIColor.clearColor()
         
@@ -80,12 +81,14 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     override func layoutSubviews() {
+        print("Page.\(#function)")
         super.layoutSubviews()
         
         webView.frame = webViewFrame()
     }
     
     func webViewFrame() -> CGRect {
+        print("Page.\(#function)")
         let paddingTop: CGFloat = 20
         let paddingBottom: CGFloat = 30
         
@@ -110,7 +113,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     func loadHTMLString(string: String!, baseURL: NSURL!) {
-        
+        print("Page.\(#function)")
         var html = (string as NSString)
         
         // Restore highlights
@@ -141,6 +144,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: - UIWebView Delegate
     
     func webViewDidFinishLoad(webView: UIWebView) {
+        print("Page.\(#function)")
         refreshPageMode()
         
         if readerConfig.enableTTS && !book.hasAudio() {
@@ -173,7 +177,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-        
+        print("Page.\(#function)")
         let url = request.URL
         
         if url?.scheme == "highlight" {
@@ -287,7 +291,8 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 dispatch_after(dispatchTime, dispatch_get_main_queue(), {
                     
                     if self.shouldShowBar && !menuIsVisibleRef {
-                        FolioReader.sharedInstance.readerCenter.toggleBars()
+//                        FolioReader.sharedInstance.readerCenter.toggleBars()
+                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                     }
                     self.shouldShowBar = true
                 })
@@ -309,6 +314,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
      - parameter animated: Enable or not scrolling animation
      */
     func scrollPageToOffset(offset: CGFloat, animated: Bool) {
+        print("Page.\(#function)")
         let pageOffsetPoint = isVerticalDirection(CGPoint(x: 0, y: offset), CGPoint(x: offset, y: 0))
         webView.scrollView.setContentOffset(pageOffsetPoint, animated: animated)
     }
@@ -345,6 +351,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
      - returns: The element offset ready to scroll
      */
     func getAnchorOffset(anchor: String) -> CGFloat {
+        print("Page.\(#function)")
         let horizontal = readerConfig.scrollDirection == .horizontal
         if let strOffset = webView.js("getAnchorOffset('\(anchor)', \(horizontal.description))") {
             return CGFloat((strOffset as NSString).floatValue)

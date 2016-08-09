@@ -56,7 +56,7 @@ public class FolioReader : NSObject {
     static let sharedInstance = FolioReader()
     static let defaults = NSUserDefaults.standardUserDefaults()
     weak var readerCenter: FolioReaderCenter!
-    weak var readerContainer: FolioReaderContainer!
+    weak var readerContainer: FolioReaderBaseContainer!
     weak var readerAudioPlayer: FolioReaderAudioPlayer!
     var isReaderOpen = false
     var isReaderReady = false
@@ -129,6 +129,26 @@ public class FolioReader : NSObject {
         FolioReader.sharedInstance.readerContainer = reader
         parentViewController.presentViewController(reader, animated: animated, completion: nil)
     }
+    
+    public class func pushReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
+        let reader = FolioReaderContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
+        FolioReader.sharedInstance.readerContainer = reader
+        parentViewController.navigationController?.setNavigationBarHidden(true, animated: false)
+        parentViewController.navigationController?.pushViewController(reader, animated: true)
+    }
+    
+    public class func presentReader(customReader: FolioReaderBaseContainer, parentViewController: UIViewController, animated: Bool = true) {
+        FolioReader.sharedInstance.readerContainer = customReader
+        parentViewController.presentViewController(customReader, animated: animated, completion: nil)
+    }
+    
+    public class func pushReader(customReader: FolioReaderBaseContainer, parentViewController: UIViewController, animated: Bool = true) {
+        FolioReader.sharedInstance.readerContainer = customReader
+        parentViewController.navigationController?.setNavigationBarHidden(true, animated: false)
+        parentViewController.navigationController?.pushViewController(customReader, animated: true)
+    }
+    
+    
     
     // MARK: - Application State
     
@@ -529,6 +549,12 @@ internal extension UIViewController {
     func setCloseButton() {
         let closeImage = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint()
         self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: closeImage, style: .Plain, target: self, action: #selector(dismiss as Void -> Void))
+    }
+    
+    func pop() {
+        dispatch_async(dispatch_get_main_queue()) {
+            self.navigationController?.popViewControllerAnimated(true)
+        }
     }
     
     func dismiss() {

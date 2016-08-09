@@ -18,6 +18,7 @@ class FolioReaderPageIndicator: UIView {
     }
     
     override init(frame: CGRect) {
+        print("PageIndicator.\(#function)")
         super.init(frame: frame)
         
         let color = isNight(readerConfig.nightModeBackground, UIColor.whiteColor())
@@ -47,6 +48,7 @@ class FolioReaderPageIndicator: UIView {
     }
     
     func reloadView(updateShadow updateShadow: Bool) {
+        print("PageIndicator.\(#function)")
         minutesLabel.sizeToFit()
         pagesLabel.sizeToFit()
         
@@ -68,6 +70,7 @@ class FolioReaderPageIndicator: UIView {
     }
     
     private func reloadViewWithPage(page: Int) {
+        print("PageIndicator.\(#function)")
         let pagesRemaining = totalPages-page
         
         if pagesRemaining == 1 {
