@@ -124,12 +124,15 @@ public class FolioReader : NSObject {
     /**
      Present a Folio Reader for a Parent View Controller.
     */
-    public class func presentReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
+    public class func presentReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true, completion: (() -> Void)? = nil) {
         let reader = FolioReaderContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
         FolioReader.sharedInstance.readerContainer = reader
-        parentViewController.presentViewController(reader, animated: animated, completion: nil)
+        parentViewController.presentViewController(reader, animated: animated, completion: completion)
     }
     
+    /**
+     Push a Folio Reader into the `parentViewController` navigation controller.
+     */
     public class func pushReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
         let reader = FolioReaderContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
         FolioReader.sharedInstance.readerContainer = reader
@@ -137,15 +140,22 @@ public class FolioReader : NSObject {
         parentViewController.navigationController?.pushViewController(reader, animated: true)
     }
     
-    public class func presentReader(customReader: FolioReaderBaseContainer, parentViewController: UIViewController, animated: Bool = true) {
+    /**
+     Present a custom Folio Reader for a Parent View Controller.
+     */
+    public class func presentReader(customReader: FolioReaderBaseContainer, parentViewController: UIViewController, animated: Bool = true, completion: (() -> Void)? = nil) {
         FolioReader.sharedInstance.readerContainer = customReader
-        parentViewController.presentViewController(customReader, animated: animated, completion: nil)
+        parentViewController.presentViewController(customReader, animated: animated, completion: completion)
     }
     
-    public class func pushReader(customReader: FolioReaderBaseContainer, parentViewController: UIViewController, animated: Bool = true) {
+    /**
+     Push a custom Folio Reader into the `parentViewController` navigation controller.
+     */
+    public class func pushReader(customReader: FolioReaderBaseContainer, parentViewController: UIViewController, animated: Bool = true, completion: (() -> Void)? = nil) {
         FolioReader.sharedInstance.readerContainer = customReader
         parentViewController.navigationController?.setNavigationBarHidden(true, animated: false)
         parentViewController.navigationController?.pushViewController(customReader, animated: true)
+        completion?()
     }
     
     
