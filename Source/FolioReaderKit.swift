@@ -155,10 +155,7 @@ public class FolioReader : NSObject {
         FolioReader.sharedInstance.readerContainer = customReader
         parentViewController.navigationController?.setNavigationBarHidden(true, animated: false)
         parentViewController.navigationController?.pushViewController(customReader, animated: true)
-        completion?()
     }
-    
-    
     
     // MARK: - Application State
     
