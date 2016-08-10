@@ -32,7 +32,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         super.init(frame: frame)
         self.backgroundColor = UIColor.clearColor()
         
@@ -81,14 +81,14 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     override func layoutSubviews() {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         super.layoutSubviews()
         
         webView.frame = webViewFrame()
     }
     
     func webViewFrame() -> CGRect {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         let paddingTop: CGFloat = 20
         let paddingBottom: CGFloat = 30
         
@@ -113,7 +113,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     func loadHTMLString(string: String!, baseURL: NSURL!) {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         var html = (string as NSString)
         
         // Restore highlights
@@ -144,7 +144,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: - UIWebView Delegate
     
     func webViewDidFinishLoad(webView: UIWebView) {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         refreshPageMode()
         
         if readerConfig.enableTTS && !book.hasAudio() {
@@ -177,7 +177,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         let url = request.URL
         
         if url?.scheme == "highlight" {
@@ -314,7 +314,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
      - parameter animated: Enable or not scrolling animation
      */
     func scrollPageToOffset(offset: CGFloat, animated: Bool) {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         let pageOffsetPoint = isVerticalDirection(CGPoint(x: 0, y: offset), CGPoint(x: offset, y: 0))
         webView.scrollView.setContentOffset(pageOffsetPoint, animated: animated)
     }
@@ -351,7 +351,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
      - returns: The element offset ready to scroll
      */
     func getAnchorOffset(anchor: String) -> CGFloat {
-        print("Page.\(#function)")
+//        print("Page.\(#function)")
         let horizontal = readerConfig.scrollDirection == .horizontal
         if let strOffset = webView.js("getAnchorOffset('\(anchor)', \(horizontal.description))") {
             return CGFloat((strOffset as NSString).floatValue)
@@ -480,6 +480,8 @@ extension UIWebView {
     func remove(sender: UIMenuController?) {
         if let removedId = js("removeThisHighlight()") {
             Highlight.removeById(removedId)
+            
+            FolioReader.sharedInstance.readerContainer.highlightWasRemoved(removedId)
         }
         
         setMenuVisible(false)
@@ -507,6 +509,8 @@ extension UIWebView {
             let html = js("getHTML()")
             if let highlight = Highlight.matchHighlight(html, andId: dic["id"]!, startOffset: startOffset, endOffset: endOffset) {
                 highlight.persist()
+                
+                FolioReader.sharedInstance.readerContainer.highlightWasPersisted(highlight)
             }
         } catch {
             print("Could not receive JSON")
@@ -562,6 +566,8 @@ extension UIWebView {
 
         if let updateId = js("setHighlightStyle('\(HighlightStyle.classForStyle(style.rawValue))')") {
             Highlight.updateById(updateId, type: style)
+            
+            FolioReader.sharedInstance.readerContainer.highlightWasUpdated(updateId, style: style.hashValue)
         }
         colors(sender)
     }

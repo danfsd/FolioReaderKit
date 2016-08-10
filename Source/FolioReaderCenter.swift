@@ -48,7 +48,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     // MARK: - View life cicle
     
     override public func viewDidLoad() {
-        print("Center.\(#function)")
+//        print("Center.\(#function)")
         super.viewDidLoad()
         
         screenBounds = UIScreen.mainScreen().bounds
@@ -106,7 +106,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     
     
     override public func viewWillAppear(animated: Bool) {
-        print("Center.\(#function)")
+//        print("Center.\(#function)")
         super.viewWillAppear(animated)
         
         // Update pages
@@ -115,7 +115,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     public override func viewDidAppear(animated: Bool) {
-        print("Center.\(#function)")
+//        print("Center.\(#function)")
         super.viewDidAppear(animated)
     }
 
@@ -163,7 +163,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
 
     func reloadData() {
-        print("Center.\(#function)")
+//        print("Center.\(#function)")
         loadingView.stopAnimating()
         bookShareLink = readerConfig.localizedShareWebLink
         totalPages = book.spine.spineReferences.count
@@ -239,7 +239,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     public func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        print("Center.\(#function)")
+//        print("Center.\(#function)")
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseIdentifier, forIndexPath: indexPath) as! FolioReaderPage
         
         cell.pageNumber = indexPath.row+1
@@ -422,6 +422,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     func updateCurrentPage(page: FolioReaderPage!, completion: (() -> Void)? = nil) {
+        print("Center.\(#function)")
         if let page = page {
             currentPage = page
             previousPageNumber = page.pageNumber-1
@@ -439,6 +440,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         nextPageNumber = currentPageNumber+1 <= totalPages ? currentPageNumber+1 : currentPageNumber
         
         // Set navigation title
+        // TODO: rever essa zueira pra quando não tem título
         if let chapterName = getCurrentChapterName() {
             title = chapterName
             FolioReader.sharedInstance.readerContainer.chapterDidChanged(chapterName)
@@ -450,12 +452,19 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             
             scrollScrubber.setSliderVal()
             
-            if let readingTime = page.webView.js("getReadingTime()") {
-                pageIndicatorView.totalMinutes = Int(readingTime)!
-                
-            } else {
-                pageIndicatorView.totalMinutes = 0
-            }
+            let jsReadingTime = page.webView.js("getReadingTime()")
+            let readingTime = jsReadingTime != nil ? Int(jsReadingTime!) : 0
+            
+            pageIndicatorView.totalMinutes = readingTime
+//            if let readingTime = page.webView.js("getReadingTime()") {
+//                pageIndicatorView.totalMinutes = Int(readingTime)!
+//                
+//            } else {
+//                pageIndicatorView.totalMinutes = 0
+//            }
+            
+            FolioReader.sharedInstance.readerContainer.readingTimeDidChanged(readingTime!)
+            
             pagesForCurrentPage(page)
         }
         
@@ -463,11 +472,19 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     func pagesForCurrentPage(page: FolioReaderPage?) {
+        print("Center.\(#function)")
         if let page = page {
             let pageSize = isVerticalDirection(pageHeight, pageWidth)
-            pageIndicatorView.totalPages = Int(ceil(page.webView.scrollView.contentSize.forDirection()/pageSize))
+            let totalPages = Int(ceil(page.webView.scrollView.contentSize.forDirection()/pageSize))
+//            print("[INFO] - content size: \(page.webView.scrollView.contentSize.forDirection()) page size: \(pageSize)")
+//            print("[INFO] - total pages: \(totalPages)")
+            pageIndicatorView.totalPages = totalPages
             let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize)
+//            print("[INFO] - offset: \(currentPage.webView.scrollView.contentOffset.x) size: \(pageSize)")
+//            print("[INFO] - current page: \(webViewPage)")
             pageIndicatorView.currentPage = webViewPage
+            
+            FolioReader.sharedInstance.readerContainer.pageDidChanged(webViewPage, totalPages: totalPages)
         }
     }
     
@@ -827,6 +844,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
                 if pageIndicatorView.currentPage != webViewPage {
                     pageIndicatorView.currentPage = webViewPage
                 }
+                // TODO: webviewPageDidChanged
             }
         }
         
@@ -838,6 +856,15 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         
         if scrollView is UICollectionView {
             if totalPages > 0 { updateCurrentPage() }
+        } else {
+            let pageSize = isVerticalDirection(pageHeight, pageWidth)
+            
+            if let page = currentPage
+                where page.webView.scrollView.contentOffset.forDirection()+pageSize <= page.webView.scrollView.contentSize.forDirection() {
+                let webViewPage = pageForOffset(page.webView.scrollView.contentOffset.forDirection(), pageHeight: pageSize)
+                // TODO: webviewPageDidChanged
+                FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(webViewPage)
+            }
         }
         
         scrollScrubber.scrollViewDidEndDecelerating(scrollView)

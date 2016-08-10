@@ -63,7 +63,7 @@ public class FolioReaderBaseContainer: UIViewController {
     }
     
     required public init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
-        print("BaseContainer.\(#function)")
+//        print("BaseContainer.\(#function)")
         readerConfig = configOrNil
         epubPath = epubPathOrNil
         shouldRemoveEpub = removeEpub
@@ -89,7 +89,7 @@ public class FolioReaderBaseContainer: UIViewController {
     // MARK: - View life cycle
     
     public override func viewDidLoad() {
-        print("BaseContainer.\(#function)")
+//        print("BaseContainer.\(#function)")
         super.viewDidLoad()
         
         setupReaderCenter()
@@ -113,7 +113,7 @@ public class FolioReaderBaseContainer: UIViewController {
      Reads the epub from `epubPath` and parses it to a `FRBook` instance.
     */
     private func loadEbook() {
-        print("BaseContainer.\(#function)")
+//        print("BaseContainer.\(#function)")
         guard let path = epubPath else {
             print("Epub path is nil.")
             errorOnLoad = true
@@ -151,7 +151,7 @@ public class FolioReaderBaseContainer: UIViewController {
      - precondition: `book` should be set.
      */
     public func ebookDidLoad() {
-        print("BaseContainer.\(#function)")
+//        print("BaseContainer.\(#function)")
         centerViewController.reloadData()
         
         if shouldSetupAudioPlayer {
@@ -261,4 +261,35 @@ public class FolioReaderBaseContainer: UIViewController {
      Called when the chapter changes.
     */
     public func chapterDidChanged(chapter: String) {}
+    
+    /**
+     Called when the page is turned.
+    */
+    public func pageDidChanged(currentPage: Int, totalPages: Int) {}
+    
+    /**
+     Called when the chapter page is turned.
+     */
+    public func webviewPageDidChanged(currentPage: Int) {}
+    
+    /**
+     Called when the reading time is updated
+    */
+    public func readingTimeDidChanged(readingTime: Int) {}
+    
+    // MARK: - Highlight callbacks
+    /**
+     Called when a highlight is persisted.
+    */
+    public func highlightWasPersisted(highlight: Highlight) {}
+    
+    /**
+     Called when a highlight is updated.
+     */
+    public func highlightWasUpdated(highlightId: String, style: Int) {}
+    
+    /**
+     Called when a highlight is removed.
+     */
+    public func highlightWasRemoved(highlightId: String) {}
 }
