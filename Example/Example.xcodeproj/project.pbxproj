@@ -16,7 +16,8 @@
 		6E3C4A3F1C3C6708009CBC8C /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E3C4A3E1C3C6708009CBC8C /* MediaPlayer.framework */; };
 		6E5C9B051C4037B7008F6FD9 /* The Silver Chair.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */; };
 		6E5C9B091C403968008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */; };
-		921585F71D4F827C003C3BCC /* Medcel.epub in Resources */ = {isa = PBXBuildFile; fileRef = 921585F61D4F826E003C3BCC /* Medcel.epub */; };
+		921585F71D4F827C003C3BCC /* Medcel - Old.epub in Resources */ = {isa = PBXBuildFile; fileRef = 921585F61D4F826E003C3BCC /* Medcel - Old.epub */; };
+		92BE7E781D5E4365002177D7 /* Medcel.epub in Resources */ = {isa = PBXBuildFile; fileRef = 92BE7E771D5E434D002177D7 /* Medcel.epub */; };
 		CA10C1341C572A4B0049165D /* FolioReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA10C1331C572A4B0049165D /* FolioReaderTests.swift */; };
 		CA61603F1C572C4C00ACD034 /* The Adventures Of Sherlock Holmes - Adventure I.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */; };
 		CA6160401C572C4C00ACD034 /* The Silver Chair.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */; };
@@ -50,7 +51,8 @@
 		6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Silver Chair.epub"; sourceTree = "<group>"; };
 		6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Adventures Of Sherlock Holmes - Adventure I.epub"; sourceTree = "<group>"; };
 		8E1BE6465444C567F5D1B8E6 /* Pods-FolioReaderTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FolioReaderTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests.release.xcconfig"; sourceTree = "<group>"; };
-		921585F61D4F826E003C3BCC /* Medcel.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = Medcel.epub; sourceTree = "<group>"; };
+		921585F61D4F826E003C3BCC /* Medcel - Old.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Medcel - Old.epub"; sourceTree = "<group>"; };
+		92BE7E771D5E434D002177D7 /* Medcel.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = Medcel.epub; sourceTree = "<group>"; };
 		CA10C1311C572A4B0049165D /* FolioReaderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioReaderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA10C1331C572A4B0049165D /* FolioReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolioReaderTests.swift; sourceTree = "<group>"; };
 		CA10C1351C572A4B0049165D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -127,7 +129,8 @@
 		6E5C9B011C4037B7008F6FD9 /* Sample eBooks */ = {
 			isa = PBXGroup;
 			children = (
-				921585F61D4F826E003C3BCC /* Medcel.epub */,
+				92BE7E771D5E434D002177D7 /* Medcel.epub */,
+				921585F61D4F826E003C3BCC /* Medcel - Old.epub */,
 				6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */,
 				6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */,
 			);
@@ -253,7 +256,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				921585F71D4F827C003C3BCC /* Medcel.epub in Resources */,
+				92BE7E781D5E4365002177D7 /* Medcel.epub in Resources */,
+				921585F71D4F827C003C3BCC /* Medcel - Old.epub in Resources */,
 				1A42C2941C0E3883000F2137 /* Assets.xcassets in Resources */,
 				1A42C2A21C0E3A8D000F2137 /* LaunchScreen.storyboard in Resources */,
 				6E5C9B091C403968008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub in Resources */,

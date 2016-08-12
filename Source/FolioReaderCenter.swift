@@ -18,6 +18,36 @@ var nextPageNumber: Int!
 var scrollDirection = ScrollDirection()
 var isScrolling = false
 
+public enum FolioReaderFontName: Int {
+    case andada = 0
+    case lato = 1
+    case lora = 2
+    case raleway = 3
+    
+    func fontName() -> String {
+        switch self {
+        case andada: return "andada"
+        case lato: return "lato"
+        case lora: return "lora"
+        case raleway: return "raleway"
+        }
+    }
+}
+
+public enum FolioReaderFontSize: String {
+    case sizeOne = "textSizeOne"
+    case sizeTwo = "textSizeTwo"
+    case sizeThree = "textSizeThree"
+    case sizeFour = "textSizeFour"
+    case sizeFive = "textSizeFive"
+}
+
+public enum FolioReaderTextAlignemnt: String {
+    case left = "left"
+    case right = "right"
+    case center = "center"
+    case justify = "justify"
+}
 
 public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     
@@ -103,7 +133,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         loadingView.startAnimating()
         view.addSubview(loadingView)
     }
-    
     
     override public func viewWillAppear(animated: Bool) {
 //        print("Center.\(#function)")
@@ -192,9 +221,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         
         UIView.animateWithDuration(0.25, animations: {
             FolioReader.sharedInstance.readerContainer.setNeedsStatusBarAppearanceUpdate()
-            
-            // Show minutes indicator
-//            self.pageIndicatorView.minutesLabel.alpha = 0
         })
         navigationController?.setNavigationBarHidden(shouldHide, animated: true)
     }
@@ -221,11 +247,24 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         
         UIView.animateWithDuration(0.25, animations: {
             FolioReader.sharedInstance.readerContainer.setNeedsStatusBarAppearanceUpdate()
-            
-            // Show minutes indicator
-//            self.pageIndicatorView.minutesLabel.alpha = shouldHide ? 0 : 1
         })
         navigationController?.setNavigationBarHidden(shouldHide, animated: true)
+    }
+    
+    public func setFontName(name: FolioReaderFontName) {
+        FolioReader.sharedInstance.currentFontName = name.rawValue
+        print("setFontName('\(name.fontName())')")
+        currentPage.webView.js("setFontName('\(name.fontName())')")
+    }
+    
+    public func setFontSize(style: FolioReaderFontSize) {
+        print("setFontSize('\(style.rawValue)')")
+        currentPage.webView.js("setFontSize('\(style.rawValue)')")
+    }
+    
+    public func setTextAlignment(style: FolioReaderTextAlignemnt) {
+        print("setTextAlignment('\(style.rawValue)')")
+        currentPage.webView.js("setTextAlignment('\(style.rawValue)')")
     }
     
     // MARK: UICollectionViewDataSource
@@ -456,12 +495,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             let readingTime = jsReadingTime != nil ? Int(jsReadingTime!) : 0
             
             pageIndicatorView.totalMinutes = readingTime
-//            if let readingTime = page.webView.js("getReadingTime()") {
-//                pageIndicatorView.totalMinutes = Int(readingTime)!
-//                
-//            } else {
-//                pageIndicatorView.totalMinutes = 0
-//            }
             
             FolioReader.sharedInstance.readerContainer.readingTimeDidChanged(readingTime!)
             

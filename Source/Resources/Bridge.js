@@ -78,6 +78,12 @@ function setFontSize(cls) {
     addClass(elm, cls);
 }
 
+// Set text alignment
+function setTextAlignment(style) {
+    var body = document.getElementsByTagName("body")[0]
+    body.style.textAlign = style
+}
+
 /*
  *	Native bridge Highlight text
  */

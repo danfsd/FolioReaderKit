@@ -14,8 +14,8 @@ class ViewController: UIViewController {
     @IBOutlet var bookOne: UIButton!
     @IBOutlet var bookTwo: UIButton!
     let epubSampleFiles = [
-//        "The Silver Chair", // standard eBook
-        "Medcel",
+        "The Silver Chair", // standard eBook
+//        "Medcel",
         "The Adventures Of Sherlock Holmes - Adventure I", // audio-eBook
     ]
 
