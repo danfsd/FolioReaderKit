@@ -24,7 +24,7 @@ public enum FolioReaderFontName: Int {
     case lora = 2
     case raleway = 3
     
-    func fontName() -> String {
+    public func fontName() -> String {
         switch self {
         case andada: return "andada"
         case lato: return "lato"
@@ -32,21 +32,70 @@ public enum FolioReaderFontName: Int {
         case raleway: return "raleway"
         }
     }
+    
+    public func buttonSelected() -> (serif: Bool, sansSerif: Bool) {
+        switch self {
+            case andada: return (serif: true, sansSerif: false)
+            case lato: return (serif: false, sansSerif: true)
+            case lora: return (serif: true, sansSerif: false)
+            case raleway: return (serif: false, sansSerif: true)
+        }
+    }
 }
 
-public enum FolioReaderFontSize: String {
-    case sizeOne = "textSizeOne"
-    case sizeTwo = "textSizeTwo"
-    case sizeThree = "textSizeThree"
-    case sizeFour = "textSizeFour"
-    case sizeFive = "textSizeFive"
+public enum FolioReaderFontSize: Int {
+    case sizeOne = 0
+    case sizeTwo = 1
+    case sizeThree = 2
+    case sizeFour = 3
+    case sizeFive = 4
+    
+    public func fontSize() -> String {
+        switch self {
+        case sizeOne: return "textSizeOne"
+        case sizeTwo: return "textSizeTwo"
+        case sizeThree: return "textSizeThree"
+        case sizeFour: return "textSizeFour"
+        case sizeFive: return "textSizeFive"
+        }
+    }
+    
+    public func sliderValue() -> Float {
+        switch self {
+        case sizeOne: return 0.0
+        case sizeTwo: return 0.21
+        case sizeThree: return 0.41
+        case sizeFour: return 0.61
+        case sizeFive: return 0.81
+        }
+    }
 }
 
-public enum FolioReaderTextAlignemnt: String {
-    case left = "left"
-    case right = "right"
-    case center = "center"
-    case justify = "justify"
+public enum FolioReaderTextAlignemnt: Int {
+    case left = 0
+    case right = 1
+    case center = 2
+    case justify = 3
+    
+    public func textAlignment() -> String {
+        switch self {
+        case left: return"left"
+        case right: return "right"
+        case center: return "center"
+        case justify: return "justify"
+        }
+    }
+    
+    public func buttonSelected() -> (left: Bool, justify: Bool) {
+        switch self {
+        case left: return (left: true, justify: false)
+        case justify: return (left: false, justify: true)
+            
+        // Not used
+        case right: return (left: true, justify: false)
+        case center: return (left: true, justify: false)
+        }
+    }
 }
 
 public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
@@ -252,19 +301,21 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     public func setFontName(name: FolioReaderFontName) {
-        FolioReader.sharedInstance.currentFontName = name.rawValue
         print("setFontName('\(name.fontName())')")
+        FolioReader.sharedInstance.currentFontName = name.rawValue
         currentPage.webView.js("setFontName('\(name.fontName())')")
     }
     
     public func setFontSize(style: FolioReaderFontSize) {
-        print("setFontSize('\(style.rawValue)')")
-        currentPage.webView.js("setFontSize('\(style.rawValue)')")
+        print("setFontSize('\(style.fontSize())')")
+        FolioReader.sharedInstance.currentFontSize = style.rawValue
+        currentPage.webView.js("setFontSize('\(style.fontSize())')")
     }
     
     public func setTextAlignment(style: FolioReaderTextAlignemnt) {
-        print("setTextAlignment('\(style.rawValue)')")
-        currentPage.webView.js("setTextAlignment('\(style.rawValue)')")
+        print("setTextAlignment('\(style.textAlignment())')")
+        FolioReader.sharedInstance.currentTextAlignement = style.rawValue
+        currentPage.webView.js("setTextAlignment('\(style.textAlignment())')")
     }
     
     // MARK: UICollectionViewDataSource
@@ -328,6 +379,11 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             classes += " nightMode"
         }
         
+        // Text Alignment
+        let textAlignment = FolioReader.sharedInstance.currentTextAlignement
+        let style = "text-align: \(FolioReaderTextAlignemnt(rawValue: textAlignment)!.textAlignment())"
+        print(style)
+        
         // Font Size
         let currentFontSize = FolioReader.sharedInstance.currentFontSize
         switch currentFontSize {
@@ -350,7 +406,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             break
         }
         
-        html = html?.stringByReplacingOccurrencesOfString("<html ", withString: "<html class=\"\(classes)\"")
+        html = html?.stringByReplacingOccurrencesOfString("<html ", withString: "<html class=\"\(classes)\" style=\"\(style)\"")
         
         cell.loadHTMLString(html, baseURL: NSURL(fileURLWithPath: (resource.fullHref as NSString).stringByDeletingLastPathComponent))
         

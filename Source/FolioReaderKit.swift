@@ -16,7 +16,8 @@ internal let isPhone = UIDevice.currentDevice().userInterfaceIdiom == .Phone
 
 // MARK: - Internal constants
 
-internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
+internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0]
+internal let kCurrentTextAlignment = "com.folioreader.kCurrentTextAlignment"
 internal let kCurrentFontFamily = "com.folioreader.kCurrentFontFamily"
 internal let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
 internal let kCurrentAudioRate = "com.folioreader.kCurrentAudioRate"
@@ -74,6 +75,14 @@ public class FolioReader : NSObject {
             FolioReader.defaults.setBool(value, forKey: kNightMode)
         }
     }
+    
+    var currentTextAlignement: Int {
+        get { return FolioReader.defaults.valueForKey(kCurrentTextAlignment) as! Int }
+        set (value) {
+            FolioReader.defaults.setValue(value, forKey: kCurrentTextAlignment)
+        }
+    }
+    
     var currentFontName: Int {
         get { return FolioReader.defaults.valueForKey(kCurrentFontFamily) as! Int }
         set (value) {

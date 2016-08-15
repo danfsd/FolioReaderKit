@@ -80,8 +80,8 @@ function setFontSize(cls) {
 
 // Set text alignment
 function setTextAlignment(style) {
-    var body = document.getElementsByTagName("body")[0]
-    body.style.textAlign = style
+    var html = document.getElementsByTagName("html")[0]
+    html.style.textAlign = style
 }
 
 /*

@@ -18,7 +18,7 @@ public class FolioReaderBaseContainer: UIViewController {
     // MARK: - Variables
     
     public var centerNavigationController: UINavigationController!
-    // TODO: make it public
+    public var controlStates: (fontSize: Int, fontFamily: Int, textAlignment: Int)!
     public var centerViewController: FolioReaderCenter!
     var audioPlayer: FolioReaderAudioPlayer?
     
@@ -79,6 +79,7 @@ public class FolioReaderBaseContainer: UIViewController {
         FolioReader.defaults.registerDefaults([
             kCurrentFontFamily: 0,
             kNightMode: false,
+            kCurrentTextAlignment: 0,
             kCurrentFontSize: 2,
             kCurrentAudioRate: 1,
             kCurrentHighlightStyle: 0,
@@ -120,6 +121,12 @@ public class FolioReaderBaseContainer: UIViewController {
             return
         }
         
+        self.controlStates = (
+            fontSize: FolioReader.sharedInstance.currentFontSize,
+            fontFamily: FolioReader.sharedInstance.currentFontName,
+            textAlignment: FolioReader.sharedInstance.currentTextAlignement
+        )
+        
         let priority = DISPATCH_QUEUE_PRIORITY_HIGH
         dispatch_async(dispatch_get_global_queue(priority, 0), {
             Void in
@@ -144,6 +151,8 @@ public class FolioReaderBaseContainer: UIViewController {
             dispatch_async(dispatch_get_main_queue(), self.ebookDidLoad)
         })
     }
+    
+    
     
     /**
      Called when `loadEbook` function finishes getting the file from the disk.
