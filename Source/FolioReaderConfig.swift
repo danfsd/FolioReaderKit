@@ -42,6 +42,7 @@ public class FolioReaderConfig: NSObject {
     public var scrollDirection: FolioReaderScrollDirection = .vertical
     public var shouldHideNavigation = false
     public var shouldHideNavigationOnTap = true
+    public var shouldSkipPagesOnEdges = false
     public var allowSharing = true
     public var enableTTS = true
     

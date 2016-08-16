@@ -277,23 +277,61 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     
     func handleTapGesture(recognizer: UITapGestureRecognizer) {
 //        webView.setMenuVisible(false)
+        let tapLocation = recognizer.locationInView(recognizer.view)
+        let lowerTapThreshold = self.webView.frame.size.width * 0.20
+        let upperTapThreshold = self.webView.frame.size.width * 0.80
+        print("tap location 1 \(tapLocation)")
         
         if FolioReader.sharedInstance.readerCenter.navigationController!.navigationBarHidden {
             let menuIsVisibleRef = menuIsVisible
             
             let selected = webView.js("getSelectedText()")
-
+            
             if selected == nil || selected!.characters.count == 0 {
                 let seconds = 0.4
                 let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
                 let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
-
+                
                 dispatch_after(dispatchTime, dispatch_get_main_queue(), {
-                    
-                    if self.shouldShowBar && !menuIsVisibleRef {
-//                        FolioReader.sharedInstance.readerCenter.toggleBars()
-                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+                    if readerConfig.shouldSkipPagesOnEdges {
+                        if tapLocation.x <= lowerTapThreshold {
+                            print("[INFO] - Back")
+                            // TODO: shouldSkipPageAtEdges
+                            FolioReader.sharedInstance.readerCenter.skipPageBackward()
+                        } else if tapLocation.x >= upperTapThreshold {
+                            print("[INFO] - Next")
+                            // TODO: shouldSkipPageAtEdges
+                            if readerConfig.shouldSkipPagesOnEdges {
+                                FolioReader.sharedInstance.readerCenter.skipPageForward()
+                            }
+                        } else if self.shouldShowBar && !menuIsVisibleRef {
+                            print("[INFO] - Toggle")
+                            //                        FolioReader.sharedInstance.readerCenter.toggleBars()
+                            FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+                        }
+                    } else {
+                        if self.shouldShowBar && !menuIsVisibleRef {
+                            print("[INFO] - Toggle")
+                            //                        FolioReader.sharedInstance.readerCenter.toggleBars()
+                            FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+                        }
                     }
+                    
+//                    if tapLocation.x <= lowerTapThreshold {
+//                        print("[INFO] - Back")
+//                        // TODO: shouldSkipPageAtEdges
+//                        FolioReader.sharedInstance.readerCenter.skipPageBackward()
+//                    } else if tapLocation.x >= upperTapThreshold {
+//                        print("[INFO] - Next")
+//                        // TODO: shouldSkipPageAtEdges
+//                        if readerConfig.shouldSkipPagesOnEdges {
+//                            FolioReader.sharedInstance.readerCenter.skipPageForward()
+//                        }
+//                    } else if self.shouldShowBar && !menuIsVisibleRef {
+//                        print("[INFO] - Toggle")
+////                        FolioReader.sharedInstance.readerCenter.toggleBars()
+//                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+//                    }
                     self.shouldShowBar = true
                 })
             }

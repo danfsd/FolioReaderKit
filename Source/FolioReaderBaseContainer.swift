@@ -274,12 +274,12 @@ public class FolioReaderBaseContainer: UIViewController {
     /**
      Called when the page is turned.
     */
-    public func pageDidChanged(currentPage: Int, totalPages: Int) {}
+    public func pageDidChanged(centerState: ReaderState, pageState: ReaderState) {}
     
     /**
      Called when the chapter page is turned.
      */
-    public func webviewPageDidChanged(currentPage: Int) {}
+    public func webviewPageDidChanged(pageState: ReaderState) {}
     
     /**
      Called when the reading time is updated
