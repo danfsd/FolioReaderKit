@@ -16,8 +16,8 @@ public class FolioReaderContainer: FolioReaderBaseContainer {
         super.init(coder: aDecoder)
     }
     
-    required public init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
-        super.init(config: configOrNil, epubPath: epubPathOrNil, removeEpub: removeEpub)
+    required public init(config configOrNil: FolioReaderConfig!, navigationConfig navigationConfigOrNil: FolioReaderNavigationConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
+        super.init(config: configOrNil, navigationConfig: navigationConfigOrNil,epubPath: epubPathOrNil, removeEpub: removeEpub)
         shouldSetupAudioPlayer = true
     }
     

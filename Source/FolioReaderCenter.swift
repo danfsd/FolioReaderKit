@@ -391,7 +391,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         // Text Alignment
         let textAlignment = FolioReader.sharedInstance.currentTextAlignement
         let style = "text-align: \(FolioReaderTextAlignemnt(rawValue: textAlignment)!.textAlignment())"
-        print(style)
         
         // Font Size
         let currentFontSize = FolioReader.sharedInstance.currentFontSize
@@ -526,7 +525,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     func updateCurrentPage(page: FolioReaderPage!, completion: (() -> Void)? = nil) {
-        print("Center.\(#function)")
+//        print("Center.\(#function)")
         if let page = page {
             currentPage = page
             previousPageNumber = page.pageNumber-1
@@ -570,7 +569,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     func pagesForCurrentPage(page: FolioReaderPage?) {
-        print("Center.\(#function)")
+//        print("Center.\(#function)")
         if let page = page {
             let pageSize = isVerticalDirection(pageHeight, pageWidth)
             let totalWebviewPages = Int(ceil(page.webView.scrollView.contentSize.forDirection()/pageSize))

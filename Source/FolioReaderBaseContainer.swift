@@ -62,9 +62,10 @@ public class FolioReaderBaseContainer: UIViewController {
         super.init(coder: aDecoder)
     }
     
-    required public init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
+    required public init(config configOrNil: FolioReaderConfig!, navigationConfig navigationConfigOrNil: FolioReaderNavigationConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
 //        print("BaseContainer.\(#function)")
         readerConfig = configOrNil
+        navigationConfig = navigationConfigOrNil
         epubPath = epubPathOrNil
         shouldRemoveEpub = removeEpub
         super.init(nibName: nil, bundle: NSBundle.frameworkBundle())
@@ -187,7 +188,7 @@ public class FolioReaderBaseContainer: UIViewController {
      - precondition: `centerViewController` has already been set.
      */
     public func setupReaderNavigationController() {
-        centerNavigationController = UINavigationController(rootViewController: centerViewController)
+        centerNavigationController = FolioReaderNavigationController(rootViewController: centerViewController)
         centerNavigationController.setNavigationBarHidden(readerConfig.shouldHideNavigationOnTap, animated: false)
         
         view.addSubview(centerNavigationController.view)

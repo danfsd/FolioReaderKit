@@ -133,8 +133,8 @@ public class FolioReader : NSObject {
     /**
      Present a Folio Reader for a Parent View Controller.
     */
-    public class func presentReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true, completion: (() -> Void)? = nil) {
-        let reader = FolioReaderContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
+    public class func presentReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, andNavigationConfig navigationConfig: FolioReaderNavigationConfig, shouldRemoveEpub: Bool = true, animated: Bool = true, completion: (() -> Void)? = nil) {
+        let reader = FolioReaderContainer(config: config, navigationConfig: navigationConfig, epubPath: epubPath, removeEpub: shouldRemoveEpub)
         FolioReader.sharedInstance.readerContainer = reader
         parentViewController.presentViewController(reader, animated: animated, completion: completion)
     }
@@ -142,8 +142,8 @@ public class FolioReader : NSObject {
     /**
      Push a Folio Reader into the `parentViewController` navigation controller.
      */
-    public class func pushReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
-        let reader = FolioReaderContainer(config: config, epubPath: epubPath, removeEpub: shouldRemoveEpub)
+    public class func pushReader(parentViewController parentViewController: UIViewController, withEpubPath epubPath: String, andConfig config: FolioReaderConfig, andNavigationConfig navigationConfig: FolioReaderNavigationConfig, shouldRemoveEpub: Bool = true, animated: Bool = true) {
+        let reader = FolioReaderContainer(config: config,  navigationConfig: navigationConfig, epubPath: epubPath, removeEpub: shouldRemoveEpub)
         FolioReader.sharedInstance.readerContainer = reader
         parentViewController.navigationController?.setNavigationBarHidden(true, animated: false)
         parentViewController.navigationController?.pushViewController(reader, animated: true)
