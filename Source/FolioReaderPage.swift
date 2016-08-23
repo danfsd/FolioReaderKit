@@ -288,50 +288,43 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             let selected = webView.js("getSelectedText()")
             
             if selected == nil || selected!.characters.count == 0 {
-                let seconds = 0.4
+                var seconds = 0.4
+                
+                var shouldSkipBackward = false
+                var shouldSkipForward = false
+                var shouldPresentMenu = false
+                
+                if tapLocation.x <= lowerTapThreshold {
+                    shouldSkipBackward = true
+                    seconds = 0.1
+                } else if tapLocation.x >= upperTapThreshold {
+                    shouldSkipForward = true
+                    seconds = 0.1
+                } else if shouldShowBar && !menuIsVisibleRef {
+                    shouldPresentMenu = true
+                }
+                
                 let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
                 let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
                 
                 dispatch_after(dispatchTime, dispatch_get_main_queue(), {
                     if readerConfig.shouldSkipPagesOnEdges {
-                        if tapLocation.x <= lowerTapThreshold {
+                        if shouldSkipBackward {
                             print("[INFO] - Back")
-                            // TODO: shouldSkipPageAtEdges
                             FolioReader.sharedInstance.readerCenter.skipPageBackward()
-                        } else if tapLocation.x >= upperTapThreshold {
+                        } else if shouldSkipForward {
                             print("[INFO] - Next")
-                            // TODO: shouldSkipPageAtEdges
-                            if readerConfig.shouldSkipPagesOnEdges {
-                                FolioReader.sharedInstance.readerCenter.skipPageForward()
-                            }
-                        } else if self.shouldShowBar && !menuIsVisibleRef {
+                            FolioReader.sharedInstance.readerCenter.skipPageForward()
+                        } else if shouldPresentMenu {
                             print("[INFO] - Toggle")
-                            //                        FolioReader.sharedInstance.readerCenter.toggleBars()
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
                     } else {
-                        if self.shouldShowBar && !menuIsVisibleRef {
+                        if shouldPresentMenu {
                             print("[INFO] - Toggle")
-                            //                        FolioReader.sharedInstance.readerCenter.toggleBars()
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
                     }
-                    
-//                    if tapLocation.x <= lowerTapThreshold {
-//                        print("[INFO] - Back")
-//                        // TODO: shouldSkipPageAtEdges
-//                        FolioReader.sharedInstance.readerCenter.skipPageBackward()
-//                    } else if tapLocation.x >= upperTapThreshold {
-//                        print("[INFO] - Next")
-//                        // TODO: shouldSkipPageAtEdges
-//                        if readerConfig.shouldSkipPagesOnEdges {
-//                            FolioReader.sharedInstance.readerCenter.skipPageForward()
-//                        }
-//                    } else if self.shouldShowBar && !menuIsVisibleRef {
-//                        print("[INFO] - Toggle")
-////                        FolioReader.sharedInstance.readerCenter.toggleBars()
-//                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
-//                    }
                     self.shouldShowBar = true
                 })
             }
@@ -355,6 +348,19 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
 //        print("Page.\(#function)")
         let pageOffsetPoint = isVerticalDirection(CGPoint(x: 0, y: offset), CGPoint(x: offset, y: 0))
         webView.scrollView.setContentOffset(pageOffsetPoint, animated: animated)
+    }
+    
+    /**
+     Scrolls the page to a given offset
+     
+     - parameter offset:   The offset to scroll
+     - parameter duration: Animation duration
+     */
+    func scrollPageToOffset(offset: CGFloat, duration: NSTimeInterval) {
+        let pageOffsetPoint = isVerticalDirection(CGPoint(x: 0, y: offset), CGPoint(x: offset, y: 0))
+        UIView.animateWithDuration(duration) {
+            self.webView.scrollView.contentOffset = pageOffsetPoint
+        }
     }
     
     /**

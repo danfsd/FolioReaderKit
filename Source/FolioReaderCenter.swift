@@ -731,7 +731,8 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             let currentOffset = currentPage.webView.scrollView.contentOffset
             let pageState = ReaderState(current: webViewPage + 1, total: totalWebviewPages)
             FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
-            currentPage.scrollPageToOffset(currentOffset.x + pageSize, animated: true)
+            currentPage.scrollPageToOffset(currentOffset.x + pageSize, duration: 0.1)
+//            currentPage.scrollPageToOffset(currentOffset.x + pageSize, animated: true)
             
             break
         }

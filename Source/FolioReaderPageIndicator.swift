@@ -74,11 +74,10 @@ class FolioReaderPageIndicator: UIView {
         let pagesRemaining = totalPages-page
         
         if pagesRemaining == 1 {
-            pagesLabel.text = " "+readerConfig.localizedReaderOnePageLeft
+            pagesLabel.text = " \(readerConfig.localizedReaderOnePageLeft)."
         } else {
-            pagesLabel.text = " \(pagesRemaining) "+readerConfig.localizedReaderManyPagesLeft
+            pagesLabel.text = " \(pagesRemaining) \(readerConfig.localizedReaderManyPagesLeft)."
         }
-        
         
         let minutesRemaining = Int(ceil(CGFloat((pagesRemaining * totalMinutes)/totalPages)))
         if minutesRemaining > 1 {
