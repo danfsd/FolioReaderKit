@@ -540,12 +540,13 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             currentPageNumber = page.pageNumber
         } else {
             let currentIndexPath = getCurrentIndexPath()
+            print("Index path row: \(currentIndexPath.row)")
             if currentIndexPath != NSIndexPath(forRow: 0, inSection: 0) {
                 currentPage = collectionView.cellForItemAtIndexPath(currentIndexPath) as! FolioReaderPage
                 previousPageNumber = currentIndexPath.row
                 currentPageNumber = currentIndexPath.row + 1
-            } else {
-                currentPage = collectionView.cellForItemAtIndexPath(currentIndexPath) as! FolioReaderPage
+            } else if let page = collectionView.cellForItemAtIndexPath(currentIndexPath) {
+                currentPage = page as! FolioReaderPage
                 previousPageNumber = currentPage.pageNumber - 1
                 currentPageNumber = currentPage.pageNumber
             }
@@ -554,7 +555,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
 //            currentPageNumber = currentIndexPath.row+1
         }
         
-        nextPageNumber = currentPageNumber+1 <= totalPages ? currentPageNumber+1 : currentPageNumber
+        nextPageNumber = currentPageNumber + 1 <= totalPages ? currentPageNumber + 1 : currentPageNumber
         
         // Set navigation title
         // TODO: rever essa zueira pra quando não tem título
@@ -619,6 +620,12 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
                 } else {
                     indexPath = first
                 }
+            case .Left:
+                if first.compare(last) == .OrderedDescending {
+                    indexPath = first
+                } else {
+                    indexPath = last
+                }
             default:
                 if first.compare(last) == .OrderedAscending {
                     indexPath = first
@@ -651,7 +658,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         }
     }
     
-    func changePageWith(page page: Int, andFragment fragment: String, animated: Bool = false, completion: (() -> Void)? = nil) {
+    public func changePageWith(page page: Int, andFragment fragment: String, animated: Bool = false, completion: (() -> Void)? = nil) {
         if currentPageNumber == page {
             if fragment != "" && currentPage != nil {
                 currentPage.handleAnchor(fragment, avoidBeginningAnchors: true, animated: animated)
@@ -695,7 +702,8 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     public func skipToFirstPage() {
-        changePageWith(page: 1)
+//        changePageWith(page: 1)
+        changeToPage(1, scrolling: false)
     }
     
     public func skipPageForward(skipMode: FolioReaderSkipPageMode = .hybrid) {
@@ -713,14 +721,14 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
                 currentPage.scrollPageToOffset(currentOffset.x + pageSize, animated: true)
             } else if nextPageNumber <= totalPages {
                 print("scrolling collectionView \(currentPageNumber)\(totalPages) next: \(nextPageNumber)")
-                changePageWith(page: nextPageNumber)
+                changeToPage(nextPageNumber, scrolling: false)
             }
             break
         case .chapter:
             guard nextPageNumber <= totalPages else { return }
             
             print("scrolling collectionView \(currentPageNumber)\(totalPages) next: \(nextPageNumber)")
-            changePageWith(page: nextPageNumber)
+            changeToPage(nextPageNumber, scrolling: false)
             // TODO: pageDidChanged
             
             break
@@ -732,7 +740,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             let pageState = ReaderState(current: webViewPage + 1, total: totalWebviewPages)
             FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
             currentPage.scrollPageToOffset(currentOffset.x + pageSize, duration: 0.1)
-//            currentPage.scrollPageToOffset(currentOffset.x + pageSize, animated: true)
             
             break
         }
@@ -753,14 +760,14 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
                 currentPage.scrollPageToOffset(currentOffset.x - pageSize, animated: true)
             } else if previousPageNumber >= 1 {
                 print("scrolling collectionView \(currentPageNumber)\(totalPages) previous: \(previousPageNumber)")
-                changePageWith(page: previousPageNumber)
+                changeToPage(previousPageNumber, scrolling: true)
             }
             break
         case .chapter:
             guard previousPageNumber >= 1 else { return }
             
             print("scrolling collectionView \(currentPageNumber)\(totalPages) previous: \(previousPageNumber)")
-            changePageWith(page: previousPageNumber)
+            changeToPage(previousPageNumber, scrolling: false)
             // TODO: pageDidChanged
             
             break
@@ -784,11 +791,42 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             return
         }
         
+        self.pointNow = self.collectionView.contentOffset
+        // isScrolling = true
         UIView.animateWithDuration(animated ? 0.3 : 0, delay: 0, options: .CurveEaseInOut, animations: { () -> Void in
             self.collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: .direction(), animated: false)
         }) { (finished: Bool) -> Void in
             completion?()
         }
+    }
+    
+    func changeToPage(page: Int, scrolling: Bool = true, animated: Bool = false, completion: (() -> Void)? = nil) {
+        if page > 0 && page-1 < totalPages {
+            let indexPath = NSIndexPath(forRow: page-1, inSection: 0)
+            changeToPage(atIndexPath: indexPath, scrolling: scrolling, animated: animated, completion: { () -> Void in
+                self.updateCurrentPage({ () -> Void in
+                    completion?()
+                })
+            })
+        }
+    }
+    
+    func changeToPage(atIndexPath indexPath: NSIndexPath, scrolling: Bool = true, animated: Bool = false, completion: (() -> Void)? = nil) {
+        guard indexPathIsValid(indexPath) else {
+            print("ERROR: Attempt to scroll at invalid index path")
+            completion?()
+            return
+        }
+        
+        pointNow = collectionView.contentOffset
+        isScrolling = scrolling
+        
+        UIView.animateWithDuration(animated ? 0.3 : 0, delay: 0, options: .CurveEaseInOut, animations: {
+            self.collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: .direction(), animated: false)
+        }) { (finished: Bool) -> Void in
+            completion?()
+        }
+        
     }
     
     func indexPathIsValid(indexPath: NSIndexPath) -> Bool {
@@ -888,7 +926,16 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     func audioMark(href href: String, fragmentID: String) {
         changePageWith(href: href, andAudioMarkID: fragmentID)
     }
-
+    
+    // MARK: - Highlight
+    
+    public func removeHighlight(withId highlightId: String) {
+        Highlight.removeById(highlightId)
+        Highlight.removeFromHTMLById(highlightId)
+        
+        FolioReader.sharedInstance.readerContainer.highlightWasRemoved(highlightId)
+    }
+    
     // MARK: - Sharing
     
     /**
@@ -1043,10 +1090,11 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         }
         
         scrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
+//        print("direction: \(scrollDirection)")
     }
     
     public func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
-        isScrolling = false
+//        isScrolling = false
         
         if scrollView is UICollectionView {
             if totalPages > 0 { updateCurrentPage() }

@@ -113,7 +113,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     func loadHTMLString(string: String!, baseURL: NSURL!) {
-//        print("Page.\(#function)")
         var html = (string as NSString)
         
         // Restore highlights
@@ -144,7 +143,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: - UIWebView Delegate
     
     func webViewDidFinishLoad(webView: UIWebView) {
-//        print("Page.\(#function)")
         refreshPageMode()
         
         if readerConfig.enableTTS && !book.hasAudio() {
@@ -161,12 +159,16 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 CGPointMake(webView.scrollView.contentSize.width - webView.scrollView.bounds.width, 0)
             )
             
+            print("bottomOffset: \(bottomOffset)")
+            
             if bottomOffset.forDirection() >= 0 {
                 dispatch_async(dispatch_get_main_queue(), {
                     webView.scrollView.setContentOffset(bottomOffset, animated: false)
                 })
             }
         }
+        
+        isScrolling = false
         
         UIView.animateWithDuration(0.2, animations: {webView.alpha = 1}) { finished in
             webView.isColors = false
@@ -300,8 +302,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 } else if tapLocation.x >= upperTapThreshold {
                     shouldSkipForward = true
                     seconds = 0.1
-                } else if shouldShowBar && !menuIsVisibleRef {
-                    shouldPresentMenu = true
                 }
                 
                 let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
@@ -315,12 +315,12 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                         } else if shouldSkipForward {
                             print("[INFO] - Next")
                             FolioReader.sharedInstance.readerCenter.skipPageForward()
-                        } else if shouldPresentMenu {
+                        } else if self.shouldShowBar && !menuIsVisibleRef {
                             print("[INFO] - Toggle")
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
                     } else {
-                        if shouldPresentMenu {
+                        if self.shouldShowBar && !menuIsVisibleRef {
                             print("[INFO] - Toggle")
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
