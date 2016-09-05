@@ -1207,7 +1207,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
 extension FolioReaderCenter: FolioReaderPageDelegate {
     
     func pageDidLoad(page: FolioReaderPage) {
-        print("[INFO] - Page Did Load")
         if let position = FolioReader.defaults.valueForKey(kBookId) as? NSDictionary {
             let pageNumber = position["pageNumber"]! as! Int
             var pageOffset: CGFloat = 0

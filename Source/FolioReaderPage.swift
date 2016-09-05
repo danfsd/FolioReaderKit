@@ -282,7 +282,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         let tapLocation = recognizer.locationInView(recognizer.view)
         let lowerTapThreshold = self.webView.frame.size.width * 0.20
         let upperTapThreshold = self.webView.frame.size.width * 0.80
-        print("tap location 1 \(tapLocation)")
         
         if FolioReader.sharedInstance.readerCenter.navigationController!.navigationBarHidden {
             let menuIsVisibleRef = menuIsVisible
@@ -309,19 +308,14 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 
                 dispatch_after(dispatchTime, dispatch_get_main_queue(), {
                     if readerConfig.shouldSkipPagesOnEdges {
-                        if shouldSkipBackward {
-                            print("[INFO] - Back")
-                            FolioReader.sharedInstance.readerCenter.skipPageBackward()
+                        if shouldSkipBackward {                            FolioReader.sharedInstance.readerCenter.skipPageBackward()
                         } else if shouldSkipForward {
-                            print("[INFO] - Next")
                             FolioReader.sharedInstance.readerCenter.skipPageForward()
                         } else if self.shouldShowBar && !menuIsVisibleRef {
-                            print("[INFO] - Toggle")
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
                     } else {
                         if self.shouldShowBar && !menuIsVisibleRef {
-                            print("[INFO] - Toggle")
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
                     }

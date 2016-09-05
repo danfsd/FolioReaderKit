@@ -136,10 +136,10 @@ public class FolioReaderBaseContainer: UIViewController {
             
             if fileManager.fileExistsAtPath(path, isDirectory: &isDir) {
                 if isDir {
-                    print("Epub loaded from dir")
+//                    print("Epub loaded from dir")
                     book = FREpubParser().readEpub(epubPath: path)
                 } else {
-                    print("Epub lodaded from file [shouldRemove=\(self.shouldRemoveEpub)]")
+//                    print("Epub lodaded from file [shouldRemove=\(self.shouldRemoveEpub)]")
                     book = FREpubParser().readEpub(epubPath: path, removeEpub: self.shouldRemoveEpub)
                 }
             } else {
