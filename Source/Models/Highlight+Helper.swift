@@ -136,6 +136,20 @@ extension Highlight {
         
     }
     
+    public static func findByHighlightId(highlightId: String) -> Highlight? {
+        var highlight: Highlight?
+        
+        let predicate = NSPredicate(format: "highlightId = %@", highlightId)
+        let realm = try! Realm()
+        let highlights = realm.objects(Highlight).filter(predicate).toArray(Highlight)
+        
+        if highlights.count > 0 {
+            return highlights[0]
+        }
+        
+        return highlight
+    }
+    
     public static func allByBookId(bookId: String, andPage page: NSNumber? = nil) -> [Highlight] {
         var highlights: [Highlight]?
         let predicate = (page != nil) ? NSPredicate(format: "bookId = %@ && page = %@", bookId, page!) : NSPredicate(format: "bookId = %@", bookId)

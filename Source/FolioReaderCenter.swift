@@ -18,7 +18,6 @@ var nextPageNumber: Int!
 var scrollDirection = ScrollDirection()
 var isScrolling = false
 
-// TODO: rename later
 public typealias ReaderState = (current: Int, total: Int)
 
 public enum FolioReaderSkipPageMode: Int {
@@ -116,6 +115,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     var tempFragment: String?
     
     var currentPage: FolioReaderPage!
+    var highlightsToSync: [Highlight]?
     public var delegate: FolioReaderCenterDelegate?
     var animator: ZFModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator!
@@ -928,6 +928,14 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     // MARK: - Highlight
+    
+    public func synchronizeHighlights(highlights: [Highlight]) {
+        if let page = currentPage {
+            currentPage.insertHighlights(highlights)
+        } else {
+            highlightsToSync = highlights
+        }
+    }
     
     public func removeHighlight(withId highlightId: String) {
         Highlight.removeById(highlightId)

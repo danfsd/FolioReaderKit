@@ -25,6 +25,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     weak var delegate: FolioReaderPageDelegate?
     var pageNumber: Int!
     var webView: UIWebView!
+    var baseURL: NSURL!
     private var colorView: UIView!
     private var shouldShowBar = true
     private var menuIsVisible = false
@@ -112,9 +113,67 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         return newFrame
     }
     
+    public func createBoldTag() {
+        let currentHtml = webView.js("document.documentElement.outerHTML") as! NSString
+        
+        let pre = "1930, quando foram criadas as "
+        let content = "Caixas de Aposentadoria e Pensão (CAPs)"
+        let pos = ", que proviam pensões, aposent"
+        let tag = "<b>\(content)</b>"
+        
+        let locator = pre + content + pos
+        let range: NSRange = currentHtml.rangeOfString(locator, options: .LiteralSearch)
+        
+        if range.location != NSNotFound {
+            let newRange = NSRange(location: range.location + pre.characters.count, length: content.characters.count)
+            let newHtml = currentHtml.stringByReplacingCharactersInRange(newRange, withString: tag)
+            webView.loadHTMLString(newHtml as String, baseURL: baseURL)
+        }
+    }
+    
+    public func insertHighlights(highlights: [Highlight]) {
+        let currentHtml = webView.js("document.documentElement.outerHTML") as! NSString
+        var newHtml = currentHtml.copy() as! NSString
+        var didChanged = false
+        
+        for highlight in highlights {
+            if let _ = Highlight.findByHighlightId(highlight.highlightId) {
+                print("Found highlight with id \(highlight.highlightId), skipping...")
+            } else {
+                if highlight.page != pageNumber {
+                    print("Didn't found highlight with id \(highlight.highlightId) but it's from another page: \(highlight.page)")
+                } else {
+                    print("Didn't found highlight with id \(highlight.highlightId). Adding it to the new HTML...")
+                    let highlightTag = createHighlightTag(highlight)
+                    let range: NSRange = newHtml.rangeOfString(highlightTag.locator, options: .LiteralSearch)
+                    if range.location != NSNotFound {
+                        let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
+                        newHtml = newHtml.stringByReplacingCharactersInRange(newRange, withString: highlightTag.tag)
+                    }
+                    
+                    highlight.persist()
+                    didChanged = true
+                }
+            }
+        }
+        
+        if didChanged {
+            webView.loadHTMLString(newHtml as String, baseURL: baseURL)
+        }
+    }
+    
+    func createHighlightTag(highlight: Highlight) -> (tag: String, locator: String) {
+        let style = HighlightStyle.classForStyle(highlight.type)
+        let tag = "<highlight id=\"\(highlight.highlightId)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content)</highlight>"
+        var locator = highlight.contentPre + highlight.content + highlight.contentPost
+        locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
+        
+        return (tag: tag, locator: locator)
+    }
+    
     func loadHTMLString(string: String!, baseURL: NSURL!) {
         var html = (string as NSString)
-        
+        self.baseURL = baseURL
         // Restore highlights
         let highlights = Highlight.allByBookId((kBookId as NSString).stringByDeletingPathExtension, andPage: pageNumber)
         
@@ -175,6 +234,11 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             self.webView.createMenu(options: false)
         }
 
+//        createBoldTag()
+        if let highlightsToSync = FolioReader.sharedInstance.readerCenter.highlightsToSync {
+            insertHighlights(highlightsToSync)
+        }
+        
         delegate?.pageDidLoad(self)
     }
     

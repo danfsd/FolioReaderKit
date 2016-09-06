@@ -42,8 +42,6 @@ public class FolioReaderNavigationController: UINavigationController {
     override public init(rootViewController: UIViewController) {
         super.init(rootViewController: rootViewController)
         
-        // TODO: setup folioreadernavigationbar
-        
         if navigationConfig.shouldUseCustomNavigationBar {
             createNavigationBar()
         }
@@ -52,7 +50,6 @@ public class FolioReaderNavigationController: UINavigationController {
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
-        // TODO: setup folioreadernavigationbar
         if navigationConfig.shouldUseCustomNavigationBar {
             createNavigationBar()
         }
@@ -61,7 +58,6 @@ public class FolioReaderNavigationController: UINavigationController {
     override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         
-        // TODO: setup folioreadernavigationbar
         if navigationConfig.shouldUseCustomNavigationBar {
             createNavigationBar()
         }
@@ -70,7 +66,6 @@ public class FolioReaderNavigationController: UINavigationController {
     override public init(navigationBarClass: AnyClass?, toolbarClass: AnyClass?) {
         super.init(navigationBarClass: navigationBarClass, toolbarClass: toolbarClass)
         
-        // TODO: setup folioreadernavigationbar
         if navigationConfig.shouldUseCustomNavigationBar {
             createNavigationBar()
         }
@@ -81,7 +76,6 @@ public class FolioReaderNavigationController: UINavigationController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         
-//         TODO: setupNavigationBar
         if navigationConfig.shouldUseCustomNavigationBar {
             setupNavigationBar()
         }
@@ -89,7 +83,6 @@ public class FolioReaderNavigationController: UINavigationController {
     
     override public func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // TODO: clean memory
     }
     
     // MARK: - Setup
@@ -149,14 +142,12 @@ class FolioReaderNavigationBar: UINavigationBar {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        // TODO: if custom height => initialize()
         initialize()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         
-        // TODO: if custom height => initialize()
         initialize()
     }
     
@@ -177,7 +168,6 @@ class FolioReaderNavigationBar: UINavigationBar {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        // TODO: if custom height => setup frame
         let shift = FolioReaderNavigationBar.heightIncrease / 2
         
         ///Move the background down for [shift] point
