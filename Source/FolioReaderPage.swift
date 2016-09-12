@@ -132,33 +132,34 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     public func insertHighlights(highlights: [Highlight]) {
-        let currentHtml = webView.js("document.documentElement.outerHTML") as! NSString
-        var newHtml = currentHtml.copy() as! NSString
-        var didChanged = false
-        
-        for highlight in highlights {
-            if let _ = Highlight.findByHighlightId(highlight.highlightId) {
-                print("Found highlight with id \(highlight.highlightId), skipping...")
-            } else {
-                if highlight.page != pageNumber {
-                    print("Didn't found highlight with id \(highlight.highlightId) but it's from another page: \(highlight.page)")
+        if let currentHtml = webView.js("document.documentElement.outerHTML") as? NSString {
+            var newHtml = currentHtml.copy() as! NSString
+            var didChanged = false
+            
+            for highlight in highlights {
+                if let _ = Highlight.findByHighlightId(highlight.highlightId) {
+                    print("Found highlight with id \(highlight.highlightId), skipping...")
                 } else {
-                    print("Didn't found highlight with id \(highlight.highlightId). Adding it to the new HTML...")
-                    let highlightTag = createHighlightTag(highlight)
-                    let range: NSRange = newHtml.rangeOfString(highlightTag.locator, options: .LiteralSearch)
-                    if range.location != NSNotFound {
-                        let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
-                        newHtml = newHtml.stringByReplacingCharactersInRange(newRange, withString: highlightTag.tag)
+                    if highlight.page != pageNumber {
+                        print("Didn't found highlight with id \(highlight.highlightId) but it's from another page: \(highlight.page)")
+                    } else {
+                        print("Didn't found highlight with id \(highlight.highlightId). Adding it to the new HTML...")
+                        let highlightTag = createHighlightTag(highlight)
+                        let range: NSRange = newHtml.rangeOfString(highlightTag.locator, options: .LiteralSearch)
+                        if range.location != NSNotFound {
+                            let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
+                            newHtml = newHtml.stringByReplacingCharactersInRange(newRange, withString: highlightTag.tag)
+                        }
+                        
+                        highlight.persist()
+                        didChanged = true
                     }
-                    
-                    highlight.persist()
-                    didChanged = true
                 }
             }
-        }
-        
-        if didChanged {
-            webView.loadHTMLString(newHtml as String, baseURL: baseURL)
+            
+            if didChanged {
+                webView.loadHTMLString(newHtml as String, baseURL: baseURL)
+            }
         }
     }
     
