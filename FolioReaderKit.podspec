@@ -34,7 +34,7 @@ Pod::Spec.new do |s|
   s.dependency 'SSZipArchive'
   s.dependency 'UIMenuItem-CXAImageSupport'
   s.dependency 'ZFDragableModalTransition'
-  s.dependency 'AEXML'
+  s.dependency 'AEXML', '~> 3.0.0'
   s.dependency 'FontBlaster'
   s.dependency 'JSQWebViewController'
   s.dependency 'RealmSwift'

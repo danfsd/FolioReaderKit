@@ -714,7 +714,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         switch skipMode {
         case .hybrid:
             if webViewPage < totalWebviewPages {
-                print("scrolling webview \(webViewPage)/\(totalPages)")
+                print("scrolling webview \(webViewPage)/\(totalWebviewPages)")
                 let currentOffset = currentPage.webView.scrollView.contentOffset
                 let pageState = ReaderState(current: webViewPage + 1, total: totalWebviewPages)
                 FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
