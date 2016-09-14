@@ -268,6 +268,14 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         currentPageNumber = 1
     }
     
+    override public func shouldAutorotate() -> Bool {
+        return true
+    }
+    
+    override public func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
+        return UIInterfaceOrientationMask.AllButUpsideDown
+    }
+    
     // MARK: Status bar and Navigation bar
     
     func hideBars() {
@@ -450,6 +458,14 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         scrollScrubberFrame.origin.x = pageWidth + 10
         scrollScrubberFrame.size.height = pageHeight - 100
         
+        // Adjust collectionView
+        self.collectionView.contentSize = isVerticalDirection(
+            CGSize(width: pageWidth, height: pageHeight * CGFloat(self.totalPages)),
+            CGSize(width: pageWidth * CGFloat(self.totalPages), height: pageHeight)
+        )
+        self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
+        self.collectionView.collectionViewLayout.invalidateLayout()
+        
         UIView.animateWithDuration(duration, animations: {
             
             // Adjust page indicator view
@@ -460,12 +476,12 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             self.scrollScrubber.slider.frame = scrollScrubberFrame
             
             // Adjust collectionView
-            self.collectionView.contentSize = isVerticalDirection(
-                CGSize(width: pageWidth, height: pageHeight * CGFloat(self.totalPages)),
-                CGSize(width: pageWidth * CGFloat(self.totalPages), height: pageHeight)
-            )
-            self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
-            self.collectionView.collectionViewLayout.invalidateLayout()
+//            self.collectionView.contentSize = isVerticalDirection(
+//                CGSize(width: pageWidth, height: pageHeight * CGFloat(self.totalPages)),
+//                CGSize(width: pageWidth * CGFloat(self.totalPages), height: pageHeight)
+//            )
+//            self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
+//            self.collectionView.collectionViewLayout.invalidateLayout()
             
             // Adjust internal page offset
             let pageScrollView = self.currentPage.webView.scrollView
@@ -1067,6 +1083,12 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         recentlyScrolled = true
         pointNow = scrollView.contentOffset
         
+        currentPage.webView.scrollView.userInteractionEnabled = false
+        collectionView.userInteractionEnabled = false
+        
+//        scrollView.userInteractionEnabled = false
+        print("\(#function): \(scrollView is UICollectionView ? "chapter" : "page")'s interaction is \(scrollView.userInteractionEnabled ? "enabled" : "disabled")")
+        
         if let currentPage = currentPage {
             currentPage.webView.createMenu(options: true)
             currentPage.webView.setMenuVisible(false)
@@ -1102,8 +1124,11 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     }
     
     public func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
-//        isScrolling = false
+        currentPage.webView.scrollView.userInteractionEnabled = true
+        collectionView.userInteractionEnabled = true
         
+//        scrollView.userInteractionEnabled = true
+//        print("\(#function): \(scrollView is UICollectionView ? "chapter" : "page")'s interaction is \(scrollView.userInteractionEnabled ? "enabled" : "disabled")")
         if scrollView is UICollectionView {
             if totalPages > 0 { updateCurrentPage() }
         } else {

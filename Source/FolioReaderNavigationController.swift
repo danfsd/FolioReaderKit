@@ -85,6 +85,14 @@ public class FolioReaderNavigationController: UINavigationController {
         super.didReceiveMemoryWarning()
     }
     
+    override public func shouldAutorotate() -> Bool {
+        return visibleViewController!.shouldAutorotate()
+    }
+    
+    override public func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
+        return visibleViewController!.supportedInterfaceOrientations()
+    }
+    
     // MARK: - Setup
     
     private func createNavigationBar() {
