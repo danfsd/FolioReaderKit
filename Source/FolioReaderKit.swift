@@ -23,6 +23,8 @@ internal let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
 internal let kCurrentAudioRate = "com.folioreader.kCurrentAudioRate"
 internal let kCurrentHighlightStyle = "com.folioreader.kCurrentHighlightStyle"
 internal var kCurrentMediaOverlayStyle = "com.folioreader.kMediaOverlayStyle"
+// TODO: add last offset for orientation
+
 internal let kNightMode = "com.folioreader.kNightMode"
 internal let kCurrentTOCMenu = "com.folioreader.kCurrentTOCMenu"
 internal let kMigratedToRealm = "com.folioreader.kMigratedToRealm"

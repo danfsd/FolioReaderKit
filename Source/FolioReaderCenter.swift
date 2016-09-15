@@ -130,6 +130,8 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
     private var pointNow = CGPointZero
     private let pageIndicatorHeight: CGFloat = 20
     private var pageOffsetRate: CGFloat = 0
+    private var internalOffsetPortrait: CGPoint?
+    private var internalOffsetLandscape: CGPoint?
     private var tempReference: FRTocReference?
     private var isFirstLoad = true
     
@@ -458,14 +460,6 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         scrollScrubberFrame.origin.x = pageWidth + 10
         scrollScrubberFrame.size.height = pageHeight - 100
         
-        // Adjust collectionView
-        self.collectionView.contentSize = isVerticalDirection(
-            CGSize(width: pageWidth, height: pageHeight * CGFloat(self.totalPages)),
-            CGSize(width: pageWidth * CGFloat(self.totalPages), height: pageHeight)
-        )
-        self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
-        self.collectionView.collectionViewLayout.invalidateLayout()
-        
         UIView.animateWithDuration(duration, animations: {
             
             // Adjust page indicator view
@@ -476,17 +470,32 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             self.scrollScrubber.slider.frame = scrollScrubberFrame
             
             // Adjust collectionView
-//            self.collectionView.contentSize = isVerticalDirection(
-//                CGSize(width: pageWidth, height: pageHeight * CGFloat(self.totalPages)),
-//                CGSize(width: pageWidth * CGFloat(self.totalPages), height: pageHeight)
-//            )
-//            self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
-//            self.collectionView.collectionViewLayout.invalidateLayout()
+            self.collectionView.contentSize = isVerticalDirection(
+                CGSize(width: pageWidth, height: pageHeight * CGFloat(self.totalPages)),
+                CGSize(width: pageWidth * CGFloat(self.totalPages), height: pageHeight)
+            )
+            self.collectionView.setContentOffset(self.frameForPage(currentPageNumber).origin, animated: false)
+            self.collectionView.collectionViewLayout.invalidateLayout()
             
             // Adjust internal page offset
             let pageScrollView = self.currentPage.webView.scrollView
+            
+            // Salvando o offset da orientação atual
+            self.saveOffset(forOrientation: self.interfaceOrientation, offset: pageScrollView.contentOffset)
             self.pageOffsetRate = pageScrollView.contentOffset.forDirection() / pageScrollView.contentSize.forDirection()
         })
+    }
+    
+    func saveOffset(forOrientation orientation: UIInterfaceOrientation, offset: CGPoint?) {
+        if orientation.isPortrait {
+            internalOffsetPortrait = offset
+        } else {
+            internalOffsetLandscape = offset
+        }
+    }
+    
+    func internalOffset(forOrientation orientation: UIInterfaceOrientation) -> CGPoint? {
+        return orientation.isPortrait ? internalOffsetPortrait : internalOffsetLandscape
     }
     
     override public func didRotateFromInterfaceOrientation(fromInterfaceOrientation: UIInterfaceOrientation) {
@@ -498,7 +507,15 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         scrollScrubber.setSliderVal()
         
         // After rotation fix internal page offset
-        var pageOffset = self.currentPage.webView.scrollView.contentSize.forDirection() * pageOffsetRate
+        // var pageOffset = self.currentPage.webView.scrollView.contentSize.forDirection() * pageOffsetRate
+        var pageOffset: CGFloat!
+        if let previousOffset = internalOffset(forOrientation: interfaceOrientation) {
+            pageOffset = previousOffset.forDirection()
+            print("Using previous \(interfaceOrientation.isPortrait ? "portrait" : "landscape") offset: \(pageOffset)")
+        } else {
+            pageOffset = self.currentPage.webView.scrollView.contentSize.forDirection() * pageOffsetRate
+            print("Using offset rate for \(interfaceOrientation.isPortrait ? "portrait" : "landscape") orientation: \(pageOffset)")
+        }
         
         // Fix the offset for paged scroll
         if readerConfig.scrollDirection == .horizontal {
@@ -1083,11 +1100,9 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         recentlyScrolled = true
         pointNow = scrollView.contentOffset
         
+        // Disallowing user to scroll
         currentPage.webView.scrollView.userInteractionEnabled = false
         collectionView.userInteractionEnabled = false
-        
-//        scrollView.userInteractionEnabled = false
-        print("\(#function): \(scrollView is UICollectionView ? "chapter" : "page")'s interaction is \(scrollView.userInteractionEnabled ? "enabled" : "disabled")")
         
         if let currentPage = currentPage {
             currentPage.webView.createMenu(options: true)
@@ -1120,15 +1135,19 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
         }
         
         scrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
-//        print("direction: \(scrollDirection)")
     }
     
     public func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+        
+        // Removing offsets for orientations
+        print("Removing offsets for both orientations")
+        saveOffset(forOrientation: .Portrait, offset: nil)
+        saveOffset(forOrientation: .LandscapeLeft, offset: nil)
+        
+        // Allowing user to scroll again
         currentPage.webView.scrollView.userInteractionEnabled = true
         collectionView.userInteractionEnabled = true
         
-//        scrollView.userInteractionEnabled = true
-//        print("\(#function): \(scrollView is UICollectionView ? "chapter" : "page")'s interaction is \(scrollView.userInteractionEnabled ? "enabled" : "disabled")")
         if scrollView is UICollectionView {
             if totalPages > 0 { updateCurrentPage() }
         } else {
