@@ -2,5 +2,5 @@ github "ZipArchive/ZipArchive"
 github "danfsd/UIMenuItem-CXAImageSupport"
 github "jessesquires/JSQWebViewController"
 github "alexpopov/ZFDragableModalTransition" "merge-carthage-into-zoonooz"
-github "tadija/AEXML" ~> 3.0
+github "tadija/AEXML" ~> 4.0
 github "ArtSabintsev/FontBlaster"
