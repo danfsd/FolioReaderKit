@@ -8,7 +8,7 @@
 
 import UIKit
 
-public class FolioReaderContainer: FolioReaderBaseContainer {
+open class FolioReaderContainer: FolioReaderBaseContainer {
     
     // MARK: - Init
     
@@ -23,25 +23,25 @@ public class FolioReaderContainer: FolioReaderBaseContainer {
     
     // MARK: - View life cicle
     
-    override public func viewDidLoad() {
+    override open func viewDidLoad() {
         super.viewDidLoad()
     }
     
-    override public func viewDidAppear(animated: Bool) {
+    override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
     }
     
     // MARK: - Status Bar
     
-    override public func prefersStatusBarHidden() -> Bool {
+    override open var prefersStatusBarHidden : Bool {
         return readerConfig.shouldHideNavigationOnTap == false ? false : shouldHideStatusBar
     }
     
-    override public func preferredStatusBarUpdateAnimation() -> UIStatusBarAnimation {
-        return UIStatusBarAnimation.Slide
+    override open var preferredStatusBarUpdateAnimation : UIStatusBarAnimation {
+        return UIStatusBarAnimation.slide
     }
     
-    override public func preferredStatusBarStyle() -> UIStatusBarStyle {
-        return isNight(.LightContent, .Default)
+    override open var preferredStatusBarStyle : UIStatusBarStyle {
+        return isNight(.lightContent, .default)
     }
 }

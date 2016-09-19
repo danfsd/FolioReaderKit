@@ -14,7 +14,7 @@ class FRResources: NSObject {
     /**
      Adds a resource to the resources.
     */
-    func add(resource: FRResource) {
+    func add(_ resource: FRResource) {
         self.resources[resource.href] = resource
     }
     
@@ -50,7 +50,7 @@ class FRResources: NSObject {
     /**
      Whether there exists a resource with the given href.
     */
-    func containsByHref(href: String) -> Bool {
+    func containsByHref(_ href: String) -> Bool {
         if href.isEmpty {
             return false
         }
@@ -61,7 +61,7 @@ class FRResources: NSObject {
     /**
      Whether there exists a resource with the given id.
     */
-    func containsById(id: String) -> Bool {
+    func containsById(_ id: String) -> Bool {
         if id.isEmpty {
             return false
         }
@@ -77,7 +77,7 @@ class FRResources: NSObject {
     /**
      Gets the resource with the given href.
     */
-    func getByHref(href: String) -> FRResource? {
+    func getByHref(_ href: String) -> FRResource? {
         if href.isEmpty {
             return nil
         }
@@ -87,7 +87,7 @@ class FRResources: NSObject {
     /**
      Gets the resource with the given href.
     */
-    func getById(id: String) -> FRResource? {
+    func getById(_ id: String) -> FRResource? {
         for resource in resources.values {
             if resource.id == id {
                 return resource

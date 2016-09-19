@@ -10,32 +10,32 @@ import UIKit
 
 var navigationConfig: FolioReaderNavigationConfig!
 
-public class FolioReaderNavigationConfig: NSObject {
+open class FolioReaderNavigationConfig: NSObject {
     
     // TODO: fazer com que fique opcional no códigoß
-    private var titleViewImage: UIImage!
-    private var shouldUseTitleWithImage = false
+    fileprivate var titleViewImage: UIImage!
+    fileprivate var shouldUseTitleWithImage = false
     
-    private var shouldUseGradient = false
-    private var gradientStartColor: UIColor!
-    private var gradientEndColor: UIColor!
+    fileprivate var shouldUseGradient = false
+    fileprivate var gradientStartColor: UIColor!
+    fileprivate var gradientEndColor: UIColor!
     
-    public var shouldUseCustomNavigationBar = false
-    public var navigationBarHeight: CGFloat = 44.0
+    open var shouldUseCustomNavigationBar = false
+    open var navigationBarHeight: CGFloat = 44.0
     
-    public func setUseTitle(withImage image: UIImage) {
+    open func setUseTitle(withImage image: UIImage) {
         shouldUseTitleWithImage = true
         titleViewImage = image
     }
     
-    public func setUseGradient(startColor: UIColor, endColor: UIColor) {
+    open func setUseGradient(_ startColor: UIColor, endColor: UIColor) {
         shouldUseGradient = true
         gradientStartColor = startColor
         gradientEndColor = endColor
     }
 }
 
-public class FolioReaderNavigationController: UINavigationController {
+open class FolioReaderNavigationController: UINavigationController {
     
     // MARK: - Initializers
     
@@ -55,7 +55,7 @@ public class FolioReaderNavigationController: UINavigationController {
         }
     }
     
-    override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
+    override public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         
         if navigationConfig.shouldUseCustomNavigationBar {
@@ -73,7 +73,7 @@ public class FolioReaderNavigationController: UINavigationController {
     
     // MARK: - View life cycle
     
-    override public func viewDidLoad() {
+    override open func viewDidLoad() {
         super.viewDidLoad()
         
         if navigationConfig.shouldUseCustomNavigationBar {
@@ -81,56 +81,56 @@ public class FolioReaderNavigationController: UINavigationController {
         }
     }
     
-    override public func didReceiveMemoryWarning() {
+    override open func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
     
-    override public func shouldAutorotate() -> Bool {
-        return visibleViewController!.shouldAutorotate()
+    override open var shouldAutorotate : Bool {
+        return visibleViewController!.shouldAutorotate
     }
     
-    override public func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
-        return visibleViewController!.supportedInterfaceOrientations()
+    override open var supportedInterfaceOrientations : UIInterfaceOrientationMask {
+        return visibleViewController!.supportedInterfaceOrientations
     }
     
     // MARK: - Setup
     
-    private func createNavigationBar() {
+    fileprivate func createNavigationBar() {
         let navigationBar = FolioReaderNavigationBar()
         navigationBar.topItem?.title = title
         setValue(navigationBar, forKey: "navigationBar")
     }
     
-    public func setupNavigationBar() {
+    open func setupNavigationBar() {
         if navigationConfig.shouldUseTitleWithImage {
-            let imageView = UIImageView(frame: CGRectMake(0, 0, 105.0, 20.0))
+            let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 105.0, height: 20.0))
             imageView.image = navigationConfig.titleViewImage
-            imageView.contentMode = .ScaleAspectFit
+            imageView.contentMode = .scaleAspectFit
             navigationBar.topItem?.titleView = imageView
         }
         
-        navigationBar.tintColor = UIColor.whiteColor()
+        navigationBar.tintColor = UIColor.white
         
         if navigationConfig.shouldUseGradient {
             setupGradientBackground()
         }
     }
     
-    public func setupGradientBackground() {
+    open func setupGradientBackground() {
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = navigationBar.bounds
-        gradientLayer.colors = [navigationConfig.gradientStartColor!, navigationConfig.gradientEndColor!].map{ $0.CGColor }
+        gradientLayer.colors = [navigationConfig.gradientStartColor!, navigationConfig.gradientEndColor!].map{ $0.cgColor }
         gradientLayer.startPoint = CGPoint(x: 0.0, y: 0.0)
         gradientLayer.endPoint = CGPoint(x: 1.0, y: 0.0)
         
         // Render the gradient to UIImage
         UIGraphicsBeginImageContext(gradientLayer.bounds.size)
-        gradientLayer.renderInContext(UIGraphicsGetCurrentContext()!)
+        gradientLayer.render(in: UIGraphicsGetCurrentContext()!)
         let image = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         
         // Set the UIImage as background property
-        navigationBar.setBackgroundImage(image, forBarMetrics: UIBarMetrics.Default)
+        navigationBar.setBackgroundImage(image, for: UIBarMetrics.default)
     }
     
 }
@@ -159,12 +159,12 @@ class FolioReaderNavigationBar: UINavigationBar {
         initialize()
     }
     
-    private func initialize() {
+    fileprivate func initialize() {
         let shift = FolioReaderNavigationBar.heightIncrease / 2
         
         ///Transform all view to shift upward for [shift] point
         self.transform =
-            CGAffineTransformMakeTranslation(0, -shift)
+            CGAffineTransform(translationX: 0, y: -shift)
     }
     
     // MARK: - View life cycle
@@ -181,7 +181,7 @@ class FolioReaderNavigationBar: UINavigationBar {
         ///Move the background down for [shift] point
         let classNamesToReposition: [String] = ["_UINavigationBarBackground"]
         for view: UIView in self.subviews {
-            if classNamesToReposition.contains(NSStringFromClass(view.dynamicType)) {
+            if classNamesToReposition.contains(NSStringFromClass(type(of: view))) {
                 let bounds: CGRect = self.bounds
                 var frame: CGRect = view.frame
                 frame.origin.y = bounds.origin.y + shift - 20.0
@@ -191,8 +191,8 @@ class FolioReaderNavigationBar: UINavigationBar {
         }
     }
     
-    override func sizeThatFits(size: CGSize) -> CGSize {
-        return CGSizeMake(UIScreen.mainScreen().bounds.width, FolioReaderNavigationBar.navigationBarHeight)
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
+        return CGSize(width: UIScreen.main.bounds.width, height: FolioReaderNavigationBar.navigationBarHeight)
     }
     
 }

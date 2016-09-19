@@ -95,7 +95,7 @@ class FRMetadata: NSObject {
     var rights = [String]()
     var metaAttributes = [Meta]()
     
-    func findMetaByName(name: String) -> String? {
+    func findMetaByName(_ name: String) -> String? {
         if name.isEmpty {
             return nil
         }
@@ -110,7 +110,7 @@ class FRMetadata: NSObject {
         return nil
     }
 
-    func findMetaByProperty(property: String, refinedBy: String?) -> String? {
+    func findMetaByProperty(_ property: String, refinedBy: String?) -> String? {
         if property.isEmpty {
             return nil
         }
@@ -128,7 +128,7 @@ class FRMetadata: NSObject {
         return nil
     }
 
-    func findMetaByProperty(property: String) -> String? {
+    func findMetaByProperty(_ property: String) -> String? {
         return findMetaByProperty(property, refinedBy: nil);
     }
 

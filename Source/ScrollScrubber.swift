@@ -7,16 +7,36 @@
 //
 
 import UIKit
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 enum ScrollDirection: Int {
-    case None
-    case Right
-    case Left
-    case Up
-    case Down
+    case none
+    case right
+    case left
+    case up
+    case down
     
     init() {
-        self = .None
+        self = .none
     }
 }
 
@@ -30,17 +50,17 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     var visible = false
     var usingSlider = false
     var slider: UISlider!
-    var hideTimer: NSTimer!
+    var hideTimer: Timer!
     var scrollStart: CGFloat!
     var scrollDelta: CGFloat!
-    var scrollDeltaTimer: NSTimer!
+    var scrollDeltaTimer: Timer!
     
     init(frame:CGRect) {
         super.init()
         
         slider = UISlider()
         slider.layer.anchorPoint = CGPoint(x: 0, y: 0)
-        slider.transform = CGAffineTransformMakeRotation(CGFloat(M_PI_2))
+        slider.transform = CGAffineTransform(rotationAngle: CGFloat(M_PI_2))
         slider.frame = frame
         slider.alpha = 0
         
@@ -48,15 +68,15 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
         
         // less obtrusive knob and fixes jump: http://stackoverflow.com/a/22301039/484780
         let thumbImg = UIImage(readerImageNamed: "knob")
-        let thumbImgColor = thumbImg!.imageTintColor(readerConfig.tintColor).imageWithRenderingMode(.AlwaysOriginal)
-        slider.setThumbImage(thumbImgColor, forState: .Normal)
-        slider.setThumbImage(thumbImgColor, forState: .Selected)
-        slider.setThumbImage(thumbImgColor, forState: .Highlighted)
+        let thumbImgColor = thumbImg!.imageTintColor(readerConfig.tintColor).withRenderingMode(.alwaysOriginal)
+        slider.setThumbImage(thumbImgColor, for: .normal)
+        slider.setThumbImage(thumbImgColor, for: .selected)
+        slider.setThumbImage(thumbImgColor, for: .highlighted)
         
-        slider.addTarget(self, action: #selector(ScrollScrubber.sliderChange(_:)), forControlEvents: .ValueChanged)
-        slider.addTarget(self, action: #selector(ScrollScrubber.sliderTouchDown(_:)), forControlEvents: .TouchDown)
-        slider.addTarget(self, action: #selector(ScrollScrubber.sliderTouchUp(_:)), forControlEvents: .TouchUpInside)
-        slider.addTarget(self, action: #selector(ScrollScrubber.sliderTouchUp(_:)), forControlEvents: .TouchUpOutside)
+        slider.addTarget(self, action: #selector(ScrollScrubber.sliderChange(_:)), for: .valueChanged)
+        slider.addTarget(self, action: #selector(ScrollScrubber.sliderTouchDown(_:)), for: .touchDown)
+        slider.addTarget(self, action: #selector(ScrollScrubber.sliderTouchUp(_:)), for: .touchUpInside)
+        slider.addTarget(self, action: #selector(ScrollScrubber.sliderTouchUp(_:)), for: .touchUpOutside)
     }
     
     func updateColors() {
@@ -66,19 +86,19 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     
     // MARK: - slider events
     
-    func sliderTouchDown(slider:UISlider) {
+    func sliderTouchDown(_ slider:UISlider) {
         usingSlider = true
         show()
     }
     
-    func sliderTouchUp(slider:UISlider) {
+    func sliderTouchUp(_ slider:UISlider) {
         usingSlider = false
         hideAfterDelay()
     }
     
-    func sliderChange(slider:UISlider) {
-        let offset = isVerticalDirection(CGPointMake(0, height()*CGFloat(slider.value)),
-                                         CGPointMake(height()*CGFloat(slider.value), 0))
+    func sliderChange(_ slider:UISlider) {
+        let offset = isVerticalDirection(CGPoint(x: 0, y: height()*CGFloat(slider.value)),
+                                         CGPoint(x: height()*CGFloat(slider.value), y: 0))
         scrollView().setContentOffset(offset, animated: false)
     }
     
@@ -91,7 +111,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
         visible = true
         
         if slider.alpha <= 0 {
-            UIView.animateWithDuration(showSpeed, animations: {
+            UIView.animate(withDuration: showSpeed, animations: {
                 
                 self.slider.alpha = 1
                 
@@ -110,14 +130,14 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     func hide() {
         visible = false
         resetScrollDelta()
-        UIView.animateWithDuration(hideSpeed, animations: {
+        UIView.animate(withDuration: hideSpeed, animations: {
             self.slider.alpha = 0
         })
     }
     
     func hideAfterDelay() {
         cancelHide()
-        hideTimer = NSTimer.scheduledTimerWithTimeInterval(hideDelay, target: self, selector: #selector(ScrollScrubber.hide), userInfo: nil, repeats: false)
+        hideTimer = Timer.scheduledTimer(timeInterval: hideDelay, target: self, selector: #selector(ScrollScrubber.hide), userInfo: nil, repeats: false)
     }
     
     func cancelHide() {
@@ -134,7 +154,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
         visible = true
     }
     
-    func scrollViewWillBeginDragging(scrollView: UIScrollView) {
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         
         if scrollDeltaTimer != nil {
             scrollDeltaTimer.invalidate()
@@ -146,7 +166,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
         }
     }
     
-    func scrollViewDidScroll(scrollView: UIScrollView) {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard readerConfig.scrollDirection == .vertical else { return }
         
         if visible && usingSlider == false {
@@ -167,13 +187,13 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
         }
     }
     
-    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         resetScrollDelta()
     }
     
-    func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
-        scrollDeltaTimer = NSTimer(timeInterval:0.5, target: self, selector: #selector(ScrollScrubber.resetScrollDelta), userInfo: nil, repeats: false)
-        NSRunLoop.currentRunLoop().addTimer(scrollDeltaTimer, forMode: NSRunLoopCommonModes)
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        scrollDeltaTimer = Timer(timeInterval:0.5, target: self, selector: #selector(ScrollScrubber.resetScrollDelta), userInfo: nil, repeats: false)
+        RunLoop.current.add(scrollDeltaTimer, forMode: RunLoopMode.commonModes)
     }
     
     
@@ -194,15 +214,15 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     
     // MARK: - utility methods
     
-    private func scrollView() -> UIScrollView {
+    fileprivate func scrollView() -> UIScrollView {
         return delegate.currentPage.webView.scrollView
     }
     
-    private func height() -> CGFloat {
+    fileprivate func height() -> CGFloat {
         return delegate.currentPage.webView.scrollView.contentSize.height - pageHeight + 44
     }
     
-    private func scrollTop() -> CGFloat {
+    fileprivate func scrollTop() -> CGFloat {
         return delegate.currentPage.webView.scrollView.contentOffset.forDirection()
     }
 }

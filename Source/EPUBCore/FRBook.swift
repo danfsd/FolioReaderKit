@@ -35,7 +35,7 @@ class FRBook: NSObject {
         
         for item in tableOfContents {
             value.append(item)
-            value.appendContentsOf(item.children)
+            value.append(contentsOf: item.children)
         }
         
         return value
@@ -49,7 +49,7 @@ class FRBook: NSObject {
     }
     
     // @NOTE: should "#" be automatically prefixed with the ID?
-    func durationFor(ID: String) -> String? {
+    func durationFor(_ ID: String) -> String? {
         return metadata.findMetaByProperty("media:duration", refinedBy: ID)
     }
     
@@ -70,7 +70,7 @@ class FRBook: NSObject {
     /**
      Get Smil File from a resource (if it has a media-overlay)
     */
-    func smilFileForResource(resource: FRResource!) -> FRSmilFile! {
+    func smilFileForResource(_ resource: FRResource!) -> FRSmilFile! {
         if( resource == nil || resource.mediaOverlay == nil ){
             return nil
         }
@@ -82,11 +82,11 @@ class FRBook: NSObject {
         return smils.getByHref( smilResource!.href )
     }
     
-    func smilFileForHref(href: String) -> FRSmilFile! {
+    func smilFileForHref(_ href: String) -> FRSmilFile! {
         return smilFileForResource(resources.getByHref(href))
     }
     
-    func smilFileForId(ID: String) -> FRSmilFile! {
+    func smilFileForId(_ ID: String) -> FRSmilFile! {
         return smilFileForResource(resources.getById(ID))
     }
     

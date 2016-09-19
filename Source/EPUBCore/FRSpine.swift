@@ -21,7 +21,7 @@ struct Spine {
 class FRSpine: NSObject {
     var spineReferences = [Spine]()
 
-    func nextChapter(href: String) -> FRResource? {
+    func nextChapter(_ href: String) -> FRResource? {
         var found = false;
 
         for item in spineReferences {
