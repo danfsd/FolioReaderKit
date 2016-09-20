@@ -17,7 +17,7 @@ protocol FolioReaderPageDelegate: class {
      
      - parameter page: The loaded page
      */
-    func pageDidLoad(page: FolioReaderPage)
+    func pageDidLoad(page: FolioReaderPage, offset: CGPoint)
 }
 
 class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate {
@@ -204,6 +204,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     
     func webViewDidFinishLoad(webView: UIWebView) {
         refreshPageMode()
+        var bottomOffset = CGPointMake(0.0, 0.0)
         
         if readerConfig.enableTTS && !book.hasAudio() {
             webView.js("wrappingSentencesWithinPTags()");
@@ -214,12 +215,10 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         }
         
         if scrollDirection == .negative() && isScrolling {
-            let bottomOffset = isVerticalDirection(
+            bottomOffset = isVerticalDirection(
                 CGPointMake(0, webView.scrollView.contentSize.height - webView.scrollView.bounds.height),
                 CGPointMake(webView.scrollView.contentSize.width - webView.scrollView.bounds.width, 0)
             )
-            
-            print("bottomOffset: \(bottomOffset)")
             
             if bottomOffset.forDirection() >= 0 {
                 dispatch_async(dispatch_get_main_queue(), {
@@ -240,7 +239,9 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             insertHighlights(highlightsToSync)
         }
         
-        delegate?.pageDidLoad(self)
+        print("bottomOffset: \(bottomOffset)")
+        
+        delegate?.pageDidLoad(self, offset: bottomOffset)
     }
     
     func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {

@@ -264,10 +264,12 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             let pageNumber = position["pageNumber"] as? Int where pageNumber > 0 {
             changePageWith(page: pageNumber)
             currentPageNumber = pageNumber
+            print("a")
             return
         }
         
         currentPageNumber = 1
+        print("b")
     }
     
     override public func shouldAutorotate() -> Bool {
@@ -571,6 +573,7 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             currentPage = page
             previousPageNumber = page.pageNumber - 1
             currentPageNumber = page.pageNumber
+            print("c")
         } else {
             let currentIndexPath = getCurrentIndexPath()
             print("Index path row: \(currentIndexPath.row)")
@@ -578,17 +581,17 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
                 currentPage = collectionView.cellForItemAtIndexPath(currentIndexPath) as! FolioReaderPage
                 previousPageNumber = currentIndexPath.row
                 currentPageNumber = currentIndexPath.row + 1
+                print("d")
             } else if let page = collectionView.cellForItemAtIndexPath(currentIndexPath) {
                 currentPage = page as! FolioReaderPage
                 previousPageNumber = currentPage.pageNumber - 1
                 currentPageNumber = currentPage.pageNumber
+                print("e")
             }
-            
-//            previousPageNumber = currentIndexPath.row
-//            currentPageNumber = currentIndexPath.row+1
         }
         
         nextPageNumber = currentPageNumber + 1 <= totalPages ? currentPageNumber + 1 : currentPageNumber
+        print("previousPageNumber: \(previousPageNumber)\ncurrentPageNumber: \(currentPageNumber)\nnextPageNumber: \(nextPageNumber)")
         
         // Set navigation title
         // TODO: rever essa zueira pra quando não tem título
@@ -626,10 +629,10 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
             let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize)
             pageIndicatorView.currentPage = webViewPage
             
-            var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
-            var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
-            
-            FolioReader.sharedInstance.readerContainer.pageDidChanged(chapterState, pageState: pageState)
+//            var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
+//            var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+//
+//            FolioReader.sharedInstance.readerContainer.pageDidChanged(chapterState, pageState: pageState)
         }
     }
     
@@ -1267,7 +1270,9 @@ public class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICo
 
 extension FolioReaderCenter: FolioReaderPageDelegate {
     
-    func pageDidLoad(page: FolioReaderPage) {
+    func pageDidLoad(page: FolioReaderPage, offset: CGPoint) {
+        var currentOffset = offset
+        
         if let position = FolioReader.defaults.valueForKey(kBookId) as? NSDictionary {
             let pageNumber = position["pageNumber"]! as! Int
             var pageOffset: CGFloat = 0
@@ -1282,6 +1287,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
                 
                 if currentPageNumber == pageNumber && pageOffset > 0 {
                     page.scrollPageToOffset(pageOffset, animated: false)
+                    currentOffset = page.webView.scrollView.contentOffset
                 }
             }
             
@@ -1295,6 +1301,29 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
             currentPage.handleAnchor(fragmentID, avoidBeginningAnchors: true, animated: true)
             tempFragment = nil
         }
+
+        let pageSize = isVerticalDirection(pageHeight, pageWidth)
+        
+        let jsContentSizeWidth = CGFloat(NSNumberFormatter().numberFromString(page.webView.js("document.width")!)!)
+        let jsContentSizeHeight = CGFloat(NSNumberFormatter().numberFromString(page.webView.js("document.height")!)!)
+        
+        let webViewContentSize = CGSizeMake(jsContentSizeWidth, jsContentSizeHeight)
+        
+        let totalWebviewPages = Int(ceil(webViewContentSize.forDirection()/pageSize))
+        let webViewPage = pageForOffset(isVerticalDirection(currentOffset.y, currentOffset.x), pageHeight: pageSize)
+        
+        print("javascript offset: \(offset)")
+        print("webview offset: \(page.webView.scrollView.contentOffset)")
+        
+        var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
+        var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+        
+        if let chapterName = getCurrentChapterName() {
+            title = chapterName
+            FolioReader.sharedInstance.readerContainer.chapterDidChanged(chapterName)
+        } else { title = ""}
+        
+        FolioReader.sharedInstance.readerContainer.pageDidChanged(chapterState, pageState: pageState)
     }
 }
 
