@@ -737,8 +737,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     open func skipToFirstPage() {
-//        changePageWith(page: 1)
-        changeToPage(1, scrolling: false)
+        let pageSize = isVerticalDirection(pageHeight, pageWidth)
+        let totalWebviewPages = Int(ceil(currentPage.webView.scrollView.contentSize.forDirection()/pageSize!))
+        let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+        
+        if currentPage.pageNumber == 1 {
+            let pageState = ReaderState(current: 1, total: totalWebviewPages)
+            FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
+            currentPage.scrollPageToOffset(0.0, animated: true)
+        } else {
+            changeToPage(1, scrolling: false)
+        }
     }
     
     open func skipPageForward(_ skipMode: FolioReaderSkipPageMode = .hybrid) {
