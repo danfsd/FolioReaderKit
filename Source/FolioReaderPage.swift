@@ -712,7 +712,7 @@ extension UIMenuItem {
     convenience init(title: String, image: UIImage, action: Selector) {
       #if COCOAPODS
         self.init(title: title, action: action)
-        self.cxa_initWithTitle(title, action: action, image: image, hidesShadow: true)
+        self.cxa_init(withTitle: title, action: action, image: image, hidesShadow: true)
       #else
         let settings = CXAMenuItemSettings()
         settings.image = image
