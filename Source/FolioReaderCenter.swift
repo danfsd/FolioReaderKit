@@ -1305,26 +1305,28 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
 
         let pageSize = isVerticalDirection(pageHeight, pageWidth)
         
-        let jsContentSizeWidth = CGFloat(NumberFormatter().number(from: page.webView.js("document.width")!)!)
-        let jsContentSizeHeight = CGFloat(NumberFormatter().number(from: page.webView.js("document.height")!)!)
-        
-        let webViewContentSize = CGSize(width: jsContentSizeWidth, height: jsContentSizeHeight)
-        
-        let totalWebviewPages = Int(ceil(webViewContentSize.forDirection()/pageSize!))
-        let webViewPage = pageForOffset(isVerticalDirection(currentOffset.y, currentOffset.x), pageHeight: pageSize!)
-        
-        print("javascript offset: \(offset)")
-        print("webview offset: \(page.webView.scrollView.contentOffset)")
-        
-        var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
-        var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
-        
         if let chapterName = getCurrentChapterName() {
             title = chapterName
             FolioReader.sharedInstance.readerContainer.chapterDidChanged(chapterName)
         } else { title = ""}
         
-        FolioReader.sharedInstance.readerContainer.pageDidChanged(chapterState, pageState: pageState)
+        if let width = page.webView.js("document.body.scrollWidth"), let height = page.webView.js("document.body.scrollHeight") {
+            let jsContentSizeWidth = CGFloat(NumberFormatter().number(from: width)!)
+            let jsContentSizeHeight = CGFloat(NumberFormatter().number(from: height)!)
+            
+            let webViewContentSize = CGSize(width: jsContentSizeWidth, height: jsContentSizeHeight)
+            
+            let totalWebviewPages = Int(ceil(webViewContentSize.forDirection()/pageSize!))
+            let webViewPage = pageForOffset(isVerticalDirection(currentOffset.y, currentOffset.x), pageHeight: pageSize!)
+            
+            print("javascript offset: \(offset)")
+            print("webview offset: \(page.webView.scrollView.contentOffset)")
+            
+            var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
+            var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+            
+            FolioReader.sharedInstance.readerContainer.pageDidChanged(chapterState, pageState: pageState)
+        }
     }
 }
 
