@@ -179,7 +179,12 @@ class FolioReaderNavigationBar: UINavigationBar {
         let shift = FolioReaderNavigationBar.heightIncrease / 2
         
         ///Move the background down for [shift] point
-        let classNamesToReposition: [String] = ["_UINavigationBarBackground"]
+        let versionStr = UIDevice.current.systemVersion
+        let index = versionStr.index(versionStr.startIndex, offsetBy: 2)
+        let majorVersionStr = versionStr.substring(to: index)
+        let majorVersion = Double(majorVersionStr)!
+        
+        let classNamesToReposition: [String] = majorVersion >= 10.0 ? ["_UIBarBackground"] : ["_UINavigationBarBackground"]
         for view: UIView in self.subviews {
             if classNamesToReposition.contains(NSStringFromClass(type(of: view))) {
                 let bounds: CGRect = self.bounds

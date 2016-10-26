@@ -127,6 +127,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                     } else {
                         print("Didn't found highlight with id \(highlight.highlightId). Adding it to the new HTML...")
                         let highlightTag = createHighlightTag(highlight)
+                        
                         let range: NSRange = newHtml.range(of: highlightTag.locator, options: .literal)
                         if range.location != NSNotFound {
                             let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
@@ -147,8 +148,8 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     
     func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
         let style = HighlightStyle.classForStyle(highlight.type)
-        let tag = "<highlight id=\"\(highlight.highlightId)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content)</highlight>"
-        var locator = "\(highlight.contentPre)\(highlight.content)\(highlight.contentPost)"
+        let tag = "<highlight id=\"\(highlight.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content!)</highlight>"
+        var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
         locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
         
         return (tag: tag, locator: locator)
@@ -163,8 +164,8 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         if highlights.count > 0 {
             for item in highlights {
                 let style = HighlightStyle.classForStyle(item.type)
-                let tag = "<highlight id=\"\(item.highlightId)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content)</highlight>"
-                var locator = "\(item.contentPre)\(item.content)\(item.contentPost)"
+                let tag = "<highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
+                var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
                 locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
                 let range: NSRange = html.range(of: locator, options: .literal)
                 
