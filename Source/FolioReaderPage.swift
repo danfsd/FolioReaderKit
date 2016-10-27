@@ -29,6 +29,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     fileprivate var colorView: UIView!
     fileprivate var shouldShowBar = true
     fileprivate var menuIsVisible = false
+    fileprivate var currentHtml: NSString!
     
     // MARK: - View life cicle
     
@@ -114,8 +115,9 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     open func insertHighlights(_ highlights: [Highlight]) {
-        if let currentHtml = webView.js("document.documentElement.outerHTML") {
+//        if let currentHtml = webView.js("document.documentElement.outerHTML") {
             var newHtml = NSString(string: currentHtml).copy() as! NSString
+        
             var didChanged = false
             
             for highlight in highlights {
@@ -143,7 +145,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             if didChanged {
                 webView.loadHTMLString(newHtml as String, baseURL: baseURL)
             }
-        }
+//        }
     }
     
     func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
@@ -157,6 +159,10 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     
     func loadHTMLString(_ string: String!, baseURL: URL!) {
         var html = (string as NSString)
+        self.currentHtml = html
+        
+        print("loadHTMLString html count: \(currentHtml.length)")
+        
         self.baseURL = baseURL
         // Restore highlights
         let highlights = Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?)
