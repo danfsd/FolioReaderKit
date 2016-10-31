@@ -122,12 +122,12 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             
             for highlight in highlights {
                 if let _ = Highlight.findByHighlightId(highlight.highlightId) {
-                    print("Found highlight with id \(highlight.highlightId), skipping...")
+//                    print("Found highlight with id \(highlight.highlightId), skipping...")
                 } else {
                     if highlight.page != pageNumber {
-                        print("Didn't found highlight with id \(highlight.highlightId) but it's from another page: \(highlight.page)")
+//                        print("Didn't found highlight with id \(highlight.highlightId) but it's from another page: \(highlight.page)")
                     } else {
-                        print("Didn't found highlight with id \(highlight.highlightId). Adding it to the new HTML...")
+//                        print("Didn't found highlight with id \(highlight.highlightId). Adding it to the new HTML...")
                         let highlightTag = createHighlightTag(highlight)
                         
                         let range: NSRange = newHtml.range(of: highlightTag.locator, options: .literal)
