@@ -49,7 +49,9 @@ open class FolioReaderConfig: NSObject {
     // Localized strings
     open var localizedHighlightsTitle = NSLocalizedString("Highlights", comment: "")
     open var localizedHighlightsDateFormat = "MMM dd, YYYY | HH:mm"
-    open var localizedHighlightMenu = NSLocalizedString("Criar Discussão", comment: "")
+    open var localizedCopyMenu = NSLocalizedString("Copiar", comment: "")
+    open var localizedDiscussionMenu = NSLocalizedString("Criar Discussão", comment: "")
+    open var localizedHighlightMenu = NSLocalizedString("Destaque", comment: "")
     open var localizedDefineMenu = NSLocalizedString("Definir", comment: "")
     open var localizedPlayMenu = NSLocalizedString("Ouvir", comment: "")
     open var localizedPauseMenu = NSLocalizedString("Pausar", comment: "")

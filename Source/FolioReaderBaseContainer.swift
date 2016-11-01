@@ -302,4 +302,6 @@ open class FolioReaderBaseContainer: UIViewController {
      Called when a highlight is removed.
      */
     open func highlightWasRemoved(_ highlightId: String) {}
+    
+    open func createDiscussion(_ content: String) {}
 }

@@ -533,7 +533,7 @@ extension UIWebView {
                 isOneWord = true
             }
             
-            if action == #selector(UIWebView.highlight(_:))
+            if (action == #selector(UIWebView.highlight(_:)) || action == #selector(UIWebView.copyText(_:)) || action == #selector(UIWebView.createDiscussion(_:)))
             || (action == #selector(UIWebView.define(_:)) && isOneWord)
             || (action == #selector(UIWebView.play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
             || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing)
@@ -577,6 +577,18 @@ extension UIWebView {
         }
         
         setMenuVisible(false)
+    }
+    
+    func copyText(_ sender: UIMenuController?) {
+        if let selectedText = js("getSelectedText()") {
+            UIPasteboard.general.string = selectedText
+        }
+    }
+    
+    func createDiscussion(_ sender: UIMenuController?) {
+        if let highlightedText = js("getSelectedText()") {
+            FolioReader.sharedInstance.readerContainer.createDiscussion(highlightedText)
+        }
     }
     
     func highlight(_ sender: UIMenuController?) {
@@ -670,6 +682,7 @@ extension UIWebView {
         isShare = options
         
         let colors = UIImage(readerImageNamed: "colors-marker")
+        let discussion = UIImage(readerImageNamed: "discussion-marker")
         let share = UIImage(readerImageNamed: "share-marker")
         let remove = UIImage(readerImageNamed: "no-marker")
         let yellow = UIImage(readerImageNamed: "yellow-marker")
@@ -678,7 +691,10 @@ extension UIWebView {
         let pink = UIImage(readerImageNamed: "pink-marker")
         let underline = UIImage(readerImageNamed: "underline-marker")
         
+        let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(UIWebView.copyText(_:)))
         let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(UIWebView.highlight(_:)))
+//        let discussionItem = UIMenuItem(title: readerConfig.localizedDiscussionMenu, action: #selector(UIWebView.highlight(_:)))
+        let discussionItem = UIMenuItem(title: "D", image: discussion!, action: #selector(UIWebView.createDiscussion(_:)))
         let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(UIWebView.play(_:)))
         let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(UIWebView.define(_:)))
         let colorsItem = UIMenuItem(title: "C", image: colors!, action: #selector(UIWebView.colors(_:)))
@@ -690,8 +706,9 @@ extension UIWebView {
         let pinkItem = UIMenuItem(title: "P", image: pink!, action: #selector(UIWebView.setPink(_:)))
         let underlineItem = UIMenuItem(title: "U", image: underline!, action: #selector(UIWebView.setUnderline(_:)))
         
-        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
-
+//        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
+        let menuItems = [copyItem, highlightItem, discussionItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+        
         UIMenuController.shared.menuItems = menuItems
     }
     
