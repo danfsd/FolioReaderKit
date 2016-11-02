@@ -788,9 +788,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     open func skipPageForward(_ skipMode: FolioReaderSkipPageMode = .hybrid) {
+        if currentPage.webView.isUserInteractionEnabled == false {
+            return
+        }
         let pageSize = isVerticalDirection(pageHeight, pageWidth)
         let totalWebviewPages = Int(ceil(currentPage.webView.scrollView.contentSize.forDirection()/pageSize!))
         let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+        
+        // Disallowing user to scroll
+        currentPage.webView.scrollView.isUserInteractionEnabled = false
+        collectionView.isUserInteractionEnabled = false
+        currentPage.webView.isUserInteractionEnabled = false
         
         switch skipMode {
         case .hybrid:
@@ -827,9 +835,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     open func skipPageBackward(_ skipMode: FolioReaderSkipPageMode = .hybrid) {
+        if currentPage.webView.isUserInteractionEnabled == false {
+            return
+        }
         let pageSize = isVerticalDirection(pageHeight, pageWidth)
         let totalWebviewPages = Int(ceil(currentPage.webView.scrollView.contentSize.forDirection()/pageSize!))
         let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+        
+        // Disallowing user to scroll
+        currentPage.webView.scrollView.isUserInteractionEnabled = false
+        collectionView.isUserInteractionEnabled = false
+        currentPage.webView.isUserInteractionEnabled = false
         
         switch skipMode {
         case .hybrid:
@@ -1151,6 +1167,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         // Disallowing user to scroll
         currentPage.webView.scrollView.isUserInteractionEnabled = false
         collectionView.isUserInteractionEnabled = false
+        currentPage.webView.isUserInteractionEnabled = false
         
         if let currentPage = currentPage {
             currentPage.webView.createMenu(true)
@@ -1195,6 +1212,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         // Allowing user to scroll again
         currentPage.webView.scrollView.isUserInteractionEnabled = true
         collectionView.isUserInteractionEnabled = true
+        currentPage.webView.isUserInteractionEnabled = true
         
         if scrollView is UICollectionView {
             if totalPages > 0 { updateCurrentPage() }
@@ -1227,6 +1245,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
 
     open func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        // Allowing user to scroll again
+        currentPage.webView.scrollView.isUserInteractionEnabled = true
+        collectionView.isUserInteractionEnabled = true
+        currentPage.webView.isUserInteractionEnabled = true
         scrollScrubber.scrollViewDidEndScrollingAnimation(scrollView)
     }
     

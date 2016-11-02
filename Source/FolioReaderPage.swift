@@ -186,6 +186,9 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         }
         
         webView.alpha = 0
+        self.webView.scrollView.isUserInteractionEnabled = false
+        FolioReader.sharedInstance.readerContainer.centerViewController.collectionView.isUserInteractionEnabled = false
+        self.webView.isUserInteractionEnabled = false
         webView.loadHTMLString(html as String, baseURL: baseURL)
     }
     
@@ -193,6 +196,9 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     
     func webViewDidFinishLoad(_ webView: UIWebView) {
         refreshPageMode()
+        self.webView.scrollView.isUserInteractionEnabled = true
+        FolioReader.sharedInstance.readerContainer.centerViewController.collectionView.isUserInteractionEnabled = true
+        self.webView.isUserInteractionEnabled = true
         var bottomOffset = CGPoint(x: 0.0, y: 0.0)
         
         if readerConfig.enableTTS && !book.hasAudio() {
@@ -360,21 +366,25 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
                 let dispatchTime = DispatchTime.now() + Double(Int64(delay)) / Double(NSEC_PER_SEC)
                 
-                DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
-                    if readerConfig.shouldSkipPagesOnEdges {
-                        if shouldSkipBackward {                            FolioReader.sharedInstance.readerCenter.skipPageBackward()
-                        } else if shouldSkipForward {
-                            FolioReader.sharedInstance.readerCenter.skipPageForward()
-                        } else if self.shouldShowBar && !menuIsVisibleRef {
-                            FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
-                        }
-                    } else {
+                if readerConfig.shouldSkipPagesOnEdges {
+                    if shouldSkipBackward {
+                        FolioReader.sharedInstance.readerCenter.skipPageBackward()
+                    } else if shouldSkipForward {
+                        FolioReader.sharedInstance.readerCenter.skipPageForward()
+                    } else if self.shouldShowBar && !menuIsVisibleRef {
+                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+                    }
+                }else{
+                    DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
                         if self.shouldShowBar && !menuIsVisibleRef {
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
-                    }
-                    self.shouldShowBar = true
-                })
+                        self.shouldShowBar = true
+                    })
+                }
+                
+                
+                
             }
         } else if readerConfig.shouldHideNavigationOnTap == true {
             FolioReader.sharedInstance.readerCenter.hideBars()
