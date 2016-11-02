@@ -11,6 +11,8 @@ import SafariServices
 import UIMenuItem_CXAImageSupport
 import JSQWebViewController
 
+var selectedHighlightId: String?
+
 protocol FolioReaderPageDelegate: class {
     /**
      Notify that page did loaded
@@ -30,6 +32,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     fileprivate var shouldShowBar = true
     fileprivate var menuIsVisible = false
     fileprivate var currentHtml: NSString!
+    fileprivate var selectedHighlight: Highlight?
     
     // MARK: - View life cicle
     
@@ -242,7 +245,13 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             
             shouldShowBar = false
             let decoded = url!.absoluteString.removingPercentEncoding!
-            let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 12)))
+//            let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 12)))
+            let schemeIndex = decoded.index(decoded.startIndex, offsetBy: 13)
+            let decodedSchemeless = decoded.substring(from: schemeIndex)
+            
+            selectedHighlightId = decodedSchemeless.substring(to: decoded.index(decodedSchemeless.startIndex, offsetBy: 36))
+            
+            let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 51)))
             
             webView.createMenu(true)
             webView.setMenuVisible(true, andRect: rect)
@@ -362,7 +371,8 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 
                 DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
                     if readerConfig.shouldSkipPagesOnEdges {
-                        if shouldSkipBackward {                            FolioReader.sharedInstance.readerCenter.skipPageBackward()
+                        if shouldSkipBackward {
+                            FolioReader.sharedInstance.readerCenter.skipPageBackward()
                         } else if shouldSkipForward {
                             FolioReader.sharedInstance.readerCenter.skipPageForward()
                         } else if self.shouldShowBar && !menuIsVisibleRef {
@@ -511,10 +521,14 @@ extension UIWebView {
     }
     
     open override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-
+        
+        if action == #selector(UIWebView.createDiscussion(_:)) {
+            print(action)
+        }
+        
         // menu on existing highlight
         if isShare {
-            if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) {
+            if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) || action == #selector(UIWebView.copyText(_:)) || action == #selector(UIWebView.createDiscussion(_:)) {
                 return true
             }
             return false
@@ -582,16 +596,24 @@ extension UIWebView {
     func copyText(_ sender: UIMenuController?) {
         if let selectedText = js("getSelectedText()") {
             UIPasteboard.general.string = selectedText
+        } else if let highlightText = js("getHighlightContent()") {
+            UIPasteboard.general.string = highlightText
         }
     }
     
     func createDiscussion(_ sender: UIMenuController?) {
-        if let highlightedText = js("getSelectedText()") {
-            FolioReader.sharedInstance.readerContainer.createDiscussion(highlightedText)
+        if let selectedText = js("getSelectedText()") {
+            // TODO: create highlight
+            if let highlight = createHighlight().highlight {
+                // TODO: create discussion
+                FolioReader.sharedInstance.readerContainer.createDiscussion(from: highlight)
+            }
+        } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
+            FolioReader.sharedInstance.readerContainer.createDiscussion(from: selectedHighlight)
         }
     }
     
-    func highlight(_ sender: UIMenuController?) {
+    func createHighlight() -> (highlight: Highlight?, rect: CGRect?) {
         let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(FolioReader.sharedInstance.currentHighlightStyle))')")
         let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
         
@@ -605,9 +627,6 @@ extension UIWebView {
             // Force remove text selection
             isUserInteractionEnabled = false
             isUserInteractionEnabled = true
-
-            createMenu(true)
-            setMenuVisible(true, andRect: rect)
             
             // Persist
             let html = js("getHTML()")
@@ -615,9 +634,19 @@ extension UIWebView {
                 highlight.persist()
                 
                 FolioReader.sharedInstance.readerContainer.highlightWasPersisted(highlight)
+                return (highlight: highlight, rect: rect)
             }
+            return (highlight: nil, rect: nil)
         } catch {
             print("Could not receive JSON")
+        }
+        return (highlight: nil, rect: nil)
+    }
+    
+    func highlight(_ sender: UIMenuController?) {
+        if let rect = createHighlight().rect {
+            createMenu(true)
+            setMenuVisible(true, andRect: rect)
         }
     }
 
@@ -693,10 +722,11 @@ extension UIWebView {
         
         let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(UIWebView.copyText(_:)))
         let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(UIWebView.highlight(_:)))
-//        let discussionItem = UIMenuItem(title: readerConfig.localizedDiscussionMenu, action: #selector(UIWebView.highlight(_:)))
         let discussionItem = UIMenuItem(title: "D", image: discussion!, action: #selector(UIWebView.createDiscussion(_:)))
+        
         let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(UIWebView.play(_:)))
         let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(UIWebView.define(_:)))
+        
         let colorsItem = UIMenuItem(title: "C", image: colors!, action: #selector(UIWebView.colors(_:)))
         let shareItem = UIMenuItem(title: "S", image: share!, action: #selector(UIWebView.share(_:)))
         let removeItem = UIMenuItem(title: "R", image: remove!, action: #selector(UIWebView.remove(_:)))
@@ -707,7 +737,7 @@ extension UIWebView {
         let underlineItem = UIMenuItem(title: "U", image: underline!, action: #selector(UIWebView.setUnderline(_:)))
         
 //        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
-        let menuItems = [copyItem, highlightItem, discussionItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+        let menuItems = [copyItem, highlightItem, colorsItem, removeItem, discussionItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
         
         UIMenuController.shared.menuItems = menuItems
     }
