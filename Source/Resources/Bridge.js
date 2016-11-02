@@ -126,8 +126,12 @@ function removeHighlightById(elmId) {
     return elm.id;
 }
 
+function getThisHighlight() {
+    return JSON.stringify(thisHighlight);
+}
+
 function getHighlightContent() {
-    return thisHighlight.textContent
+    return thisHighlight.textContent;
 }
 
 function getBodyText() {
@@ -155,7 +159,7 @@ var callHighlightURL = function(elm) {
     var currentHighlightRect = getRectForSelectedText(elm);
     thisHighlight = elm;
     
-    window.location = URLBase + encodeURIComponent(currentHighlightRect);
+    window.location = URLBase + "{" + thisHighlight.getAttribute("id") + "}," + encodeURIComponent(currentHighlightRect);
 }
 
 
