@@ -307,4 +307,9 @@ open class FolioReaderBaseContainer: UIViewController {
      Called to create a discussion from a highlight
     */
     open func createDiscussion(from highlight: Highlight) {}
+    
+    /**
+     Verifies if the highlight with the given Id is a discussion on the app namespace
+    */
+    open func isDiscussion(highlightWith id: String) -> Bool { return false }
 }

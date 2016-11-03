@@ -384,7 +384,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                     } else if self.shouldShowBar && !menuIsVisibleRef {
                         FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                     }
-                }else{
+                } else {
                     DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
                         if self.shouldShowBar && !menuIsVisibleRef {
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
@@ -400,8 +400,11 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             FolioReader.sharedInstance.readerCenter.hideBars()
         }
         
-        // Reset menu
-        menuIsVisible = false
+        // Reset menu\
+        if menuIsVisible {
+            menuIsVisible = false
+            selectedHighlightId = nil
+        }
     }
     
     // MARK: - Scroll and positioning
@@ -532,12 +535,13 @@ extension UIWebView {
     
     open override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         
-        if action == #selector(UIWebView.createDiscussion(_:)) {
-            print(action)
-        }
-        
         // menu on existing highlight
         if isShare {
+            var isDiscussion = false
+            if let highlightId = selectedHighlightId {
+                isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlightId)
+            }
+            
             if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) || action == #selector(UIWebView.copyText(_:)) || action == #selector(UIWebView.createDiscussion(_:)) {
                 return true
             }
