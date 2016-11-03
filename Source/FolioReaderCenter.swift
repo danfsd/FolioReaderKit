@@ -1018,6 +1018,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         return nil
     }
     
+    open func getChapterName(with chapterNumber: Int) -> String? {
+        if let toc = book.getTableOfContents(), chapterNumber - 1 < toc.count {
+            let title = toc[chapterNumber - 1].title
+            return title
+        }
+        return nil
+    }
+    
     // MARK: - Audio Playing
 
     func audioMark(href: String, fragmentID: String) {
