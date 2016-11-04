@@ -365,6 +365,19 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         return totalPages
     }
     
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let chapter = cell as! FolioReaderPage
+        
+        print("webview scrollview UIEnabled: \(chapter.webView.scrollView.isUserInteractionEnabled)")
+        chapter.webView.scrollView.isUserInteractionEnabled = true
+        
+        print("collection view UIEnabled: \(collectionView.isUserInteractionEnabled)")
+        collectionView.isUserInteractionEnabled = true
+        
+        print("webview UIEnabled: \(chapter.webView.isUserInteractionEnabled)")
+        chapter.webView.isUserInteractionEnabled = true
+    }
+    
     open func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 //        print("Center.\(#function)")
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! FolioReaderPage
