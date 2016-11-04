@@ -201,6 +201,10 @@ open class FolioReader : NSObject {
         }
     }
     
+    open class func getHighlightCount(_ bookId: String) -> Int {
+        return Highlight.allByBookId((bookId as NSString).deletingPathExtension).count
+    }
+    
     class func close() {
         FolioReader.saveReaderState()
         FolioReader.sharedInstance.isReaderOpen = false
