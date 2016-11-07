@@ -389,11 +389,9 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                         if self.shouldShowBar && !menuIsVisibleRef {
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                         }
-                        self.shouldShowBar = true
                     })
                 }
-                
-                
+                self.shouldShowBar = true
                 
             }
         } else if readerConfig.shouldHideNavigationOnTap == true {
