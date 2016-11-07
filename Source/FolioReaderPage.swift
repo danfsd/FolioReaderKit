@@ -384,7 +384,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                     } else if self.shouldShowBar && !menuIsVisibleRef {
                         FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                     }
-                }else{
+                } else {
                     DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
                         if self.shouldShowBar && !menuIsVisibleRef {
                             FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
@@ -398,8 +398,11 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             FolioReader.sharedInstance.readerCenter.hideBars()
         }
         
-        // Reset menu
-        menuIsVisible = false
+        // Reset menu\
+        if menuIsVisible {
+            menuIsVisible = false
+            selectedHighlightId = nil
+        }
     }
     
     // MARK: - Scroll and positioning
@@ -530,24 +533,36 @@ extension UIWebView {
     
     open override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         
-        if action == #selector(UIWebView.createDiscussion(_:)) {
-            print(action)
-        }
-        
         // menu on existing highlight
         if isShare {
-            if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) || action == #selector(UIWebView.copyText(_:)) || action == #selector(UIWebView.createDiscussion(_:)) {
-                return true
+            var isDiscussion = false
+            if let highlightId = selectedHighlightId {
+                isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlightId)
+            }
+            
+            if isDiscussion {
+                if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) || action == #selector(UIWebView.copyText(_:)){
+                    
+                    return true
+                }
+                return false
+            } else {
+                if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) || action == #selector(UIWebView.copyText(_:)) || action == #selector(UIWebView.createDiscussion(_:)) {
+                    
+                    return true
+                }
+                return false
             }
             return false
-
         // menu for selecting highlight color
         } else if isColors {
             if action == #selector(UIWebView.setYellow(_:)) || action == #selector(UIWebView.setGreen(_:)) || action == #selector(UIWebView.setBlue(_:)) || action == #selector(UIWebView.setPink(_:)) || action == #selector(UIWebView.setUnderline(_:)) {
                 return true
+                
             }
+            
             return false
-
+            
         // default menu
         } else {
             var isOneWord = false
@@ -745,6 +760,7 @@ extension UIWebView {
         let underlineItem = UIMenuItem(title: "U", image: underline!, action: #selector(UIWebView.setUnderline(_:)))
         
 //        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
+        
         let menuItems = [copyItem, highlightItem, colorsItem, removeItem, discussionItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
         
         UIMenuController.shared.menuItems = menuItems
