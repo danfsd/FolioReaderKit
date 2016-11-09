@@ -871,6 +871,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             } else if previousPageNumber >= 1 {
                 print("scrolling collectionView \(currentPageNumber)\(totalPages) previous: \(previousPageNumber)")
                 changeToPage(previousPageNumber, scrolling: true)
+            }else{
+                currentPage.webView.scrollView.isUserInteractionEnabled = true
+                collectionView.isUserInteractionEnabled = true
+                currentPage.webView.isUserInteractionEnabled = true
             }
             break
         case .chapter:
@@ -932,6 +936,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         isScrolling = scrolling
         
         UIView.animate(withDuration: animated ? 0.3 : 0, delay: 0, options: UIViewAnimationOptions(), animations: {
+            
             self.collectionView.scrollToItem(at: indexPath, at: .direction(), animated: false)
         }) { (finished: Bool) -> Void in
             completion?()
