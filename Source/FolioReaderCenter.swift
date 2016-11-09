@@ -330,15 +330,16 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open func setFontSize(_ style: FolioReaderFontSize) {
         print("setFontSize('\(style.fontSize())')")
         FolioReader.sharedInstance.currentFontSize = style.rawValue
-        
-        let pageSize = isVerticalDirection(pageHeight, pageWidth)
-        let totalWebviewPages = Int(ceil(currentPage.webView.scrollView.contentSize.forDirection()/pageSize!))
-        let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize!)
-        let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
-        
-        FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
-        
         _ = currentPage.webView.js("setFontSize('\(style.fontSize())')")
+        
+//        let pageSize = isVerticalDirection(pageHeight, pageWidth)
+//        let totalWebviewPages = Int(ceil(currentPage.webView.scrollView.contentSize.forDirection()/pageSize!))
+//        let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+//        let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+//        
+//        FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
+        
+//        _ = currentPage.webView.js("setFontSize('\(style.fontSize())')")
     }
     
     open func disableInteraction() {

@@ -204,7 +204,10 @@ extension Highlight {
             highlight.highlightId = id
             highlight.type = HighlightStyle.styleForClass(str.substring(with: match.rangeAt(1))).rawValue
             highlight.date = Foundation.Date()
-            highlight.content = Highlight.removeSentenceSpam(str.substring(with: match.rangeAt(2)))
+            var content = Highlight.removeSentenceSpam(str.substring(with: match.rangeAt(2)))
+//            content = Highlight.removeFrom(content, withPattern: "<em class=\"\\w?\">((.|\\s)*?)<\\/em>")
+//            print(content)
+            highlight.content = content
             highlight.contentPre = Highlight.removeSentenceSpam(contentPre)
             highlight.contentPost = Highlight.removeSentenceSpam(contentPost)
             highlight.page = currentPageNumber
@@ -228,6 +231,26 @@ extension Highlight {
         }
     }
     
+    // Remove from text
+    static func removeFrom(_ text: String, withPattern pattern: String) -> String {
+        var locator = text
+        let regex = try! NSRegularExpression(pattern: pattern, options: [])
+        let matches = regex.matches(in: locator, options: [], range: NSRange(location: 0, length: locator.utf16.count))
+        let str = (locator as NSString)
+        
+        var newLocator = ""
+        for match in matches {
+            newLocator += str.substring(with: match.rangeAt(1))
+        }
+        
+        if matches.count > 0 && !newLocator.isEmpty {
+            locator = newLocator
+        }
+        
+        return locator
+    }
+
+    
     /**
      Remove span tag before store the highlight, this span is added on JavaScript.
      <span class=\"sentence\"></span>
@@ -237,27 +260,13 @@ extension Highlight {
      */
     public static func removeSentenceSpam(_ text: String) -> String {
         
-        // Remove from text
-        func removeFrom(_ text: String, withPattern pattern: String) -> String {
-            var locator = text
-            let regex = try! NSRegularExpression(pattern: pattern, options: [])
-            let matches = regex.matches(in: locator, options: [], range: NSRange(location: 0, length: locator.utf16.count))
-            let str = (locator as NSString)
-            
-            var newLocator = ""
-            for match in matches {
-                newLocator += str.substring(with: match.rangeAt(1))
-            }
-            
-            if matches.count > 0 && !newLocator.isEmpty {
-                locator = newLocator
-            }
-            
-            return locator
-        }
         
-        let pattern = "<span class=\"sentence\">((.|\\s)*?)</span>"
-        let cleanText = removeFrom(text, withPattern: pattern)
+        var pattern = "<span class=\"sentence\">((.|\\s)*?)</span>"
+        var cleanText = removeFrom(text, withPattern: pattern)
+        
+//        pattern = "<em class=\"((.|\\s)*?)\">((.|\\s)*?)<\\/em>"
+//        cleanText = removeFrom(cleanText, withPattern: pattern)
+        
         return cleanText
     }
 }

@@ -324,8 +324,19 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 FolioReader.sharedInstance.readerCenter.present(nav, animated: true, completion: nil)
             }
             return false
+        } else if url?.scheme == "font-changed" {
+            Timer.scheduledTimer(timeInterval: TimeInterval(0.5), target: self, selector: #selector(fontDidChanged), userInfo: nil, repeats: false)
         }
         return true
+    }
+    
+    func fontDidChanged() {
+        let pageSize = isVerticalDirection(pageHeight, pageWidth)
+        let totalWebviewPages = Int(ceil(webView.scrollView.contentSize.forDirection()/pageSize!))
+        let webViewPage = FolioReader.sharedInstance.readerCenter.pageForOffset(webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+        let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+        
+        FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
     }
     
     // MARK: Gesture recognizer
