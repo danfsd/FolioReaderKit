@@ -201,11 +201,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         // Update pages
         pagesForCurrentPage(currentPage)
         pageIndicatorView.reloadView(true)
+
     }
     
     open override func viewDidAppear(_ animated: Bool) {
 //        print("Center.\(#function)")
         super.viewDidAppear(animated)
+        if(UIDeviceOrientationIsLandscape(UIDevice.current.orientation))
+        {
+            let value = UIInterfaceOrientation.portrait.rawValue
+            UIDevice.current.setValue(value, forKey: "orientation")
+        }
     }
 
     func configureNavBar() {
@@ -277,8 +283,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     override open var supportedInterfaceOrientations : UIInterfaceOrientationMask {
+        let value = UIInterfaceOrientation.portraitUpsideDown.rawValue
+        UIDevice.current.setValue(value, forKey: "orientation")
         return UIInterfaceOrientationMask.allButUpsideDown
     }
+    
+    
     
     // MARK: Status bar and Navigation bar
     
@@ -469,6 +479,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     // MARK: - Device rotation
     
     override open func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
+        ajustRotate(to: toInterfaceOrientation, duration: duration)
+    }
+    
+    open func ajustRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval){
         if !FolioReader.sharedInstance.isReaderReady { return }
         
         setPageSize(toInterfaceOrientation)
@@ -508,6 +522,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             self.saveOffset(forOrientation: UIApplication.shared.statusBarOrientation, offset: pageScrollView.contentOffset)
             self.pageOffsetRate = pageScrollView.contentOffset.forDirection() / pageScrollView.contentSize.forDirection()
         })
+
     }
     
     func saveOffset(forOrientation orientation: UIInterfaceOrientation, offset: CGPoint?) {
