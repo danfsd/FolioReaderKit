@@ -245,7 +245,11 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
         let url = request.url
         
+        print("\n### shouldStartLoadWith ###")
+        
         if url?.scheme == "highlight" {
+            
+            print("highlight was pressed")
             
             shouldShowBar = false
             let decoded = url!.absoluteString.removingPercentEncoding!
@@ -327,6 +331,9 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         } else if url?.scheme == "font-changed" {
             Timer.scheduledTimer(timeInterval: TimeInterval(0.5), target: self, selector: #selector(fontDidChanged), userInfo: nil, repeats: false)
         }
+        
+        print("### shouldStartLoadWith ###\n")
+        
         return true
     }
     
@@ -355,18 +362,21 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         return false
     }
     
-    func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
-//        webView.setMenuVisible(false)
-        let tapLocation = recognizer.location(in: recognizer.view)
+    func handleTap(_ timer: Timer) {
+        let tapLocation = timer.userInfo as! CGPoint
         let lowerTapThreshold = self.webView.frame.size.width * 0.20
         let upperTapThreshold = self.webView.frame.size.width * 0.80
+        
+        print("after timer tapLocation.x: \(tapLocation.x)")
         
         if FolioReader.sharedInstance.readerCenter.navigationController!.isNavigationBarHidden {
             let menuIsVisibleRef = menuIsVisible
             
             let selected = webView.js("getSelectedText()")
             
-            if selected == nil || selected!.characters.count == 0 {
+            print("shouldShowBar: \(shouldShowBar)")
+            
+            if shouldShowBar && (selected == nil || selected!.characters.count == 0) {
                 var seconds = 0.4
                 
                 var shouldSkipBackward = false
@@ -383,32 +393,44 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
                 let dispatchTime = DispatchTime.now() + Double(Int64(delay)) / Double(NSEC_PER_SEC)
                 
-
+                
                 if readerConfig.shouldSkipPagesOnEdges {
                     if shouldSkipBackward {
                         FolioReader.sharedInstance.readerCenter.skipPageBackward()
                     } else if shouldSkipForward {
                         FolioReader.sharedInstance.readerCenter.skipPageForward()
-                    } else if self.shouldShowBar && !menuIsVisibleRef {
-                        DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
-                            if self.shouldShowBar && !menuIsVisibleRef {
-                                FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
-                                self.shouldShowBar = true
-                            }
-                        })
                     }
-                }                
+                }
                 
+                if /*self.shouldShowBar && */!menuIsVisibleRef {
+                    DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
+                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+                    })
+                }
+                
+//                self.shouldShowBar = true
             }
         } else if readerConfig.shouldHideNavigationOnTap == true {
             FolioReader.sharedInstance.readerCenter.hideBars()
         }
         
+//        self.shouldShowBar = true
+        
         // Reset menu\
         if menuIsVisible {
             menuIsVisible = false
             selectedHighlightId = nil
+        } else {
+            shouldShowBar = true
         }
+    }
+    
+    func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
+        let tapLocation = recognizer.location(in: recognizer.view)
+        
+        print("before timer tapLocation.x: \(tapLocation.x)")
+        
+        Timer.scheduledTimer(timeInterval: TimeInterval(0.4), target: self, selector: #selector(handleTap), userInfo: tapLocation, repeats: false)
     }
     
     // MARK: - Scroll and positioning
