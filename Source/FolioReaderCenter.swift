@@ -135,11 +135,18 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     fileprivate var tempReference: FRTocReference?
     fileprivate var isFirstLoad = true
     
+    var isFirstLoadOrientation = true
+    
     // MARK: - View life cicle
     
     override open func viewDidLoad() {
 //        print("Center.\(#function)")
         super.viewDidLoad()
+        if(UIDeviceOrientationIsLandscape(UIDevice.current.orientation))
+        {
+            let value = UIInterfaceOrientation.portrait.rawValue
+            UIDevice.current.setValue(value, forKey: "orientation")
+        }
         
         screenBounds = UIScreen.main.bounds
         setPageSize(UIApplication.shared.statusBarOrientation)
@@ -197,7 +204,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     override open func viewWillAppear(_ animated: Bool) {
 //        print("Center.\(#function)")
         super.viewWillAppear(animated)
-        
+
         // Update pages
         pagesForCurrentPage(currentPage)
         pageIndicatorView.reloadView(true)
@@ -207,11 +214,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open override func viewDidAppear(_ animated: Bool) {
 //        print("Center.\(#function)")
         super.viewDidAppear(animated)
-        if(UIDeviceOrientationIsLandscape(UIDevice.current.orientation))
-        {
-            let value = UIInterfaceOrientation.portrait.rawValue
-            UIDevice.current.setValue(value, forKey: "orientation")
-        }
+
     }
 
     func configureNavBar() {
@@ -278,15 +281,19 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         print("b")
     }
     
-    override open var shouldAutorotate : Bool {
-        return true
+    open override var shouldAutorotate: Bool {
+        get {
+            return false
+        }
     }
     
     override open var supportedInterfaceOrientations : UIInterfaceOrientationMask {
-        let value = UIInterfaceOrientation.portraitUpsideDown.rawValue
-        UIDevice.current.setValue(value, forKey: "orientation")
+        if(isFirstLoadOrientation){
+            return UIInterfaceOrientationMask.portrait
+        }
         return UIInterfaceOrientationMask.allButUpsideDown
     }
+    
     
     
     
@@ -1424,6 +1431,7 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
             
             FolioReader.sharedInstance.readerContainer.pageDidChanged(chapterState, pageState: pageState)
         }
+        isFirstLoadOrientation = false
     }
 }
 
@@ -1466,3 +1474,4 @@ extension FolioReaderCenter: FolioReaderChapterListDelegate {
      */
     @objc optional func center(didReloadData center: FolioReaderCenter)
 }
+

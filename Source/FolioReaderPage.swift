@@ -241,7 +241,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         print("bottomOffset: \(bottomOffset)")
         
         delegate?.pageDidLoad(self, offset: bottomOffset)
-        
     }
     
     func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
