@@ -76,6 +76,8 @@ function setFontSize(cls) {
     removeClass(elm, "textSizeFour");
     removeClass(elm, "textSizeFive");
     addClass(elm, cls);
+    
+    window.location = "font-changed://{" + cls + "}";
 }
 
 // Set text alignment

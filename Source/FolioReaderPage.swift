@@ -28,6 +28,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     var pageNumber: Int!
     var webView: UIWebView!
     var baseURL: URL!
+    var bottomOffset: CGPoint?
     fileprivate var colorView: UIView!
     fileprivate var shouldShowBar = true
     fileprivate var menuIsVisible = false
@@ -37,7 +38,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
-//        print("Page.\(#function)")
         super.init(frame: frame)
         self.backgroundColor = UIColor.clear
         
@@ -86,14 +86,12 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     override func layoutSubviews() {
-//        print("Page.\(#function)")
         super.layoutSubviews()
         
         webView.frame = webViewFrame()
     }
     
     func webViewFrame() -> CGRect {
-//        print("Page.\(#function)")
         let paddingTop: CGFloat = 20
         let paddingBottom: CGFloat = 30
         
@@ -118,37 +116,33 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     open func insertHighlights(_ highlights: [Highlight]) {
-//        if let currentHtml = webView.js("document.documentElement.outerHTML") {
-            var newHtml = NSString(string: currentHtml).copy() as! NSString
+        var newHtml = NSString(string: currentHtml).copy() as! NSString
+    
+        var didChanged = false
         
-            var didChanged = false
-            
-            for highlight in highlights {
-                if let _ = Highlight.findByHighlightId(highlight.highlightId) {
-//                    print("Found highlight with id \(highlight.highlightId), skipping...")
+        for highlight in highlights {
+            if let _ = Highlight.findByHighlightId(highlight.highlightId) {
+                
+            } else {
+                if highlight.page != pageNumber {
                 } else {
-                    if highlight.page != pageNumber {
-//                        print("Didn't found highlight with id \(highlight.highlightId) but it's from another page: \(highlight.page)")
-                    } else {
-//                        print("Didn't found highlight with id \(highlight.highlightId). Adding it to the new HTML...")
-                        let highlightTag = createHighlightTag(highlight)
-                        
-                        let range: NSRange = newHtml.range(of: highlightTag.locator, options: .literal)
-                        if range.location != NSNotFound {
-                            let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
-                            newHtml = newHtml.replacingCharacters(in: newRange, with: highlightTag.tag) as NSString
-                        }
-                        
-                        highlight.persist()
-                        didChanged = true
+                    let highlightTag = createHighlightTag(highlight)
+                    
+                    let range: NSRange = newHtml.range(of: highlightTag.locator, options: .literal)
+                    if range.location != NSNotFound {
+                        let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
+                        newHtml = newHtml.replacingCharacters(in: newRange, with: highlightTag.tag) as NSString
                     }
+                    
+                    highlight.persist()
+                    didChanged = true
                 }
             }
-            
-            if didChanged {
-                webView.loadHTMLString(newHtml as String, baseURL: baseURL)
-            }
-//        }
+        }
+        
+        if didChanged {
+            webView.loadHTMLString(newHtml as String, baseURL: baseURL)
+        }
     }
     
     func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
@@ -181,9 +175,8 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 if range.location != NSNotFound {
                     let newRange = NSRange(location: range.location + item.contentPre.characters.count, length: item.content.characters.count)
                     html = html.replacingCharacters(in: newRange, with: tag) as (NSString)
-                }
-                else {
-                    print("highlight range not found")
+                } else {
+                    
                 }
             }
         }
@@ -198,11 +191,13 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     // MARK: - UIWebView Delegate
     
     func webViewDidFinishLoad(_ webView: UIWebView) {
+        print("\n### webViewDidFinishLoad ###")
         refreshPageMode()
         self.webView.scrollView.isUserInteractionEnabled = true
         FolioReader.sharedInstance.readerContainer.centerViewController.collectionView.isUserInteractionEnabled = true
         self.webView.isUserInteractionEnabled = true
-        var bottomOffset = CGPoint(x: 0.0, y: 0.0)
+        var offset = CGPoint(x: 0.0, y: 0.0)
+//        bottomOffset = CGPoint(x: 0.0, y: 0.0)
         
         if readerConfig.enableTTS && !book.hasAudio() {
             _ = webView.js("wrappingSentencesWithinPTags()");
@@ -211,17 +206,22 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 FolioReader.sharedInstance.readerAudioPlayer.readCurrentSentence()
             }
         }
+
+        bottomOffset = isVerticalDirection(
+            CGPoint(x: 0, y: webView.scrollView.contentSize.height - webView.scrollView.bounds.height),
+            CGPoint(x: webView.scrollView.contentSize.width - webView.scrollView.bounds.width, y: 0)
+        )
+        
+        print("Page bottom offset: \(bottomOffset)")
+        print("Is scrolling back: \(scrollDirection == .negative())")
+        print("Is scrolling: \(isScrolling)")
         
         if scrollDirection == .negative() && isScrolling {
-
-            bottomOffset = isVerticalDirection(
-                CGPoint(x: 0, y: webView.scrollView.contentSize.height - webView.scrollView.bounds.height),
-                CGPoint(x: webView.scrollView.contentSize.width - webView.scrollView.bounds.width, y: 0)
-            )
-            
-            if bottomOffset.forDirection() >= 0 {
+            offset = bottomOffset!
+            if offset.forDirection() >= 0 {
+                print("Setting webview's scrollview content offset")
                 DispatchQueue.main.async(execute: {
-                    webView.scrollView.setContentOffset(bottomOffset, animated: false)
+                    webView.scrollView.setContentOffset(offset, animated: false)
                 })
             }
         }
@@ -231,27 +231,24 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         UIView.animate(withDuration: 0.2, animations: {webView.alpha = 1}, completion: { finished in
             webView.isColors = false
             self.webView.createMenu(false)
-        }) 
-
-//        createBoldTag()
+        })
+        
         if let highlightsToSync = FolioReader.sharedInstance.readerCenter.highlightsToSync {
             insertHighlights(highlightsToSync)
         }
         
-        print("bottomOffset: \(bottomOffset)")
+        print("### webViewDidFinishLoad ###\n")
         
-        delegate?.pageDidLoad(self, offset: bottomOffset)
+        delegate?.pageDidLoad(self, offset: offset)
     }
     
     func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-//        print("Page.\(#function)")
         let url = request.url
         
         if url?.scheme == "highlight" {
             
             shouldShowBar = false
             let decoded = url!.absoluteString.removingPercentEncoding!
-//            let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 12)))
             let schemeIndex = decoded.index(decoded.startIndex, offsetBy: 13)
             let decodedSchemeless = decoded.substring(from: schemeIndex)
             
@@ -327,8 +324,19 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                 FolioReader.sharedInstance.readerCenter.present(nav, animated: true, completion: nil)
             }
             return false
+        } else if url?.scheme == "font-changed" {
+            Timer.scheduledTimer(timeInterval: TimeInterval(0.5), target: self, selector: #selector(fontDidChanged), userInfo: nil, repeats: false)
         }
         return true
+    }
+    
+    func fontDidChanged() {
+        let pageSize = isVerticalDirection(pageHeight, pageWidth)
+        let totalWebviewPages = Int(ceil(webView.scrollView.contentSize.forDirection()/pageSize!))
+        let webViewPage = FolioReader.sharedInstance.readerCenter.pageForOffset(webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+        let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+        
+        FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
     }
     
     // MARK: Gesture recognizer
@@ -412,7 +420,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
      - parameter animated: Enable or not scrolling animation
      */
     func scrollPageToOffset(_ offset: CGFloat, animated: Bool) {
-//        print("Page.\(#function)")
         let pageOffsetPoint = isVerticalDirection(CGPoint(x: 0, y: offset), CGPoint(x: offset, y: 0))
         webView.scrollView.setContentOffset(pageOffsetPoint, animated: animated)
     }
@@ -462,7 +469,6 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
      - returns: The element offset ready to scroll
      */
     func getAnchorOffset(_ anchor: String) -> CGFloat {
-//        print("Page.\(#function)")
         let horizontal = readerConfig.scrollDirection == .horizontal
         if let strOffset = webView.js("getAnchorOffset('\(anchor)', \(horizontal.description))") {
             return CGFloat((strOffset as NSString).floatValue)
