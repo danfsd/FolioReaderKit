@@ -135,7 +135,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     fileprivate var tempReference: FRTocReference?
     fileprivate var isFirstLoad = true
     
-    var isFirstLoadOrientation = true
+    open var isFirstLoadOrientation = true
     
     // MARK: - View life cicle
     
@@ -280,20 +280,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         currentPageNumber = 1
         print("b")
     }
-    
-    open override var shouldAutorotate: Bool {
-        get {
-            return false
-        }
-    }
-    
-    override open var supportedInterfaceOrientations : UIInterfaceOrientationMask {
-        if(isFirstLoadOrientation){
-            return UIInterfaceOrientationMask.portrait
-        }
-        return UIInterfaceOrientationMask.allButUpsideDown
-    }
-    
     
     
     
@@ -508,6 +494,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     override open func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
         ajustRotate(to: toInterfaceOrientation, duration: duration)
     }
+
+    
+
+
     
     open func ajustRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval){
         if !FolioReader.sharedInstance.isReaderReady { return }
@@ -566,7 +556,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     override open func didRotate(from fromInterfaceOrientation: UIInterfaceOrientation) {
         if !FolioReader.sharedInstance.isReaderReady { return }
-        
         // Update pages
         pagesForCurrentPage(currentPage)
         
@@ -650,6 +639,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 currentPage = page as! FolioReaderPage
                 previousPageNumber = currentPage.pageNumber - 1
                 currentPageNumber = currentPage.pageNumber
+            }else{
+                currentPageNumber = 1
+                previousPageNumber = 0
+                nextPageNumber = 2
             }
         }
         
