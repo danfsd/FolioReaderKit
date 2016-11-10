@@ -402,7 +402,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
                     }
                 }
                 
-                if /*self.shouldShowBar && */!menuIsVisibleRef {
+                if !shouldSkipBackward && !shouldSkipForward && !menuIsVisibleRef {
                     DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
                         FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
                     })
