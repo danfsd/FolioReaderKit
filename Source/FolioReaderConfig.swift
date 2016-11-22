@@ -27,6 +27,92 @@ public enum FolioReaderScrollDirection: Int {
     }
 }
 
+public enum FolioReaderSkipPageMode: Int {
+    case hybrid = 0
+    case page = 1
+    case chapter = 2
+}
+
+public enum FolioReaderFontName: Int {
+    case andada = 0
+    case lato = 1
+    case lora = 2
+    case raleway = 3
+    
+    public func fontName() -> String {
+        switch self {
+        case .andada: return "andada"
+        case .lato: return "lato"
+        case .lora: return "lora"
+        case .raleway: return "raleway"
+        }
+    }
+    
+    public func buttonSelected() -> (serif: Bool, sansSerif: Bool) {
+        switch self {
+        case .andada: return (serif: true, sansSerif: false)
+        case .lato: return (serif: false, sansSerif: true)
+        case .lora: return (serif: true, sansSerif: false)
+        case .raleway: return (serif: false, sansSerif: true)
+        }
+    }
+}
+
+public enum FolioReaderFontSize: Int {
+    case sizeOne = 0
+    case sizeTwo = 1
+    case sizeThree = 2
+    case sizeFour = 3
+    case sizeFive = 4
+    
+    public func fontSize() -> String {
+        switch self {
+        case .sizeOne: return "textSizeOne"
+        case .sizeTwo: return "textSizeTwo"
+        case .sizeThree: return "textSizeThree"
+        case .sizeFour: return "textSizeFour"
+        case .sizeFive: return "textSizeFive"
+        }
+    }
+    
+    public func sliderValue() -> Float {
+        switch self {
+        case .sizeOne: return 0.0
+        case .sizeTwo: return 0.21
+        case .sizeThree: return 0.41
+        case .sizeFour: return 0.61
+        case .sizeFive: return 0.81
+        }
+    }
+}
+
+public enum FolioReaderTextAlignemnt: Int {
+    case left = 0
+    case right = 1
+    case center = 2
+    case justify = 3
+    
+    public func textAlignment() -> String {
+        switch self {
+        case .left: return"left"
+        case .right: return "right"
+        case .center: return "center"
+        case .justify: return "justify"
+        }
+    }
+    
+    public func buttonSelected() -> (left: Bool, justify: Bool) {
+        switch self {
+        case .left: return (left: true, justify: false)
+        case .justify: return (left: false, justify: true)
+            
+        // Not used
+        case .right: return (left: true, justify: false)
+        case .center: return (left: true, justify: false)
+        }
+    }
+}
+
 open class FolioReaderConfig: NSObject {
     // Colors
     open var tintColor = UIColor(rgba: "#6ACC50")
