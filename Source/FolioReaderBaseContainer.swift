@@ -20,6 +20,7 @@ open class FolioReaderBaseContainer: UIViewController {
     open var centerNavigationController: UINavigationController!
     open var controlStates: (fontSize: Int, fontFamily: Int, textAlignment: Int)!
     open var centerViewController: FolioReaderCenter!
+    open var scrollDirection: FolioReaderScrollDirection!
     var audioPlayer: FolioReaderAudioPlayer?
     
     /**

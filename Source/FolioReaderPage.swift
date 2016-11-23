@@ -383,14 +383,9 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         let lowerTapThreshold = self.webView.frame.size.width * 0.20
         let upperTapThreshold = self.webView.frame.size.width * 0.80
         
-        print("after timer tapLocation.x: \(tapLocation.x)")
-        
         if FolioReader.sharedInstance.readerCenter.navigationController!.isNavigationBarHidden {
             let menuIsVisibleRef = menuIsVisible
-            
             let selected = webView.js("getSelectedText()")
-            
-            print("shouldShowBar: \(shouldShowBar)")
             
             if shouldShowBar && (selected == nil || selected!.characters.count == 0) {
                 var seconds = 0.4
@@ -418,7 +413,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 }
                 
                 // TODO: remover lógica caso for .horizontalWithVerticalContent
-                print("is scrolling? \(isScrolling)")
                 if !shouldSkipBackward && !shouldSkipForward && !menuIsVisibleRef && !isScrolling {
                     DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
                         FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
@@ -446,7 +440,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     open func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
         let tapLocation = recognizer.location(in: recognizer.view)
         
-        print("before timer tapLocation.x: \(tapLocation.x)")
         if isScrolling {
             handleTap(tapLocation)
         } else {
