@@ -174,21 +174,21 @@ class FolioReaderFontsMenu: UIViewController, SMSegmentViewDelegate, UIGestureRe
             
             switch index {
             case 0:
-                _ = currentPage?.webView.js("nightMode(false)")
+                currentPage?.webView.js("nightMode(false)")
                 UIView.animate(withDuration: 0.6, animations: {
                     self.menuView.backgroundColor = UIColor.white
                     readerCenter?.collectionView.backgroundColor = UIColor.white
                     readerCenter?.configureNavBar()
-                    readerCenter?.scrollScrubber.updateColors()
+//                    readerCenter?.scrollScrubber.updateColors()
                 })
                 break
             case 1:
-                _ = currentPage?.webView.js("nightMode(true)")
+                currentPage?.webView.js("nightMode(true)")
                 UIView.animate(withDuration: 0.6, animations: {
                     self.menuView.backgroundColor = readerConfig.nightModeMenuBackground
                     readerCenter?.collectionView.backgroundColor = readerConfig.nightModeBackground
                     readerCenter?.configureNavBar()
-                    readerCenter?.scrollScrubber.updateColors()
+//                    readerCenter?.scrollScrubber.updateColors()
                 })
                 break
             default:
@@ -201,16 +201,16 @@ class FolioReaderFontsMenu: UIViewController, SMSegmentViewDelegate, UIGestureRe
         if segmentView.tag == 2 {
             switch index {
             case 0:
-                _ = currentPage?.webView.js("setFontName('andada')")
+                currentPage?.webView.js("setFontName('andada')")
                 break
             case 1:
-                _ = currentPage?.webView.js("setFontName('lato')")
+                currentPage?.webView.js("setFontName('lato')")
                 break
             case 2:
-                _ = currentPage?.webView.js("setFontName('lora')")
+                currentPage?.webView.js("setFontName('lora')")
                 break
             case 3:
-                _ = currentPage?.webView.js("setFontName('raleway')")
+                currentPage?.webView.js("setFontName('raleway')")
                 break
             default:
                 break
@@ -228,19 +228,19 @@ class FolioReaderFontsMenu: UIViewController, SMSegmentViewDelegate, UIGestureRe
         
         switch index {
         case 0:
-            _ = currentPage?.webView.js("setFontSize('textSizeOne')")
+            currentPage?.webView.js("setFontSize('textSizeOne')")
             break
         case 1:
-            _ = currentPage?.webView.js("setFontSize('textSizeTwo')")
+            currentPage?.webView.js("setFontSize('textSizeTwo')")
             break
         case 2:
-            _ = currentPage?.webView.js("setFontSize('textSizeThree')")
+            currentPage?.webView.js("setFontSize('textSizeThree')")
             break
         case 3:
-            _ = currentPage?.webView.js("setFontSize('textSizeFour')")
+            currentPage?.webView.js("setFontSize('textSizeFour')")
             break
         case 4:
-            _ = currentPage?.webView.js("setFontSize('textSizeFive')")
+            currentPage?.webView.js("setFontSize('textSizeFive')")
             break
         default:
             break

@@ -222,47 +222,76 @@ func isNight<T> (_ f: T, _ l: T) -> T {
 
 // MARK: - Scroll Direction Functions
 
-func isVerticalDirection<T> (_ f: T, _ l: T) -> T {
-    return readerConfig.scrollDirection == .vertical ? f : l
+/**
+ Simplify attibution of values based on direction, basically is to avoid too much usage of `switch`,
+ `if` and `else` statements to check. So basically this is like a shorthand version of the `switch` verification.
+ 
+ For example:
+ ```
+ let pageOffsetPoint = isDirection(CGPoint(x: 0, y: pageOffset), CGPoint(x: pageOffset, y: 0), CGPoint(x: 0, y: pageOffset))
+ ```
+ 
+ As usually the `vertical` direction and `horizontalContentVertical` has similar statements you can basically hide the last
+ value and it will assume the value from `vertical` as fallback.
+ ```
+ let pageOffsetPoint = isDirection(CGPoint(x: 0, y: pageOffset), CGPoint(x: pageOffset, y: 0))
+ ```
+ 
+ - parameter vertical:                  Value for `vertical` direction
+ - parameter horizontal:                Value for `horizontal` direction
+ - parameter horizontalContentVertical: Value for `horizontalWithVerticalContent` direction, if nil will fallback to `vertical` value
+ 
+ - returns: The right value based on direction.
+ */
+func isDirection<T> (_ vertical: T, _ horizontal: T, _ horizontalContentVertical: T? = nil) -> T {
+    switch readerConfig.scrollDirection {
+    case .vertical: return vertical
+    case .horizontal: return horizontal
+    case .horizontalWithVerticalContent: return horizontalContentVertical ?? vertical
+    }
 }
 
 extension UICollectionViewScrollDirection {
     static func direction() -> UICollectionViewScrollDirection {
-        return isVerticalDirection(.vertical, .horizontal)
+        return isDirection(.vertical, .horizontal, .horizontal)
     }
 }
 
 extension UICollectionViewScrollPosition {
     static func direction() -> UICollectionViewScrollPosition {
-        return isVerticalDirection(.top, .left)
+        return isDirection(.top, .left, .left)
     }
 }
 
 extension CGPoint {
     func forDirection() -> CGFloat {
-        return isVerticalDirection(self.y, self.x)
+        return isDirection(y, x, y)
     }
 }
 
 extension CGSize {
     func forDirection() -> CGFloat {
-        return isVerticalDirection(self.height, self.width)
+        return isDirection(height, width, height)
+    }
+    
+    func forReverseDirection() -> CGFloat {
+        return isDirection(width, height, width)
     }
 }
 
 extension CGRect {
     func forDirection() -> CGFloat {
-        return isVerticalDirection(self.height, self.width)
+        return isDirection(height, width, height)
     }
 }
 
 extension ScrollDirection {
     static func negative() -> ScrollDirection {
-        return isVerticalDirection(.down, .right)
+        return isDirection(.down, .right, .right)
     }
     
     static func positive() -> ScrollDirection {
-        return isVerticalDirection(.up, .left)
+        return isDirection(.up, .left, .left)
     }
 }
 

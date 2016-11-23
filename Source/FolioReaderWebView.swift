@@ -271,4 +271,22 @@ open class FolioReaderWebView: UIWebView {
         if callback!.isEmpty { return nil }
         return callback
     }
+    
+    // MARK: WebView direction config
+    
+    func setupScrollDirection() {
+        switch readerConfig.scrollDirection {
+        case .vertical, .horizontalWithVerticalContent:
+            scrollView.isPagingEnabled = false
+            paginationMode = .unpaginated
+            scrollView.bounces = true
+            break
+        case .horizontal:
+            scrollView.isPagingEnabled = true
+            paginationMode = .leftToRight
+            paginationBreakingMode = .page
+            scrollView.bounces = false
+            break
+        }
+    }
 }
