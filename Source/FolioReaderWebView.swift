@@ -111,9 +111,9 @@ open class FolioReaderWebView: UIWebView {
     
     func createDiscussion(_ sender: UIMenuController?) {
         if let selectedText = js("getSelectedText()") {
-            // TODO: create highlight
+            // create highlight
             if let highlight = createHighlight().highlight {
-                // TODO: create discussion
+                // create discussion
                 FolioReader.sharedInstance.readerContainer.createDiscussion(from: highlight)
             }
         } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {

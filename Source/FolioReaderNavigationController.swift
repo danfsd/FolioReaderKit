@@ -37,6 +37,8 @@ open class FolioReaderNavigationConfig: NSObject {
 
 open class FolioReaderNavigationController: UINavigationController {
     
+    var customNavigationBar: FolioReaderNavigationBar!
+    
     // MARK: - Initializers
     
     override public init(rootViewController: UIViewController) {
@@ -96,18 +98,23 @@ open class FolioReaderNavigationController: UINavigationController {
     // MARK: - Setup
     
     fileprivate func createNavigationBar() {
-        let navigationBar = FolioReaderNavigationBar()
-        navigationBar.topItem?.title = title
-        setValue(navigationBar, forKey: "navigationBar")
+        customNavigationBar = FolioReaderNavigationBar()
+        customNavigationBar.topItem?.title = title
+        setValue(customNavigationBar, forKey: "navigationBar")
+    }
+    
+    open func restoreNavigationBar() {
+        navigationBar.tintColor = nil
+        navigationBar.setBackgroundImage(nil, for: .default)
     }
     
     open func setupNavigationBar() {
-        if navigationConfig.shouldUseTitleWithImage {
-            let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 172.0, height: 36.0))
-            imageView.image = navigationConfig.titleViewImage
-            imageView.contentMode = .scaleAspectFit
-            navigationBar.topItem?.titleView = imageView
-        }
+//        if navigationConfig.shouldUseTitleWithImage {
+//            let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 172.0, height: 36.0))
+//            imageView.image = navigationConfig.titleViewImage
+//            imageView.contentMode = .scaleAspectFit
+//            navigationBar.topItem?.titleView = imageView
+//        }
         
         navigationBar.tintColor = UIColor.white
         

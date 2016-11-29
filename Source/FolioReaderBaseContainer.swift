@@ -33,7 +33,7 @@ open class FolioReaderBaseContainer: UIViewController {
     */
     open var shouldUseDefaultNavigationBar = true {
         didSet {
-            readerConfig.shouldHideNavigation = !shouldUseDefaultNavigationBar
+//            readerConfig.shouldHideNavigation = !shouldUseDefaultNavigationBar
         }
     }
     
@@ -51,7 +51,6 @@ open class FolioReaderBaseContainer: UIViewController {
         didSet {
             if errorOnLoad {
                 print("[INFO] - Error loading container")
-                // TODO: dismissViewControllerAnimated
                 closeReader()
             }
         }
@@ -212,6 +211,8 @@ open class FolioReaderBaseContainer: UIViewController {
         let navText = isNight(UIColor.white, UIColor.black)
         let font = UIFont(name: "Avenir-Light", size: 10)!
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
+        
+        // TODO: chamar função do próprio leitor para configurar leftBarButtons, rightBarButtons, titleView e sobrescrever no TabletReaderContainer
     }
     
     /**
@@ -220,7 +221,6 @@ open class FolioReaderBaseContainer: UIViewController {
      - precondition: `shouldSetupAudioPlayer` must be true.
     */
     func setupAudioPlayer() {
-        // TODO: verify if audioplayer has SMILS
         audioPlayer = FolioReaderAudioPlayer()
         FolioReader.sharedInstance.readerAudioPlayer = audioPlayer
     }
