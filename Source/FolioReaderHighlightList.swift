@@ -37,7 +37,7 @@ class FolioReaderHighlightList: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) 
         cell.backgroundColor = UIColor.clear
 
-        let highlight = highlights[(indexPath as NSIndexPath).row]
+        let highlight = highlights[indexPath.row]
         
         // Format date
         let dateFormatter = DateFormatter()
@@ -103,7 +103,7 @@ class FolioReaderHighlightList: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        let highlight = highlights[(indexPath as NSIndexPath).row]
+        let highlight = highlights[indexPath.row]
         
         let cleanString = highlight.content.stripHtml().truncate(250, trailing: "...").stripLineBreaks()
         let text = NSMutableAttributedString(string: cleanString)
@@ -123,7 +123,7 @@ class FolioReaderHighlightList: UITableViewController {
     // MARK: - Table view delegate
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let highlight = highlights[(indexPath as NSIndexPath).row]
+        let highlight = highlights[indexPath.row]
         
         FolioReader.sharedInstance.readerCenter.changePageWith(page: highlight.page, andFragment: highlight.highlightId)
         dismiss()
@@ -131,14 +131,14 @@ class FolioReaderHighlightList: UITableViewController {
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            let highlight = highlights[(indexPath as NSIndexPath).row]
+            let highlight = highlights[indexPath.row]
             
             if highlight.page == currentPageNumber {
                 _ = Highlight.removeFromHTMLById(highlight.highlightId) // Remove from HTML
             }
             
             highlight.remove() // Remove from Database
-            highlights.remove(at: (indexPath as NSIndexPath).row)
+            highlights.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
         }
     }

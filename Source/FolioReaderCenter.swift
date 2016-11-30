@@ -388,7 +388,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         cell.centerDelegate = delegate
         cell.delegate = self
-        cell.pageNumber = (indexPath as NSIndexPath).row+1
+        cell.pageNumber = indexPath.row+1
         cell.webView.scrollView.delegate = self
         cell.webView.setupScrollDirection()
         cell.webView.frame = cell.webViewFrame()
@@ -988,8 +988,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 //    }
     
     func indexPathIsValid(_ indexPath: IndexPath) -> Bool {
-        let section = (indexPath as NSIndexPath).section
-        let row = (indexPath as NSIndexPath).row
+        let section = indexPath.section
+        let row = indexPath.row
         let lastSectionIndex = numberOfSections(in: collectionView) - 1
         
         //Make sure the specified section exists
@@ -997,7 +997,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             return false
         }
         
-        let rowCount = self.collectionView(collectionView, numberOfItemsInSection: (indexPath as NSIndexPath).section) - 1
+        let rowCount = self.collectionView(collectionView, numberOfItemsInSection: indexPath.section) - 1
         return row <= rowCount
     }
     
