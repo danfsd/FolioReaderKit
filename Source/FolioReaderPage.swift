@@ -443,7 +443,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         if isScrolling {
             handleTap(tapLocation)
         } else {
-            Timer.scheduledTimer(timeInterval: TimeInterval(0.4), target: self, selector: #selector(self.handleTap(withTimer:)), userInfo: tapLocation, repeats: false)
+            Timer.scheduledTimer(timeInterval: TimeInterval(0.0), target: self, selector: #selector(self.handleTap(withTimer:)), userInfo: tapLocation, repeats: false)
         }
     }
     
