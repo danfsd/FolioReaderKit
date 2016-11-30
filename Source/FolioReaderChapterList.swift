@@ -54,7 +54,7 @@ class FolioReaderChapterList: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath) as! FolioReaderChapterListCell
         
-        let tocReference = tocItems[(indexPath as NSIndexPath).row]
+        let tocReference = tocItems[indexPath.row]
         let isSection = tocReference.children.count > 0
         
         cell.indexLabel.text = tocReference.title.trimmingCharacters(in: .whitespaces)
@@ -85,7 +85,7 @@ class FolioReaderChapterList: UITableViewController {
     // MARK: - Table view delegate
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let tocReference = tocItems[(indexPath as NSIndexPath).row]
+        let tocReference = tocItems[indexPath.row]
         delegate?.chapterList(self, didSelectRowAtIndexPath: indexPath, withTocReference: tocReference)
         
         tableView.deselectRow(at: indexPath, animated: true)

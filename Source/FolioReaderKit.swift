@@ -17,10 +17,10 @@ internal let isPhone = UIDevice.current.userInterfaceIdiom == .phone
 // MARK: - Internal constants
 
 internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
-internal let kCurrentTextAlignment = "com.folioreader.kCurrentTextAlignment"
+public let kCurrentTextAlignment = "com.folioreader.kCurrentTextAlignment"
 internal let kCurrentFontFamily = "com.folioreader.kCurrentFontFamily"
-internal let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
-internal let kCurrentAudioRate = "com.folioreader.kCurrentAudioRate"
+public let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
+public let kCurrentAudioRate = "com.folioreader.kCurrentAudioRate"
 internal let kCurrentHighlightStyle = "com.folioreader.kCurrentHighlightStyle"
 internal var kCurrentMediaOverlayStyle = "com.folioreader.kMediaOverlayStyle"
 // TODO: add last offset for orientation
@@ -57,7 +57,7 @@ enum MediaOverlayStyle: Int {
 */
 open class FolioReader : NSObject {
     static let sharedInstance = FolioReader()
-    static let defaults = UserDefaults.standard
+    open static let defaults = UserDefaults.standard
     weak var readerCenter: FolioReaderCenter!
     weak var readerContainer: FolioReaderBaseContainer!
     weak var readerAudioPlayer: FolioReaderAudioPlayer!
@@ -78,27 +78,29 @@ open class FolioReader : NSObject {
         }
     }
     
-    var currentTextAlignement: Int {
-        get { return FolioReader.defaults.value(forKey: kCurrentTextAlignment) as! Int }
+    open var currentTextAlignement: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentTextAlignment) as? Int ?? 0 }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentTextAlignment)
         }
     }
     
-    var currentFontName: Int {
-        get { return FolioReader.defaults.value(forKey: kCurrentFontFamily) as! Int }
+    open var currentFontName: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentFontFamily) as? Int ?? 0 }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentFontFamily)
         }
     }
     
-    var currentFontSize: Int {
-        get { return FolioReader.defaults.value(forKey: kCurrentFontSize) as! Int }
+    open var currentFontSize: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentFontSize) as? Int ?? 2 }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentFontSize)
         }
     }
     
+ 
+
     var currentAudioRate: Int {
         get { return FolioReader.defaults.value(forKey: kCurrentAudioRate) as! Int }
         set (value) {
@@ -211,6 +213,31 @@ open class FolioReader : NSObject {
         FolioReader.sharedInstance.isReaderReady = false
         FolioReader.sharedInstance.readerAudioPlayer.stop(true)
         FolioReader.defaults.set(0, forKey: kCurrentTOCMenu)
+    }
+    
+    open class func getFRbook(path: String) -> FRBook?{
+        
+        let controlStates = (
+            fontSize: FolioReader.sharedInstance.currentFontSize,
+            fontFamily: FolioReader.sharedInstance.currentFontName,
+            textAlignment: FolioReader.sharedInstance.currentTextAlignement
+        )
+        let book : FRBook!
+        
+        var isDir: ObjCBool = false
+        let fileManager = FileManager.default
+            
+        if fileManager.fileExists(atPath: path, isDirectory: &isDir) {
+            if isDir.boolValue {
+                book = FREpubParser().readEpub(epubPath: path)
+            } else {
+                book = FREpubParser().readEpub(epubPath: path, removeEpub: false)
+            }
+        } else {
+            print("Erro on laod.")
+            return nil
+        }
+        return book;
     }
 }
 

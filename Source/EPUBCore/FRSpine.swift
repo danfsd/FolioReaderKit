@@ -8,9 +8,9 @@
 
 import UIKit
 
-struct Spine {
+public struct Spine {
     var linear: Bool!
-    var resource: FRResource!
+    public var resource: FRResource!
     
     init(resource: FRResource, linear: Bool = true) {
         self.resource = resource
@@ -18,8 +18,8 @@ struct Spine {
     }
 }
 
-class FRSpine: NSObject {
-    var spineReferences = [Spine]()
+open class FRSpine: NSObject {
+    open var spineReferences = [Spine]()
 
     func nextChapter(_ href: String) -> FRResource? {
         var found = false;
