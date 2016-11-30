@@ -407,7 +407,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         return cell
     }
     
-    fileprivate func epubToHtml(_ resource: FRResource) -> String? {
+    open func epubToHtml(_ resource: FRResource) -> String? {
         var html = try? String(contentsOfFile: (resource.fullHref)!, encoding: String.Encoding.utf8)
         let mediaOverlayStyleColors = "\"\(readerConfig.mediaOverlayColor.hexString(false))\", \"\(readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
         
