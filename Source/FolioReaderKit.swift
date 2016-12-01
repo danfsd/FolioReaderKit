@@ -215,6 +215,7 @@ open class FolioReader : NSObject {
         FolioReader.defaults.set(0, forKey: kCurrentTOCMenu)
     }
     
+    
     open class func getFRbook(path: String) -> FRBook?{
         
         let controlStates = (
