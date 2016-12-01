@@ -319,5 +319,5 @@ open class FolioReaderBaseContainer: UIViewController {
     open func updateChapterPosition(chapter: Int, position: Float){}
     
     open func getChapterPosition(chapter: Int) -> Float{ return 0.0}
-    
+
 }
