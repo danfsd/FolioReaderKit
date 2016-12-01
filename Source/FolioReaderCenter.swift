@@ -101,6 +101,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     fileprivate var currentWebViewScrollPositions = [Int: CGPoint]()
     
     open var isFirstLoadOrientation = true
+    var lastContentOffset : CGFloat!
     
     // MARK: - Init
     
@@ -673,7 +674,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         let pageSize = isDirection(pageHeight, pageWidth)
         let totalWebviewPages = Int(ceil(page.webView.scrollView.contentSize.forDirection()/pageSize!))
-        let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+        let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.forDirection(), pageHeight: pageSize!)
         
         pageIndicatorView.totalPages = totalWebviewPages
         pageIndicatorView.currentPage = webViewPage
@@ -706,14 +707,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 } else {
                     indexPath = first
                 }
-            case .left:
-                if (first as NSIndexPath).compare(last) == .orderedDescending {
+            case .right:
+                if (first as NSIndexPath).compare(last) == .orderedAscending {
                     indexPath = first
                 } else {
                     indexPath = last
                 }
             default:
-                if (first as NSIndexPath).compare(last) == .orderedAscending {
+                if (first as NSIndexPath).compare(last) == .orderedDescending {
                     indexPath = first
                 } else {
                     indexPath = last
@@ -1282,7 +1283,18 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
         }
         
-        scrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
+        print(scrollView.contentOffset.forDirection())
+        print(pointNow.forDirection())
+        
+        
+      
+        if (pointNow.x > scrollView.contentOffset.x) {
+            scrollDirection = .negative()
+        }
+        else  {
+            scrollDirection = .positive()
+        }
+//        scrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
     }
     
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
