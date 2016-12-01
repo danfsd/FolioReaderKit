@@ -66,6 +66,8 @@ public typealias ReaderState = (current: Int, total: Int)
     // Refactored from highlightWasRemoved
     @objc optional func center(chapter: FolioReaderPage, highlightWasRemoved highlight: Highlight)
     
+    @objc optional func center(willHideBars page: FolioReaderPage)
+    
 }
 
 open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
@@ -309,6 +311,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 
         let shouldHide = true
         FolioReader.sharedInstance.readerContainer.shouldHideStatusBar = shouldHide
+        delegate?.center?(willHideBars: currentPage)
         
         UIView.animate(withDuration: 0.25, animations: {
             FolioReader.sharedInstance.readerContainer.setNeedsStatusBarAppearanceUpdate()
@@ -1252,7 +1255,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
         if !navigationController!.isNavigationBarHidden {
-            toggleBars()
+            hideBars()
         }
         
         scrollScrubber?.scrollViewDidScroll(scrollView)
