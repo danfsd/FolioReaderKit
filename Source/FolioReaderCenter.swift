@@ -1283,10 +1283,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
         }
         
-        print(scrollView.contentOffset.forDirection())
-        print(pointNow.forDirection())
-        
-        
       
         if (pointNow.x > scrollView.contentOffset.x) {
             scrollDirection = .negative()
@@ -1294,6 +1290,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         else  {
             scrollDirection = .positive()
         }
+        
+        
 //        scrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
     }
     
@@ -1330,6 +1328,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
         }
         
+        FolioReader.sharedInstance.readerContainer.updateChapterPosition(chapter: currentPage.pageNumber-1,
+                                                                         position: Float(currentPage.webView.scrollView.contentOffset.y))
         scrollScrubber?.scrollViewDidEndDecelerating(scrollView)
     }
     
@@ -1459,7 +1459,11 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
                     print("Scrolled to page offset. Webview's offset is \(currentOffset)")
                 }
             } else if !isScrolling {
-                page.scrollPageToBottom()
+                let position = FolioReader.sharedInstance.readerContainer.getChapterPosition(chapter: page.pageNumber-1)
+                page.scrollPageToOffset(CGFloat(position), animated: false)
+                currentOffset = page.webView.scrollView.contentOffset
+                print("Scrolled to page offset. Webview's offset is \(currentOffset)")
+//                page.scrollPageToBottom()
             }
             
         } else if isFirstLoad {

@@ -314,8 +314,10 @@ open class FolioReaderBaseContainer: UIViewController {
     */
     open func isDiscussion(highlightWith id: String) -> Bool { return false }
     
-    open func updateReadInfos(totalPages: Int, actualPage: Int, chapter: Int){
-        
-    }
+    open func updateReadInfos(totalPages: Int, actualPage: Int, chapter: Int){}
+      
+    open func updateChapterPosition(chapter: Int, position: Float){}
+    
+    open func getChapterPosition(chapter: Int) -> Float{ return 0.0}
     
 }
