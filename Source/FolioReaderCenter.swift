@@ -733,7 +733,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         )
     }
     
-    func changePageWith(page: Int, animated: Bool = false, completion: (() -> Void)? = nil) {
+    open func changePageWith(page: Int, animated: Bool = false, completion: (() -> Void)? = nil) {
         if page > 0 && page-1 < totalPages {
             let indexPath = IndexPath(row: page-1, section: 0)
             

@@ -24,13 +24,13 @@ open class FRBook: NSObject {
         return smils.smils.count > 0 ? true : false
     }
 
-    func title() -> String? {
+    open func title() -> String? {
         return metadata.titles.first
     }
     
     // MARK: - Table of Contents
     
-    func getTableOfContents() -> [FRTocReference]! {
+    open func getTableOfContents() -> [FRTocReference]! {
         var value = [FRTocReference]()
         
         for item in tableOfContents {
