@@ -216,29 +216,32 @@ open class FolioReader : NSObject {
     }
     
     
-    open class func getFRbook(path: String) -> FRBook?{
-        
-        let controlStates = (
-            fontSize: FolioReader.sharedInstance.currentFontSize,
-            fontFamily: FolioReader.sharedInstance.currentFontName,
-            textAlignment: FolioReader.sharedInstance.currentTextAlignement
-        )
-        let book : FRBook!
-        
-        var isDir: ObjCBool = false
-        let fileManager = FileManager.default
+    open class func getFRbook(path: String, completion: @escaping (FRBook?) -> Void) {
+        let priority = DispatchQueue.GlobalQueuePriority.high
+        DispatchQueue.global(priority: priority).async(execute: {
+            Void in
+            let controlStates = (
+                fontSize: FolioReader.sharedInstance.currentFontSize,
+                fontFamily: FolioReader.sharedInstance.currentFontName,
+                textAlignment: FolioReader.sharedInstance.currentTextAlignement
+            )
+            let book : FRBook!
             
-        if fileManager.fileExists(atPath: path, isDirectory: &isDir) {
-            if isDir.boolValue {
-                book = FREpubParser().readEpub(epubPath: path)
+            var isDir: ObjCBool = false
+            let fileManager = FileManager.default
+                
+            if fileManager.fileExists(atPath: path, isDirectory: &isDir) {
+                if isDir.boolValue {
+                    book = FREpubParser().readEpub(epubPath: path)
+                } else {
+                    book = FREpubParser().readEpub(epubPath: path, removeEpub: false)
+                }
             } else {
-                book = FREpubParser().readEpub(epubPath: path, removeEpub: false)
+                print("Erro on laod.")
+                return completion(nil)
             }
-        } else {
-            print("Erro on laod.")
-            return nil
-        }
-        return book;
+            completion(book)
+        })
     }
 }
 
