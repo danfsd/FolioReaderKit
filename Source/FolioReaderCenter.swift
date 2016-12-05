@@ -161,6 +161,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         collectionView.isPagingEnabled = true
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.bounces = false
         collectionView.backgroundColor = background
         collectionView.decelerationRate = UIScrollViewDecelerationRateFast
         enableScrollBetweenChapters(scrollEnabled: true)
@@ -1293,9 +1294,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         else  {
             scrollDirection = .positive()
         }
-        
-        
-//        scrollDirection = scrollView.contentOffset.forDirection() < pointNow.forDirection() ? .negative() : .positive()
     }
     
     open func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
