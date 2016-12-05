@@ -1329,10 +1329,11 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
                 delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
             }
+            FolioReader.sharedInstance.readerContainer.updateChapterPosition(chapter: currentPage.pageNumber-1,
+                                                                             position: Float(currentPage.webView.scrollView.contentOffset.y))
+            
         }
         
-        FolioReader.sharedInstance.readerContainer.updateChapterPosition(chapter: currentPage.pageNumber-1,
-                                                                         position: Float(currentPage.webView.scrollView.contentOffset.y))
         scrollScrubber?.scrollViewDidEndDecelerating(scrollView)
     }
     
