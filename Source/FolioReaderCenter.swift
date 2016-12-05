@@ -374,6 +374,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         return totalPages
     }
     
+    public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+    }
+
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         print("\n### willDisplayCell ###")
         let chapter = cell as! FolioReaderPage
@@ -394,6 +397,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     open func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! FolioReaderPage
         
         cell.centerDelegate = delegate
@@ -1319,7 +1323,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             if totalPages > 0 { updateCurrentPage() }
         } else {
             let pageSize = isDirection(pageHeight, pageWidth)
-            
+            FolioReader.sharedInstance.readerContainer.updateChapterPosition(chapter: currentPage.pageNumber-1, position: Float(currentPage.webView.scrollView.contentOffset.y))
             if let page = currentPage
                 , page.webView.scrollView.contentOffset.forDirection()+pageSize! <= page.webView.scrollView.contentSize.forDirection() {
                 let totalWebviewPages = Int(ceil(currentPage.webView.scrollView.contentSize.forDirection()/pageSize!))
@@ -1327,9 +1331,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                 let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
                 delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
             }
-            FolioReader.sharedInstance.readerContainer.updateChapterPosition(chapter: currentPage.pageNumber-1,
-                                                                             position: Float(currentPage.webView.scrollView.contentOffset.y))
-            
+
+
         }
         
         scrollScrubber?.scrollViewDidEndDecelerating(scrollView)
