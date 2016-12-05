@@ -10,7 +10,7 @@ import UIKit
 import AVFoundation
 import MediaPlayer
 
-class FolioReaderAudioPlayer: NSObject {
+open class FolioReaderAudioPlayer: NSObject {
     var isTextToSpeech = false
     var synthesizer: AVSpeechSynthesizer!
     var playing = false
@@ -146,11 +146,11 @@ class FolioReaderAudioPlayer: NSObject {
 //        UIApplication.sharedApplication().idleTimerDisabled = false
     }
 
-    func togglePlay() {
+    open func togglePlay() {
         isPlaying() ? pause() : play()
     }
 
-    func play() {
+    open func play() {
         if book.hasAudio() {
             let currentPage = FolioReader.sharedInstance.readerCenter.currentPage
             currentPage?.webView.js("playAudio()")
@@ -161,7 +161,7 @@ class FolioReaderAudioPlayer: NSObject {
 //        UIApplication.sharedApplication().idleTimerDisabled = true
     }
     
-    func isPlaying() -> Bool {
+    open func isPlaying() -> Bool {
         return playing
     }
 
@@ -504,11 +504,11 @@ class FolioReaderAudioPlayer: NSObject {
 // MARK: AVSpeechSynthesizerDelegate
 
 extension FolioReaderAudioPlayer: AVSpeechSynthesizerDelegate {
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+    public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         completionHandler()
     }
     
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+    public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         if isPlaying() {
             readCurrentSentence()
         }
@@ -518,7 +518,7 @@ extension FolioReaderAudioPlayer: AVSpeechSynthesizerDelegate {
 // MARK: AVAudioPlayerDelegate
 
 extension FolioReaderAudioPlayer: AVAudioPlayerDelegate {
-    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         _ = _playFragment(nextAudioFragment())
     }
 }
