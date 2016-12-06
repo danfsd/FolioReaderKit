@@ -88,6 +88,22 @@ open class FolioReaderBaseContainer: UIViewController {
             ])
     }
     
+    open func changeEbook(epubPathOrNil: String? = nil) {
+        FolioReader.sharedInstance.isReaderOpen = false
+        FolioReader.sharedInstance.isReaderReady = false
+        epubPath = epubPathOrNil
+        book = FRBook()
+        replaceReaderCenter()
+        setupBackMenuView()
+        setupNavigationItens()
+        
+        loadEbook()
+    }
+    
+    open func setupNavigationItens() { }
+    
+    open func setupBackMenuView() { }
+    
     // MARK: - View life cycle
     
     open override func viewDidLoad() {
@@ -179,6 +195,19 @@ open class FolioReaderBaseContainer: UIViewController {
     open func setupReaderCenter() {
         centerViewController = FolioReaderCenter()
         FolioReader.sharedInstance.readerCenter = centerViewController
+    }
+    
+    /**
+     Replaces the actual `FolioReaderCenter` instance, with a new one, waiting for a book to load.
+     */
+    open func replaceReaderCenter() {
+        var newControllers = centerNavigationController.viewControllers.filter { (vc) -> Bool in
+            return vc != centerViewController
+        }
+        
+        setupReaderCenter()
+        newControllers.insert(centerViewController, at: 0)
+        centerNavigationController.setViewControllers(newControllers, animated: true)
     }
     
     /**
