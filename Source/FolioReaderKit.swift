@@ -101,7 +101,7 @@ open class FolioReader : NSObject {
     
  
 
-    var currentAudioRate: Int {
+    open var currentAudioRate: Int {
         get { return FolioReader.defaults.value(forKey: kCurrentAudioRate) as! Int }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentAudioRate)
@@ -211,7 +211,7 @@ open class FolioReader : NSObject {
         FolioReader.saveReaderState()
         FolioReader.sharedInstance.isReaderOpen = false
         FolioReader.sharedInstance.isReaderReady = false
-        FolioReader.sharedInstance.readerAudioPlayer.stop(true)
+        FolioReader.sharedInstance.readerAudioPlayer.stop(immediate: true)
         FolioReader.defaults.set(0, forKey: kCurrentTOCMenu)
     }
     
