@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		13EEB9E592A80F9B0437B43C /* Pods_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6C7FEDB0C1CA1F769F87ED /* Pods_Example.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		13EEB9E592A80F9B0437B43C /* Pods_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D6C7FEDB0C1CA1F769F87ED /* Pods_Example.framework */; };
 		1A42C28D1C0E3882000F2137 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A42C28C1C0E3882000F2137 /* AppDelegate.swift */; };
 		1A42C28F1C0E3882000F2137 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A42C28E1C0E3882000F2137 /* ViewController.swift */; };
 		1A42C2921C0E3883000F2137 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1A42C2901C0E3883000F2137 /* Main.storyboard */; };
@@ -16,7 +16,8 @@
 		6E3C4A3F1C3C6708009CBC8C /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E3C4A3E1C3C6708009CBC8C /* MediaPlayer.framework */; };
 		6E5C9B051C4037B7008F6FD9 /* The Silver Chair.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */; };
 		6E5C9B091C403968008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */; };
-		928D6A301D25BD6900C8936F /* comecando-com-o-linux-comandos-servicos-e-administracao.epub in Resources */ = {isa = PBXBuildFile; fileRef = 928D6A2F1D25BCB500C8936F /* comecando-com-o-linux-comandos-servicos-e-administracao.epub */; };
+		921585F71D4F827C003C3BCC /* Medcel - Old.epub in Resources */ = {isa = PBXBuildFile; fileRef = 921585F61D4F826E003C3BCC /* Medcel - Old.epub */; };
+		92BE7E781D5E4365002177D7 /* Medcel.epub in Resources */ = {isa = PBXBuildFile; fileRef = 92BE7E771D5E434D002177D7 /* Medcel.epub */; };
 		CA10C1341C572A4B0049165D /* FolioReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA10C1331C572A4B0049165D /* FolioReaderTests.swift */; };
 		CA61603F1C572C4C00ACD034 /* The Adventures Of Sherlock Holmes - Adventure I.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */; };
 		CA6160401C572C4C00ACD034 /* The Silver Chair.epub in Resources */ = {isa = PBXBuildFile; fileRef = 6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */; };
@@ -50,7 +51,8 @@
 		6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Silver Chair.epub"; sourceTree = "<group>"; };
 		6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "The Adventures Of Sherlock Holmes - Adventure I.epub"; sourceTree = "<group>"; };
 		8E1BE6465444C567F5D1B8E6 /* Pods-FolioReaderTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FolioReaderTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests.release.xcconfig"; sourceTree = "<group>"; };
-		928D6A2F1D25BCB500C8936F /* comecando-com-o-linux-comandos-servicos-e-administracao.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "comecando-com-o-linux-comandos-servicos-e-administracao.epub"; sourceTree = "<group>"; };
+		921585F61D4F826E003C3BCC /* Medcel - Old.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Medcel - Old.epub"; sourceTree = "<group>"; };
+		92BE7E771D5E434D002177D7 /* Medcel.epub */ = {isa = PBXFileReference; lastKnownFileType = file; path = Medcel.epub; sourceTree = "<group>"; };
 		CA10C1311C572A4B0049165D /* FolioReaderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioReaderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA10C1331C572A4B0049165D /* FolioReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolioReaderTests.swift; sourceTree = "<group>"; };
 		CA10C1351C572A4B0049165D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -127,7 +129,8 @@
 		6E5C9B011C4037B7008F6FD9 /* Sample eBooks */ = {
 			isa = PBXGroup;
 			children = (
-				928D6A2F1D25BCB500C8936F /* comecando-com-o-linux-comandos-servicos-e-administracao.epub */,
+				92BE7E771D5E434D002177D7 /* Medcel.epub */,
+				921585F61D4F826E003C3BCC /* Medcel - Old.epub */,
 				6E5C9B081C403942008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub */,
 				6E5C9B031C4037B7008F6FD9 /* The Silver Chair.epub */,
 			);
@@ -161,12 +164,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1A42C29B1C0E3883000F2137 /* Build configuration list for PBXNativeTarget "Example" */;
 			buildPhases = (
-				BFF78AC0EC7FAA2ADF7765C4 /* 📦 Check Pods Manifest.lock */,
+				6BB4B87019CBF22A26D57251 /* [CP] Check Pods Manifest.lock */,
+				BFF78AC0EC7FAA2ADF7765C4 /* [CP] Check Pods Manifest.lock */,
 				1A42C2851C0E3882000F2137 /* Sources */,
 				1A42C2861C0E3882000F2137 /* Frameworks */,
 				1A42C2871C0E3882000F2137 /* Resources */,
-				B6A166DC30D64CDC32736E22 /* 📦 Embed Pods Frameworks */,
-				8F716768EB59E9B6D88C48D7 /* 📦 Copy Pods Resources */,
+				B6A166DC30D64CDC32736E22 /* [CP] Embed Pods Frameworks */,
+				8F716768EB59E9B6D88C48D7 /* [CP] Copy Pods Resources */,
+				52EDD0255393518C859DA01C /* 📦 Embed Pods Frameworks */,
+				EF9B4ADBBC85CBF81E88F153 /* 📦 Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -181,12 +187,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CA10C1381C572A4B0049165D /* Build configuration list for PBXNativeTarget "FolioReaderTests" */;
 			buildPhases = (
-				1D8126CC73301F2413345444 /* 📦 Check Pods Manifest.lock */,
+				0642B6A6EF0631B5697FC382 /* [CP] Check Pods Manifest.lock */,
+				1D8126CC73301F2413345444 /* [CP] Check Pods Manifest.lock */,
 				CA10C12D1C572A4B0049165D /* Sources */,
 				CA10C12E1C572A4B0049165D /* Frameworks */,
 				CA10C12F1C572A4B0049165D /* Resources */,
-				C1392FF51E4FD15EBB5AA8DD /* 📦 Embed Pods Frameworks */,
-				652A7706A17894A2B0BA1503 /* 📦 Copy Pods Resources */,
+				C1392FF51E4FD15EBB5AA8DD /* [CP] Embed Pods Frameworks */,
+				652A7706A17894A2B0BA1503 /* [CP] Copy Pods Resources */,
+				E82F486563C1547E0775A59F /* 📦 Embed Pods Frameworks */,
+				064D38CE83FACC358B7C0EC8 /* 📦 Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -247,7 +256,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				928D6A301D25BD6900C8936F /* comecando-com-o-linux-comandos-servicos-e-administracao.epub in Resources */,
+				92BE7E781D5E4365002177D7 /* Medcel.epub in Resources */,
+				921585F71D4F827C003C3BCC /* Medcel - Old.epub in Resources */,
 				1A42C2941C0E3883000F2137 /* Assets.xcassets in Resources */,
 				1A42C2A21C0E3A8D000F2137 /* LaunchScreen.storyboard in Resources */,
 				6E5C9B091C403968008F6FD9 /* The Adventures Of Sherlock Holmes - Adventure I.epub in Resources */,
@@ -268,14 +278,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1D8126CC73301F2413345444 /* 📦 Check Pods Manifest.lock */ = {
+		0642B6A6EF0631B5697FC382 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "📦 Check Pods Manifest.lock";
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -283,7 +293,7 @@
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		652A7706A17894A2B0BA1503 /* 📦 Copy Pods Resources */ = {
+		064D38CE83FACC358B7C0EC8 /* 📦 Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -298,22 +308,22 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8F716768EB59E9B6D88C48D7 /* 📦 Copy Pods Resources */ = {
+		1D8126CC73301F2413345444 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "📦 Copy Pods Resources";
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Example/Pods-Example-resources.sh\"\n";
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		B6A166DC30D64CDC32736E22 /* 📦 Embed Pods Frameworks */ = {
+		52EDD0255393518C859DA01C /* 📦 Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -328,14 +338,29 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Example/Pods-Example-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BFF78AC0EC7FAA2ADF7765C4 /* 📦 Check Pods Manifest.lock */ = {
+		652A7706A17894A2B0BA1503 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "📦 Check Pods Manifest.lock";
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6BB4B87019CBF22A26D57251 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -343,7 +368,67 @@
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		C1392FF51E4FD15EBB5AA8DD /* 📦 Embed Pods Frameworks */ = {
+		8F716768EB59E9B6D88C48D7 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Example/Pods-Example-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		B6A166DC30D64CDC32736E22 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Example/Pods-Example-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BFF78AC0EC7FAA2ADF7765C4 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		C1392FF51E4FD15EBB5AA8DD /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E82F486563C1547E0775A59F /* 📦 Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -356,6 +441,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-FolioReaderTests/Pods-FolioReaderTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EF9B4ADBBC85CBF81E88F153 /* 📦 Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "📦 Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-Example/Pods-Example-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -501,8 +601,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = Example/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = rocks.davai.EpubTester;
+				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.Example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 			};
@@ -516,8 +617,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = Example/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = rocks.davai.EpubTester;
+				PRODUCT_BUNDLE_IDENTIFIER = com.folioreader.Example;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 			};

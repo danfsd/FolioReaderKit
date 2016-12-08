@@ -18,26 +18,27 @@ class FolioReaderPageIndicator: UIView {
     }
     
     override init(frame: CGRect) {
+//        print("PageIndicator.\(#function)")
         super.init(frame: frame)
         
-        let color = isNight(readerConfig.nightModeBackground, UIColor.whiteColor())
+        let color = isNight(readerConfig.nightModeBackground, UIColor.white)
         backgroundColor = color
-        layer.shadowColor = color.CGColor
+        layer.shadowColor = color.cgColor
         layer.shadowOffset = CGSize(width: 0, height: -6)
         layer.shadowOpacity = 1
         layer.shadowRadius = 4
-        layer.shadowPath = UIBezierPath(rect: bounds).CGPath
-        layer.rasterizationScale = UIScreen.mainScreen().scale
+        layer.shadowPath = UIBezierPath(rect: bounds).cgPath
+        layer.rasterizationScale = UIScreen.main.scale
         layer.shouldRasterize = true
         
-        pagesLabel = UILabel(frame: CGRectZero)
+        pagesLabel = UILabel(frame: CGRect.zero)
         pagesLabel.font = UIFont(name: "Avenir-Light", size: 10)!
-        pagesLabel.textAlignment = NSTextAlignment.Right
+        pagesLabel.textAlignment = NSTextAlignment.right
         addSubview(pagesLabel)
         
-        minutesLabel = UILabel(frame: CGRectZero)
+        minutesLabel = UILabel(frame: CGRect.zero)
         minutesLabel.font = UIFont(name: "Avenir-Light", size: 10)!
-        minutesLabel.textAlignment = NSTextAlignment.Right
+        minutesLabel.textAlignment = NSTextAlignment.right
 //        minutesLabel.alpha = 0
         addSubview(minutesLabel)
     }
@@ -46,7 +47,8 @@ class FolioReaderPageIndicator: UIView {
         super.init(coder: aDecoder)
     }
     
-    func reloadView(updateShadow updateShadow: Bool) {
+    func reloadView(_ updateShadow: Bool) {
+//        print("PageIndicator.\(#function)")
         minutesLabel.sizeToFit()
         pagesLabel.sizeToFit()
         
@@ -55,27 +57,27 @@ class FolioReaderPageIndicator: UIView {
         pagesLabel.frame.origin = CGPoint(x: minutesLabel.frame.origin.x+minutesLabel.frame.width, y: 2)
         
         if updateShadow {
-            layer.shadowPath = UIBezierPath(rect: bounds).CGPath
+            layer.shadowPath = UIBezierPath(rect: bounds).cgPath
             
             // Update colors
-            let color = isNight(readerConfig.nightModeBackground, UIColor.whiteColor())
+            let color = isNight(readerConfig.nightModeBackground, UIColor.white)
             backgroundColor = color
-            layer.shadowColor = color.CGColor
+            layer.shadowColor = color.cgColor
             
             minutesLabel.textColor = isNight(UIColor(white: 5, alpha: 0.3), UIColor(white: 0, alpha: 0.6))
             pagesLabel.textColor = isNight(UIColor(white: 5, alpha: 0.6), UIColor(white: 0, alpha: 0.9))
         }
     }
     
-    private func reloadViewWithPage(page: Int) {
+    fileprivate func reloadViewWithPage(_ page: Int) {
+//        print("PageIndicator.\(#function)")
         let pagesRemaining = totalPages-page
         
         if pagesRemaining == 1 {
-            pagesLabel.text = " "+readerConfig.localizedReaderOnePageLeft
+            pagesLabel.text = " \(readerConfig.localizedReaderOnePageLeft)."
         } else {
-            pagesLabel.text = " \(pagesRemaining) "+readerConfig.localizedReaderManyPagesLeft
+            pagesLabel.text = " \(pagesRemaining) \(readerConfig.localizedReaderManyPagesLeft)."
         }
-        
         
         let minutesRemaining = Int(ceil(CGFloat((pagesRemaining * totalMinutes)/totalPages)))
         if minutesRemaining > 1 {
@@ -86,6 +88,6 @@ class FolioReaderPageIndicator: UIView {
             minutesLabel.text = readerConfig.localizedReaderLessThanOneMinute+" ·"
         }
         
-        reloadView(updateShadow: false)
+        reloadView(false)
     }
 }

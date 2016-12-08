@@ -11,138 +11,78 @@ import SafariServices
 import UIMenuItem_CXAImageSupport
 import JSQWebViewController
 
-@objc protocol FolioPageDelegate: class {
-    optional func pageDidLoad(page: FolioReaderPage)
+var selectedHighlightId: String?
+
+protocol FolioReaderPageDelegate: class {
+    /**
+     Notify that page did loaded
+     
+     - parameter page: The loaded page
+     */
+    func pageDidLoad(_ page: FolioReaderPage, offset: CGPoint)
 }
 
-class FolioReaderWebView: UIWebView {
-//    var numberOfPages: Int!
-//    
-//    var destinationPage = 0
-//    var currentPage = 0
-//    var previousPage = 0
-//    
-//    var scrollDirection = FolioReaderWebViewScrollDirection.none
-//    
-//    var lastXContentOffset = CGFloat(0)
-//    var destinationXContentOffset: CGFloat?
-//    
-//    override func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
-//        isScrolling = false
-//    }
-//    
-//    override func scrollViewDidScroll(scrollView: UIScrollView) {
-//        let pageWidth = self.bounds.width
-//        let fractionalPage = scrollView.contentOffset.x / pageWidth
-//        let page = lround(Double(fractionalPage))
-//
-//        let currentXContentOffset = scrollView.contentOffset.x
-//        if let destination = destinationXContentOffset where destination != currentXContentOffset {
-//            // didn't reached destination
-//            if currentXContentOffset > lastXContentOffset {
-//                // scrolling right
-//                scrollDirection = .right
-//                
-//                // TODO: scroll to next page horizontal center
-//            } else if currentXContentOffset < lastXContentOffset {
-//                // scrolling left
-//                scrollDirection = .left
-//                
-//                // TODO: scroll to last page horizontal leading
-//            }
-//        } else {
-//            // reached destination
-//            scrollDirection = .none
-//            
-//        }
-//        
-//        if previousPage != page {
-//            print("[INFO] - previous: \(previousPage) page: \(page)")
-//            previousPage = page
-//        
-//            lastXContentOffset = currentXContentOffset
-//            destinationXContentOffset = CGFloat(CGFloat(page) * pageWidth)
-//            let rect = CGRectMake(destinationXContentOffset!, 0, 10, 10)
-//            print("[INFO] - scrolling to \(destinationXContentOffset)")
-//            scrollView.scrollRectToVisible(rect, animated: true)
-//        }
-//        
-//        
-//        
-////        if !isScrolling {
-////            let currentXContentOffset = scrollView.contentOffset.x
-////            print("[INFO] - didScroll")
-////            
-////            if currentXContentOffset > lastXContentOffset {
-////                print("[INFO] - right")
-////                currentPage += 1
-////            } else if currentXContentOffset < lastXContentOffset {
-////                print("[INFO] - left")
-////                currentPage -= 1
-////            }
-////            
-////            lastXContentOffset = currentXContentOffset
-////            destinationXContentOffset = CGFloat(CGFloat(currentPage) * pageWidth)
-////            print("[INFO] - scrolling to x: \(destinationXContentOffset!)")
-////            let rect = CGRectMake(destinationXContentOffset!, 0, 10, 10)
-////            isScrolling = true
-////            scrollView.scrollRectToVisible(rect, animated: true)
-////        }
-//        
-////        scrollView.contentOffset.x = destinationXContentOffset
-//    }
+class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate {
     
-}
-
-class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate, FolioReaderAudioPlayerDelegate {
-    
+    weak var delegate: FolioReaderPageDelegate?
     var pageNumber: Int!
-    
-    var webView: FolioReaderWebView!
-    weak var delegate: FolioPageDelegate!
-    
-    var shouldLoadAtLastPage = false
-    
-    // TODO: refactor
-    private var shouldShowBar = true
-    private var menuIsVisible = false
+    var webView: UIWebView!
+    var baseURL: URL!
+    var bottomOffset: CGPoint?
+    fileprivate var colorView: UIView!
+    fileprivate var shouldShowBar = true
+    fileprivate var menuIsVisible = false
+    fileprivate var currentHtml: NSString!
+    fileprivate var selectedHighlight: Highlight?
     
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.backgroundColor = UIColor.whiteColor()
+        self.backgroundColor = UIColor.clear
+        
+        // TODO: Put the notification name in a Constants file
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: NSNotification.Name(rawValue: "needRefreshPageMode"), object: nil)
         
         if webView == nil {
-            webView = FolioReaderWebView(frame: webViewFrame())
-            webView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
-            webView.dataDetectorTypes = [.None, .Link]
-            
-            // Enabling column left-to-right pagination breaking the HTML content into columns
-            // Stated on https://developer.apple.com/library/prerelease/content/releasenotes/General/WhatsNewInSafari/Articles/Safari_7_0.html
-            if readerConfig.scrollOrientation == .horizontal {
-                webView.paginationMode = .LeftToRight
-                webView.paginationBreakingMode = .Column
-                webView.scrollView.pagingEnabled = true
-                webView.scrollView.bounces = false
-            } else {
-                webView.scrollView.bounces = true
-            }
-            
+            webView = UIWebView(frame: webViewFrame())
+            webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            webView.dataDetectorTypes = .link
             webView.scrollView.showsVerticalScrollIndicator = false
-            webView.backgroundColor = UIColor.clearColor()
+            webView.scrollView.showsHorizontalScrollIndicator = false
+            webView.backgroundColor = UIColor.clear
+            
             self.contentView.addSubview(webView)
         }
         webView.delegate = self
         
-        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FolioReaderPage.handleTapGesture(_:)))
+        if readerConfig.scrollDirection == .horizontal {
+            webView.scrollView.isPagingEnabled = true
+            webView.paginationMode = .leftToRight
+            webView.paginationBreakingMode = .page
+            webView.scrollView.bounces = false
+        } else {
+            webView.scrollView.bounces = true
+        }
+        
+        if colorView == nil {
+            colorView = UIView()
+            colorView.backgroundColor = readerConfig.nightModeBackground
+            webView.scrollView.addSubview(colorView)
+        }
+        
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapGesture(_:)))
         tapGestureRecognizer.numberOfTapsRequired = 1
         tapGestureRecognizer.delegate = self
         webView.addGestureRecognizer(tapGestureRecognizer)
     }
-    
+
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func layoutSubviews() {
@@ -152,124 +92,186 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
     }
     
     func webViewFrame() -> CGRect {
-        if readerConfig.shouldHideNavigationOnTap == false {
-            let statusbarHeight = UIApplication.sharedApplication().statusBarFrame.size.height
+        let paddingTop: CGFloat = 20
+        let paddingBottom: CGFloat = 30
+        
+        guard readerConfig.shouldHideNavigationOnTap else {
+            let statusbarHeight = UIApplication.shared.statusBarFrame.size.height
             let navBarHeight = FolioReader.sharedInstance.readerCenter.navigationController?.navigationBar.frame.size.height
             let navTotal = statusbarHeight + navBarHeight!
-            let newFrame = CGRect(x: self.bounds.origin.x, y: self.bounds.origin.y+navTotal, width: self.bounds.width, height: self.bounds.height-navTotal)
+            let newFrame = CGRect(
+                x: bounds.origin.x,
+                y: isVerticalDirection(bounds.origin.y + navTotal, bounds.origin.y + navTotal + paddingTop),
+                width: bounds.width,
+                height: isVerticalDirection(bounds.height - navTotal, bounds.height - navTotal - paddingTop - paddingBottom))
             return newFrame
-        } else {
-            return self.bounds
+        }
+        
+        let newFrame = CGRect(
+            x: bounds.origin.x,
+            y: isVerticalDirection(bounds.origin.y, bounds.origin.y + paddingTop),
+            width: bounds.width,
+            height: isVerticalDirection(bounds.height, bounds.height - paddingTop - paddingBottom))
+        return newFrame
+    }
+    
+    open func insertHighlights(_ highlights: [Highlight]) {
+        var newHtml = NSString(string: currentHtml).copy() as! NSString
+    
+        var didChanged = false
+        
+        for highlight in highlights {
+            if let _ = Highlight.findByHighlightId(highlight.highlightId) {
+                
+            } else {
+                if highlight.page != pageNumber {
+                } else {
+                    let highlightTag = createHighlightTag(highlight)
+                    
+                    let range: NSRange = newHtml.range(of: highlightTag.locator, options: .literal)
+                    if range.location != NSNotFound {
+                        let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
+                        newHtml = newHtml.replacingCharacters(in: newRange, with: highlightTag.tag) as NSString
+                    }
+                    
+                    highlight.persist()
+                    didChanged = true
+                }
+            }
+        }
+        
+        if didChanged {
+            webView.loadHTMLString(newHtml as String, baseURL: baseURL)
         }
     }
     
-    func loadHTMLString(string: String!, baseURL: NSURL!) {
+    func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
+        let style = HighlightStyle.classForStyle(highlight.type)
+        let tag = "<highlight id=\"\(highlight.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content!)</highlight>"
+        var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
+        locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
         
+        return (tag: tag, locator: locator)
+    }
+    
+    func loadHTMLString(_ string: String!, baseURL: URL!) {
         var html = (string as NSString)
+        self.currentHtml = html
         
+        print("loadHTMLString html count: \(currentHtml.length)")
+        
+        self.baseURL = baseURL
         // Restore highlights
-        let highlights = Highlight.allByBookId((kBookId as NSString).stringByDeletingPathExtension, andPage: pageNumber)
+        let highlights = Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?)
         
         if highlights.count > 0 {
             for item in highlights {
-                let style = HighlightStyle.classForStyle(item.type.integerValue)
-                let tag = "<highlight id=\"\(item.highlightId)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content)</highlight>"
-                let locator = item.contentPre + item.content + item.contentPost
-                let range: NSRange = html.rangeOfString(locator, options: .LiteralSearch)
+                let style = HighlightStyle.classForStyle(item.type)
+                let tag = "<highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
+                var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
+                locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
+                let range: NSRange = html.range(of: locator, options: .literal)
                 
                 if range.location != NSNotFound {
                     let newRange = NSRange(location: range.location + item.contentPre.characters.count, length: item.content.characters.count)
-                    html = html.stringByReplacingCharactersInRange(newRange, withString: tag)
-                }
-                else {
-                    print("highlight range not found")
+                    html = html.replacingCharacters(in: newRange, with: tag) as (NSString)
+                } else {
+                    
                 }
             }
         }
         
         webView.alpha = 0
+        self.webView.scrollView.isUserInteractionEnabled = false
+        FolioReader.sharedInstance.readerContainer.centerViewController.collectionView.isUserInteractionEnabled = false
+        self.webView.isUserInteractionEnabled = false
         webView.loadHTMLString(html as String, baseURL: baseURL)
-    }
-    
-    // MARK: - FolioReaderAudioPlayerDelegate
-    func didReadSentence() {
-        self.readCurrentSentence();
     }
     
     // MARK: - UIWebView Delegate
     
-    func webViewDidFinishLoad(webView: UIWebView) {
-        if (!book.hasAudio()) {
-            FolioReader.sharedInstance.readerAudioPlayer.delegate = self;
-            self.webView.js("wrappingSentencesWithinPTags()");
-            if (FolioReader.sharedInstance.readerAudioPlayer.isPlaying()) {
-                readCurrentSentence()
+    func webViewDidFinishLoad(_ webView: UIWebView) {
+        print("\n### webViewDidFinishLoad ###")
+        refreshPageMode()
+        self.webView.scrollView.isUserInteractionEnabled = true
+        FolioReader.sharedInstance.readerContainer.centerViewController.collectionView.isUserInteractionEnabled = true
+        self.webView.isUserInteractionEnabled = true
+        var offset = CGPoint(x: 0.0, y: 0.0)
+//        bottomOffset = CGPoint(x: 0.0, y: 0.0)
+        
+        if readerConfig.enableTTS && !book.hasAudio() {
+            _ = webView.js("wrappingSentencesWithinPTags()");
+            
+            if FolioReader.sharedInstance.readerAudioPlayer.isPlaying() {
+                FolioReader.sharedInstance.readerAudioPlayer.readCurrentSentence()
             }
         }
+
+        bottomOffset = isVerticalDirection(
+            CGPoint(x: 0, y: webView.scrollView.contentSize.height - webView.scrollView.bounds.height),
+            CGPoint(x: webView.scrollView.contentSize.width - webView.scrollView.bounds.width, y: 0)
+        )
         
-        // If on `.horizontal` mode, there's no need to limit the horizontal `contentSize` to the page's width
-        if readerConfig.scrollOrientation == FolioReaderScrollOrientation.vertical {
-            webView.scrollView.contentSize = CGSizeMake(pageWidth, webView.scrollView.contentSize.height)
-        }
+        print("Page bottom offset: \(bottomOffset)")
+        print("Is scrolling back: \(scrollDirection == .negative())")
+        print("Is scrolling: \(isScrolling)")
         
-        if scrollDirection == .Down && isScrolling {
-            let bottomOffset = CGPointMake(0, webView.scrollView.contentSize.height - webView.scrollView.bounds.height)
-            if bottomOffset.y >= 0 {
-                dispatch_async(dispatch_get_main_queue(), {
-                    webView.scrollView.setContentOffset(bottomOffset, animated: false)
+        if scrollDirection == .negative() && isScrolling {
+            offset = bottomOffset!
+            if offset.forDirection() >= 0 {
+                print("Setting webview's scrollview content offset")
+                DispatchQueue.main.async(execute: {
+                    webView.scrollView.setContentOffset(offset, animated: false)
                 })
             }
         }
         
-        if shouldLoadAtLastPage {
-            print("Will try to skip to last page")
-            let pageCount = webView.pageCount
-            print("Page count: \(pageCount)")
-            if pageCount > 1 {
-                let horizontalOffset = CGPointMake(CGFloat(pageCount - 1) * webView.frame.width, 0)
-                print("Changing contentOffset.x to \(horizontalOffset.x)")
-                dispatch_async(dispatch_get_main_queue(), {
-                    webView.scrollView.setContentOffset(horizontalOffset, animated: true)
-                })
-            } else {
-                print("No need for change contentOffset.x")
-            }
-        } else {
-            print("Will not skip to last page")
-        }
+        isScrolling = false
         
-        UIView.animateWithDuration(0.2, animations: {webView.alpha = 1}) { finished in
+        UIView.animate(withDuration: 0.2, animations: {webView.alpha = 1}, completion: { finished in
             webView.isColors = false
-            self.webView.createMenu(options: false)
+            self.webView.createMenu(false)
+        })
+        
+        if let highlightsToSync = FolioReader.sharedInstance.readerCenter.highlightsToSync {
+            insertHighlights(highlightsToSync)
         }
         
-        delegate.pageDidLoad!(self)
+        print("### webViewDidFinishLoad ###\n")
         
-//        webView.scrollView.scrollRectToVisible(CGRectMake(4000.0, 0.0, 10, 10), animated: true)
+        delegate?.pageDidLoad(self, offset: offset)
     }
     
-    func webView(webView: UIWebView, shouldStartLoadWithRequest request: NSURLRequest, navigationType: UIWebViewNavigationType) -> Bool {
+    func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
+        let url = request.url
         
-        let url = request.URL
+        print("\n### shouldStartLoadWith ###")
         
         if url?.scheme == "highlight" {
             
+            print("highlight was pressed")
+            
             shouldShowBar = false
+            let decoded = url!.absoluteString.removingPercentEncoding!
+            let schemeIndex = decoded.index(decoded.startIndex, offsetBy: 13)
+            let decodedSchemeless = decoded.substring(from: schemeIndex)
             
-            let decoded = url?.absoluteString.stringByRemovingPercentEncoding as String!
-            let rect = CGRectFromString(decoded.substringFromIndex(decoded.startIndex.advancedBy(12)))
+            selectedHighlightId = decodedSchemeless.substring(to: decoded.index(decodedSchemeless.startIndex, offsetBy: 36))
             
-            webView.createMenu(options: true)
+            let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 51)))
+            
+            webView.createMenu(true)
             webView.setMenuVisible(true, andRect: rect)
             menuIsVisible = true
             
             return false
         } else if url?.scheme == "play-audio" {
 
-            let decoded = url?.absoluteString.stringByRemovingPercentEncoding as String!
-            let playID = decoded.substringFromIndex(decoded.startIndex.advancedBy(13))
-
-            FolioReader.sharedInstance.readerCenter.playAudio(playID)
+            let decoded = url!.absoluteString.removingPercentEncoding!
+            let playID = decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 13))
+            let chapter = FolioReader.sharedInstance.readerCenter.getCurrentChapter()
+            let href = chapter != nil ? chapter!.href : "";
+            FolioReader.sharedInstance.readerAudioPlayer.playAudio(href!, fragmentID: playID)
 
             return false
         } else if url?.scheme == "file" {
@@ -277,27 +279,27 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             let anchorFromURL = url?.fragment
             
             // Handle internal url
-            if (url!.path! as NSString).pathExtension != "" {
-                let base = (book.opfResource.href as NSString).stringByDeletingLastPathComponent
+            if (url!.path as NSString).pathExtension != "" {
+                let base = (book.opfResource.href as NSString).deletingLastPathComponent
                 let path = url?.path
-                let splitedPath = path!.componentsSeparatedByString(base.isEmpty ? kBookId : base)
+                let splitedPath = path!.components(separatedBy: base.isEmpty ? kBookId : base)
                 
                 // Return to avoid crash
                 if splitedPath.count <= 1 || splitedPath[1].isEmpty {
                     return true
                 }
                 
-                let href = splitedPath[1].stringByTrimmingCharactersInSet(NSCharacterSet(charactersInString: "/"))
+                let href = splitedPath[1].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
                 let hrefPage = FolioReader.sharedInstance.readerCenter.findPageByHref(href)+1
                 
                 if hrefPage == pageNumber {
                     // Handle internal #anchor
                     if anchorFromURL != nil {
-                        handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animating: true)
+                        handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animated: true)
                         return false
                     }
                 } else {
-                    FolioReader.sharedInstance.readerCenter.changePageWith(href: href, animated: true)
+                    FolioReader.sharedInstance.readerCenter.changePageWith(href: href, animated: true, completion: nil)
                 }
                 
                 return false
@@ -305,7 +307,7 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
             
             // Handle internal #anchor
             if anchorFromURL != nil {
-                handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animating: true)
+                handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animated: true)
                 return false
             }
             
@@ -313,31 +315,44 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         } else if url?.scheme == "mailto" {
             print("Email")
             return true
-        } else if request.URL!.absoluteString != "about:blank" && navigationType == .LinkClicked {
+        } else if request.url!.absoluteString != "about:blank" && navigationType == .linkClicked {
             
             if #available(iOS 9.0, *) {
-                let safariVC = SFSafariViewController(URL: request.URL!)
+                let safariVC = SFSafariViewController(url: request.url!)
                 safariVC.view.tintColor = readerConfig.tintColor
-                FolioReader.sharedInstance.readerCenter.presentViewController(safariVC, animated: true, completion: nil)
+                FolioReader.sharedInstance.readerCenter.present(safariVC, animated: true, completion: nil)
             } else {
-                let webViewController = WebViewController(url: request.URL!)
+                let webViewController = WebViewController(url: request.url!)
                 let nav = UINavigationController(rootViewController: webViewController)
                 nav.view.tintColor = readerConfig.tintColor
-                FolioReader.sharedInstance.readerCenter.presentViewController(nav, animated: true, completion: nil)
+                FolioReader.sharedInstance.readerCenter.present(nav, animated: true, completion: nil)
             }
-            
             return false
+        } else if url?.scheme == "font-changed" {
+            Timer.scheduledTimer(timeInterval: TimeInterval(0.5), target: self, selector: #selector(fontDidChanged), userInfo: nil, repeats: false)
         }
+        
+        print("### shouldStartLoadWith ###\n")
         
         return true
     }
     
+    func fontDidChanged() {
+        let pageSize = isVerticalDirection(pageHeight, pageWidth)
+        let totalWebviewPages = Int(ceil(webView.scrollView.contentSize.forDirection()/pageSize!))
+        let webViewPage = FolioReader.sharedInstance.readerCenter.pageForOffset(webView.scrollView.contentOffset.x, pageHeight: pageSize!)
+        let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+        
+        FolioReader.sharedInstance.readerContainer.webviewPageDidChanged(pageState)
+    }
+    
     // MARK: Gesture recognizer
     
-    func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWithGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        
         if gestureRecognizer.view is UIWebView {
             if otherGestureRecognizer is UILongPressGestureRecognizer {
-                if UIMenuController.sharedMenuController().menuVisible {
+                if UIMenuController.shared.isMenuVisible {
                     webView.setMenuVisible(false)
                 }
                 return false
@@ -347,132 +362,184 @@ class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecogni
         return false
     }
     
-    func handleTapGesture(recognizer: UITapGestureRecognizer) {
-//        webView.setMenuVisible(false)
+    func handleTap(_ timer: Timer) {
+        let tapLocation = timer.userInfo as! CGPoint
+        let lowerTapThreshold = self.webView.frame.size.width * 0.20
+        let upperTapThreshold = self.webView.frame.size.width * 0.80
         
-        if FolioReader.sharedInstance.readerCenter.navigationController!.navigationBarHidden {
+        print("after timer tapLocation.x: \(tapLocation.x)")
+        
+        if FolioReader.sharedInstance.readerCenter.navigationController!.isNavigationBarHidden {
             let menuIsVisibleRef = menuIsVisible
             
             let selected = webView.js("getSelectedText()")
-
-            if selected == nil || selected!.characters.count == 0 {
-                let seconds = 0.4
+            
+            print("shouldShowBar: \(shouldShowBar)")
+            
+            if shouldShowBar && (selected == nil || selected!.characters.count == 0) {
+                var seconds = 0.4
+                
+                var shouldSkipBackward = false
+                var shouldSkipForward = false
+                
+                if tapLocation.x <= lowerTapThreshold {
+                    shouldSkipBackward = true
+                    seconds = 0.1
+                } else if tapLocation.x >= upperTapThreshold {
+                    shouldSkipForward = true
+                    seconds = 0.1
+                }
+                
                 let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
-                let dispatchTime = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
-
-                dispatch_after(dispatchTime, dispatch_get_main_queue(), {
-                    
-                    if self.shouldShowBar && !menuIsVisibleRef {
-                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
-//                        FolioReader.sharedInstance.readerCenter.toggleBars()
+                let dispatchTime = DispatchTime.now() + Double(Int64(delay)) / Double(NSEC_PER_SEC)
+                
+                
+                if readerConfig.shouldSkipPagesOnEdges {
+                    if shouldSkipBackward {
+                        FolioReader.sharedInstance.readerCenter.skipPageBackward()
+                    } else if shouldSkipForward {
+                        FolioReader.sharedInstance.readerCenter.skipPageForward()
                     }
-                    // TODO: refactor later
-                    self.shouldShowBar = true
-                })
+                }
+                
+                if !shouldSkipBackward && !shouldSkipForward && !menuIsVisibleRef {
+                    DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
+                        FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+                    })
+                }
+                
+//                self.shouldShowBar = true
             }
         } else if readerConfig.shouldHideNavigationOnTap == true {
-            FolioReader.sharedInstance.readerContainer.hideNavigationBar()
-//            FolioReader.sharedInstance.readerCenter.hideBars()
+            FolioReader.sharedInstance.readerCenter.hideBars()
         }
         
-        // Reset menu
-        menuIsVisible = false
-    }
-    
-    // MARK: - Scroll positioning
-    
-    // TODO: talvez usar isso aqui para fazer scroll vertical/horizontal
-    func scrollPageToOffset(offset: String, animating: Bool) {
-        let jsCommand = "window.scrollTo(0,\(offset));"
-        if animating {
-            UIView.animateWithDuration(0.35, animations: {
-                self.webView.js(jsCommand)
-            })
+//        self.shouldShowBar = true
+        
+        // Reset menu\
+        if menuIsVisible {
+            menuIsVisible = false
+            selectedHighlightId = nil
         } else {
-            webView.js(jsCommand)
+            shouldShowBar = true
         }
     }
     
-    func handleAnchor(anchor: String,  avoidBeginningAnchors: Bool, animating: Bool) {
+    func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
+        let tapLocation = recognizer.location(in: recognizer.view)
+        
+        print("before timer tapLocation.x: \(tapLocation.x)")
+        
+        Timer.scheduledTimer(timeInterval: TimeInterval(0.4), target: self, selector: #selector(handleTap), userInfo: tapLocation, repeats: false)
+    }
+    
+    // MARK: - Scroll and positioning
+    
+    /**
+     Scrolls the page to a given offset
+     
+     - parameter offset:   The offset to scroll
+     - parameter animated: Enable or not scrolling animation
+     */
+    func scrollPageToOffset(_ offset: CGFloat, animated: Bool) {
+        let pageOffsetPoint = isVerticalDirection(CGPoint(x: 0, y: offset), CGPoint(x: offset, y: 0))
+        webView.scrollView.setContentOffset(pageOffsetPoint, animated: animated)
+    }
+    
+    /**
+     Scrolls the page to a given offset
+     
+     - parameter offset:   The offset to scroll
+     - parameter duration: Animation duration
+     */
+    func scrollPageToOffset(_ offset: CGFloat, duration: TimeInterval) {
+        let pageOffsetPoint = isVerticalDirection(CGPoint(x: 0, y: offset), CGPoint(x: offset, y: 0))
+        UIView.animate(withDuration: duration, animations: {
+            self.webView.scrollView.contentOffset = pageOffsetPoint
+        }) 
+    }
+    
+    /**
+     Handdle #anchors in html, get the offset and scroll to it
+     
+     - parameter anchor:                The #anchor
+     - parameter avoidBeginningAnchors: Sometimes the anchor is on the beggining of the text, there is not need to scroll
+     - parameter animated:              Enable or not scrolling animation
+     */
+    func handleAnchor(_ anchor: String,  avoidBeginningAnchors: Bool, animated: Bool) {
         if !anchor.isEmpty {
-            if let offset = getAnchorOffset(anchor) {
-                let isBeginning = CGFloat((offset as NSString).floatValue) > self.frame.height/2
+            let offset = getAnchorOffset(anchor)
+            
+            if readerConfig.scrollDirection == .vertical {
+                let isBeginning = offset < frame.forDirection()/2
                 
                 if !avoidBeginningAnchors {
-                    scrollPageToOffset(offset, animating: animating)
-                } else if avoidBeginningAnchors && isBeginning {
-                    scrollPageToOffset(offset, animating: animating)
+                    scrollPageToOffset(offset, animated: animated)
+                } else if avoidBeginningAnchors && !isBeginning {
+                    scrollPageToOffset(offset, animated: animated)
                 }
+            } else {
+                scrollPageToOffset(offset, animated: animated)
             }
         }
     }
     
-    func getAnchorOffset(anchor: String) -> String? {
-        let jsAnchorHandler = "(function() {var target = '\(anchor)';var elem = document.getElementById(target); if (!elem) elem=document.getElementsByName(target)[0];return elem.offsetTop;})();"
-        return webView.js(jsAnchorHandler)
-    }
-    
-    override func canPerformAction(action: Selector, withSender sender: AnyObject?) -> Bool {
-
-        if UIMenuController.sharedMenuController().menuItems?.count == 0 {
-            webView.isColors = false
-            webView.createMenu(options: false)
+    /**
+     Get the #anchor offset in the page
+     
+     - parameter anchor: The #anchor id
+     - returns: The element offset ready to scroll
+     */
+    func getAnchorOffset(_ anchor: String) -> CGFloat {
+        let horizontal = readerConfig.scrollDirection == .horizontal
+        if let strOffset = webView.js("getAnchorOffset('\(anchor)', \(horizontal.description))") {
+            return CGFloat((strOffset as NSString).floatValue)
         }
         
+        return CGFloat(0)
+    }
+    
+    // MARK: Mark ID
+    
+    /**
+     Audio Mark ID - marks an element with an ID with the given class and scrolls to it
+     
+     - parameter ID: The ID
+     */
+    func audioMarkID(_ ID: String) {
+        let currentPage = FolioReader.sharedInstance.readerCenter.currentPage
+        _ = currentPage?.webView.js("audioMarkID('\(book.playbackActiveClass())','\(ID)')")
+    }
+    
+    // MARK: UIMenu visibility
+    
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        if UIMenuController.shared.menuItems?.count == 0 {
+            webView.isColors = false
+            webView.createMenu(false)
+        }
         return super.canPerformAction(action, withSender: sender)
     }
-
-    func playAudio(){
-		if (book.hasAudio()) {
-            webView.js("playAudio()")
-		} else {
-			readCurrentSentence()
-		}
-    }
     
-    func speakSentence(){
-        let sentence = self.webView.js("getSentenceWithIndex('\(book.playbackActiveClass())')")
-        if sentence != nil {
-            let chapter = FolioReader.sharedInstance.readerCenter.getCurrentChapter()
-            let href = chapter != nil ? chapter!.href : "";
-            FolioReader.sharedInstance.readerAudioPlayer.playText(href, text: sentence!)
+    // MARK: ColorView fix for horizontal layout
+    func refreshPageMode() {
+        if FolioReader.sharedInstance.nightMode {
+            // omit create webView and colorView
+            let script = "document.documentElement.offsetHeight"
+            let contentHeight = webView.stringByEvaluatingJavaScript(from: script)
+            let frameHeight = webView.frame.height
+            let lastPageHeight = frameHeight * CGFloat(webView.pageCount) - CGFloat(Double(contentHeight!)!)
+            colorView.frame = CGRect(x: webView.frame.width * CGFloat(webView.pageCount-1), y: webView.frame.height - lastPageHeight, width: webView.frame.width, height: lastPageHeight)
         } else {
-            if(FolioReader.sharedInstance.readerCenter.isLastPage()){
-                FolioReader.sharedInstance.readerAudioPlayer.stop()
-            } else{
-                FolioReader.sharedInstance.readerCenter.changePageToNext()
-            }
+            colorView.frame = CGRect.zero
         }
-    }
-    
-	func readCurrentSentence() {
-		if (FolioReader.sharedInstance.readerAudioPlayer.synthesizer == nil ) {
-            speakSentence()
-		} else {
-            if(FolioReader.sharedInstance.readerAudioPlayer.synthesizer.paused){
-                FolioReader.sharedInstance.readerAudioPlayer.synthesizer.continueSpeaking()
-            }else{
-                if(FolioReader.sharedInstance.readerAudioPlayer.synthesizer.speaking){
-                    FolioReader.sharedInstance.readerAudioPlayer.stopSynthesizer({ () -> Void in
-                        self.webView.js("resetCurrentSentenceIndex()")
-                        self.speakSentence()
-                    })
-                }else{
-                    speakSentence()
-                }
-            }
-		}
-	}
-
-    func audioMarkID(ID: String){
-        self.webView.js("audioMarkID('\(book.playbackActiveClass())','\(ID)')");
     }
 }
 
 // MARK: - WebView Highlight and share implementation
 
 private var cAssociationKey: UInt8 = 0
-private var sAssociationKey: UInt8 = 0
+fileprivate var sAssociationKey: UInt8 = 0
 
 extension UIWebView {
     
@@ -490,45 +557,61 @@ extension UIWebView {
         }
     }
     
-    public override func canPerformAction(action: Selector, withSender sender: AnyObject?) -> Bool {
-
+    open override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        
         // menu on existing highlight
         if isShare {
-            if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig?.allowSharing == true) || action == #selector(UIWebView.remove(_:)) {
-                return true
+            var isDiscussion = false
+            if let highlightId = selectedHighlightId {
+                isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlightId)
+            }
+            
+            if isDiscussion {
+                if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) || action == #selector(UIWebView.copyText(_:)){
+                    
+                    return true
+                }
+                return false
+            } else {
+                if action == #selector(UIWebView.colors(_:)) || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing) || action == #selector(UIWebView.remove(_:)) || action == #selector(UIWebView.copyText(_:)) || action == #selector(UIWebView.createDiscussion(_:)) {
+                    
+                    return true
+                }
+                return false
             }
             return false
-
-            // menu for selecting highlight color
+        // menu for selecting highlight color
         } else if isColors {
             if action == #selector(UIWebView.setYellow(_:)) || action == #selector(UIWebView.setGreen(_:)) || action == #selector(UIWebView.setBlue(_:)) || action == #selector(UIWebView.setPink(_:)) || action == #selector(UIWebView.setUnderline(_:)) {
                 return true
+                
             }
+            
             return false
-
-            // default menu
+            
+        // default menu
         } else {
             var isOneWord = false
-            if let result = js("getSelectedText()") where result.componentsSeparatedByString(" ").count == 1 {
+            if let result = js("getSelectedText()") , result.components(separatedBy: " ").count == 1 {
                 isOneWord = true
             }
-
-            if action == #selector(UIWebView.highlight(_:))
-                || (action == #selector(UIWebView.define(_:)) && isOneWord)
-                || (action == #selector(UIWebView.play(_:)) && (book.hasAudio() || readerConfig?.enableTTS == true))
-                || (action == #selector(UIWebView.share(_:)) && readerConfig?.allowSharing == true)
-                || (action == #selector(NSObject.copy(_:)) && readerConfig?.allowSharing == true) {
+            
+            if (action == #selector(UIWebView.highlight(_:)) || action == #selector(UIWebView.copyText(_:)) || action == #selector(UIWebView.createDiscussion(_:)))
+            || (action == #selector(UIWebView.define(_:)) && isOneWord)
+            || (action == #selector(UIWebView.play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
+            || (action == #selector(UIWebView.share(_:)) && readerConfig.allowSharing)
+            || (action == #selector(NSObject.copy) && readerConfig.allowSharing) {
                 return true
             }
             return false
         }
     }
     
-    public override func canBecomeFirstResponder() -> Bool {
+    open override var canBecomeFirstResponder : Bool {
         return true
     }
     
-    func share(sender: UIMenuController) {
+    func share(_ sender: UIMenuController) {
         
         if isShare {
             if let textToShare = js("getHighlightContent()") {
@@ -543,106 +626,141 @@ extension UIWebView {
         setMenuVisible(false)
     }
     
-    func colors(sender: UIMenuController?) {
+    func colors(_ sender: UIMenuController?) {
         isColors = true
-        createMenu(options: false)
+        createMenu(false)
         setMenuVisible(true)
     }
     
-    func remove(sender: UIMenuController?) {
+    func remove(_ sender: UIMenuController?) {
         if let removedId = js("removeThisHighlight()") {
             Highlight.removeById(removedId)
+            
+            FolioReader.sharedInstance.readerContainer.highlightWasRemoved(removedId)
         }
         
         setMenuVisible(false)
     }
     
-    func highlight(sender: UIMenuController?) {
+    func copyText(_ sender: UIMenuController?) {
+        if let selectedText = js("getSelectedText()") {
+            UIPasteboard.general.string = selectedText
+        } else if let highlightText = js("getHighlightContent()") {
+            UIPasteboard.general.string = highlightText
+        }
+    }
+    
+    func createDiscussion(_ sender: UIMenuController?) {
+        if let selectedText = js("getSelectedText()") {
+            // TODO: create highlight
+            if let highlight = createHighlight().highlight {
+                // TODO: create discussion
+                FolioReader.sharedInstance.readerContainer.createDiscussion(from: highlight)
+            }
+        } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
+            FolioReader.sharedInstance.readerContainer.createDiscussion(from: selectedHighlight)
+        }
+    }
+    
+    func createHighlight() -> (highlight: Highlight?, rect: CGRect?) {
         let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(FolioReader.sharedInstance.currentHighlightStyle))')")
-        let jsonData = highlightAndReturn?.dataUsingEncoding(NSUTF8StringEncoding)
+        let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
         
         do {
-            let json = try NSJSONSerialization.JSONObjectWithData(jsonData!, options: []) as! NSArray
+            let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
             let dic = json.firstObject as! [String: String]
             let rect = CGRectFromString(dic["rect"]!)
+            let startOffset = dic["startOffset"]!
+            let endOffset = dic["endOffset"]!
             
             // Force remove text selection
-            userInteractionEnabled = false
-            userInteractionEnabled = true
-
-            createMenu(options: true)
-            setMenuVisible(true, andRect: rect)
+            isUserInteractionEnabled = false
+            isUserInteractionEnabled = true
             
             // Persist
             let html = js("getHTML()")
-            if let highlight = FRHighlight.matchHighlight(html, andId: dic["id"]!) {
-                Highlight.persistHighlight(highlight, completion: nil)
-                // TODO: persist highlight on project
+            if let highlight = Highlight.matchHighlight(html, andId: dic["id"]!, startOffset: startOffset, endOffset: endOffset) {
+                highlight.persist()
+                
+                FolioReader.sharedInstance.readerContainer.highlightWasPersisted(highlight)
+                return (highlight: highlight, rect: rect)
             }
+            return (highlight: nil, rect: nil)
         } catch {
             print("Could not receive JSON")
         }
+        return (highlight: nil, rect: nil)
+    }
+    
+    func highlight(_ sender: UIMenuController?) {
+        if let rect = createHighlight().rect {
+            createMenu(true)
+            setMenuVisible(true, andRect: rect)
+        }
     }
 
-    func define(sender: UIMenuController?) {
+    func define(_ sender: UIMenuController?) {
         let selectedText = js("getSelectedText()")
         
         setMenuVisible(false)
-        userInteractionEnabled = false
-        userInteractionEnabled = true
+        isUserInteractionEnabled = false
+        isUserInteractionEnabled = true
         
         let vc = UIReferenceLibraryViewController(term: selectedText! )
         vc.view.tintColor = readerConfig.tintColor
-        FolioReader.sharedInstance.readerContainer.showViewController(vc, sender: nil)
+        FolioReader.sharedInstance.readerContainer.show(vc, sender: nil)
     }
 
-    func play(sender: UIMenuController?) {
-        FolioReader.sharedInstance.readerCenter.currentPage.playAudio()
+    func play(_ sender: UIMenuController?) {
+        FolioReader.sharedInstance.readerAudioPlayer.play()
 
         // Force remove text selection
         // @NOTE: this doesn't seem to always work
-        userInteractionEnabled = false
-        userInteractionEnabled = true
+        isUserInteractionEnabled = false
+        isUserInteractionEnabled = true
     }
 
 
     // MARK: - Set highlight styles
     
-    func setYellow(sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .Yellow)
+    func setYellow(_ sender: UIMenuController?) {
+        changeHighlightStyle(sender, style: .yellow)
     }
     
-    func setGreen(sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .Green)
+    func setGreen(_ sender: UIMenuController?) {
+        changeHighlightStyle(sender, style: .green)
     }
     
-    func setBlue(sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .Blue)
+    func setBlue(_ sender: UIMenuController?) {
+        changeHighlightStyle(sender, style: .blue)
     }
     
-    func setPink(sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .Pink)
+    func setPink(_ sender: UIMenuController?) {
+        changeHighlightStyle(sender, style: .pink)
     }
     
-    func setUnderline(sender: UIMenuController?) {
-        changeHighlightStyle(sender, style: .Underline)
+    func setUnderline(_ sender: UIMenuController?) {
+        changeHighlightStyle(sender, style: .underline)
     }
 
-    func changeHighlightStyle(sender: UIMenuController?, style: HighlightStyle) {
+    func changeHighlightStyle(_ sender: UIMenuController?, style: HighlightStyle) {
         FolioReader.sharedInstance.currentHighlightStyle = style.rawValue
 
         if let updateId = js("setHighlightStyle('\(HighlightStyle.classForStyle(style.rawValue))')") {
             Highlight.updateById(updateId, type: style)
+            
+            FolioReader.sharedInstance.readerContainer.highlightWasUpdated(updateId, style: style.hashValue)
         }
         colors(sender)
     }
     
     // MARK: - Create and show menu
     
-    func createMenu(options options: Bool) {
+    func createMenu(_ options: Bool) {
         isShare = options
         
         let colors = UIImage(readerImageNamed: "colors-marker")
+        let discussion = UIImage(readerImageNamed: "discussion-marker")
         let share = UIImage(readerImageNamed: "share-marker")
         let remove = UIImage(readerImageNamed: "no-marker")
         let yellow = UIImage(readerImageNamed: "yellow-marker")
@@ -651,9 +769,13 @@ extension UIWebView {
         let pink = UIImage(readerImageNamed: "pink-marker")
         let underline = UIImage(readerImageNamed: "underline-marker")
         
+        let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(UIWebView.copyText(_:)))
         let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(UIWebView.highlight(_:)))
+        let discussionItem = UIMenuItem(title: "D", image: discussion!, action: #selector(UIWebView.createDiscussion(_:)))
+        
         let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(UIWebView.play(_:)))
         let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(UIWebView.define(_:)))
+        
         let colorsItem = UIMenuItem(title: "C", image: colors!, action: #selector(UIWebView.colors(_:)))
         let shareItem = UIMenuItem(title: "S", image: share!, action: #selector(UIWebView.share(_:)))
         let removeItem = UIMenuItem(title: "R", image: remove!, action: #selector(UIWebView.remove(_:)))
@@ -663,28 +785,30 @@ extension UIWebView {
         let pinkItem = UIMenuItem(title: "P", image: pink!, action: #selector(UIWebView.setPink(_:)))
         let underlineItem = UIMenuItem(title: "U", image: underline!, action: #selector(UIWebView.setUnderline(_:)))
         
-        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
-
-        UIMenuController.sharedMenuController().menuItems = menuItems
+//        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
+        
+        let menuItems = [copyItem, highlightItem, colorsItem, removeItem, discussionItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+        
+        UIMenuController.shared.menuItems = menuItems
     }
     
-    func setMenuVisible(menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRectZero) {
+    func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {
         if !menuVisible && isShare || !menuVisible && isColors {
             isColors = false
             isShare = false
         }
         
         if menuVisible  {
-            if !CGRectEqualToRect(rect, CGRectZero) {
-                UIMenuController.sharedMenuController().setTargetRect(rect, inView: self)
+            if !rect.equalTo(CGRect.zero) {
+                UIMenuController.shared.setTargetRect(rect, in: self)
             }
         }
         
-        UIMenuController.sharedMenuController().setMenuVisible(menuVisible, animated: animated)
+        UIMenuController.shared.setMenuVisible(menuVisible, animated: animated)
     }
     
-    func js(script: String) -> String? {
-        let callback = self.stringByEvaluatingJavaScriptFromString(script)
+    func js(_ script: String) -> String? {
+        let callback = self.stringByEvaluatingJavaScript(from: script)
         if callback!.isEmpty { return nil }
         return callback
     }
@@ -694,7 +818,7 @@ extension UIMenuItem {
     convenience init(title: String, image: UIImage, action: Selector) {
       #if COCOAPODS
         self.init(title: title, action: action)
-        self.cxa_initWithTitle(title, action: action, image: image, hidesShadow: true)
+        self.cxa_init(withTitle: title, action: action, image: image, hidesShadow: true)
       #else
         let settings = CXAMenuItemSettings()
         settings.image = image

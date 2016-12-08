@@ -1,9 +1,9 @@
 //
 //  FolioReaderBaseContainer.swift
-//  FolioReaderKit
+//  Pods
 //
-//  Created by Daniel F. Sampaio on 23/06/16.
-//  Copyright © 2016 FolioReader. All rights reserved.
+//  Created by Daniel F. Sampaio on 03/08/16.
+//
 //
 
 import UIKit
@@ -13,100 +13,133 @@ var readerConfig: FolioReaderConfig!
 var epubPath: String?
 var book: FRBook!
 
-public class FolioReaderBaseContainer: UIViewController {
+open class FolioReaderBaseContainer: UIViewController {
     
-    public func chapterDidChanged(name: String) {}
+    // MARK: - Variables
     
-    public var centerNavigationController: UINavigationController!
-    public var centerViewController: FolioReaderCenter!
+    open var centerNavigationController: UINavigationController!
+    open var controlStates: (fontSize: Int, fontFamily: Int, textAlignment: Int)!
+    open var centerViewController: FolioReaderCenter!
     var audioPlayer: FolioReaderAudioPlayer?
-    
-    /**
-     Indicates whether the `audioPlayer` will be setup.
-     */
-    var shouldSetupAudioPlayer = true
     
     /**
      Indicates whether the `statusBar` will be visible.
      */
     var shouldHideStatusBar = true
     
-    private var errorOnLoad = false {
+    /**
+     Indicates wheter the default navigation bar will be setup
+    */
+    open var shouldUseDefaultNavigationBar = true {
         didSet {
-            print("[WARN] - Error found!")
-            dismissViewControllerAnimated(true, completion: nil)
+            readerConfig.shouldHideNavigation = !shouldUseDefaultNavigationBar
         }
     }
-    private var shouldRemoveEpub = true
     
-    // MARK: - Init
+    /**
+     Indicates whether the `audioPlayer` will be setup.
+     */
+    open var shouldSetupAudioPlayer = true
+    
+    /**
+     Indicates whether the epub will be removed from the disk after being parsed
+    */
+    fileprivate var shouldRemoveEpub = false
+    
+    fileprivate var errorOnLoad = false {
+        didSet {
+            if errorOnLoad {
+                print("[INFO] - Error loading container")
+                // TODO: dismissViewControllerAnimated
+                closeReader()
+            }
+        }
+    }
+    
+    // MARK: - Initializers
     
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
     
-    required public init(config configOrNil: FolioReaderConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
+    required public init(config configOrNil: FolioReaderConfig!, navigationConfig navigationConfigOrNil: FolioReaderNavigationConfig!, epubPath epubPathOrNil: String? = nil, removeEpub: Bool) {
+//        print("BaseContainer.\(#function)")
         readerConfig = configOrNil
+        navigationConfig = navigationConfigOrNil
         epubPath = epubPathOrNil
         shouldRemoveEpub = removeEpub
-        super.init(nibName: nil, bundle: NSBundle.frameworkBundle())
+        super.init(nibName: nil, bundle: Bundle.frameworkBundle())
         
         // Init with empty book
         book = FRBook()
         
         // Register custom fonts
-        FontBlaster.blast(NSBundle.frameworkBundle())
+        FontBlaster.blast(bundle: Bundle.frameworkBundle())
         
         // Register initial defaults
-        FolioReader.defaults.registerDefaults([
+        FolioReader.defaults.register(defaults: [
             kCurrentFontFamily: 0,
             kNightMode: false,
+            kCurrentTextAlignment: 0,
             kCurrentFontSize: 2,
             kCurrentAudioRate: 1,
             kCurrentHighlightStyle: 0,
-            kCurrentMediaOverlayStyle: MediaOverlayStyle.Default.rawValue
+            kCurrentMediaOverlayStyle: MediaOverlayStyle.default.rawValue
             ])
     }
     
-    // MARK: - View life cicle
+    // MARK: - View life cycle
     
-    override public func viewDidLoad() {
+    open override func viewDidLoad() {
+//        print("BaseContainer.\(#function)")
         super.viewDidLoad()
         
-        setupCenterViewController()
-        setupNavigationController()
-        setupNavigationBar()
+        setupReaderCenter()
+        setupReaderNavigationController()
+        if shouldUseDefaultNavigationBar {
+            setupNavigationBar()
+        }
         loadEbook()
     }
     
-    override public func viewDidAppear(animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        showShadowForCenterViewController(true)
+    open func closeReader(_ shouldDismiss: Bool = true) {
+        FolioReader.close()
+        if shouldDismiss {
+            dismiss()
+        } else {
+            pop()
+        }
     }
     
-    // MARK: - Book
-    
     /**
-     Loads the `FREbook` from an **epub file**. If it cannot be found, an the view controller will be dismissed.
-     */
-    private func loadEbook() {
+     Reads the epub from `epubPath` and parses it to a `FRBook` instance.
+    */
+    fileprivate func loadEbook() {
+//        print("BaseContainer.\(#function)")
         guard let path = epubPath else {
             print("Epub path is nil.")
             errorOnLoad = true
             return
         }
         
-        let priority = DISPATCH_QUEUE_PRIORITY_HIGH
-        dispatch_async(dispatch_get_global_queue(priority, 0), {
+        self.controlStates = (
+            fontSize: FolioReader.sharedInstance.currentFontSize,
+            fontFamily: FolioReader.sharedInstance.currentFontName,
+            textAlignment: FolioReader.sharedInstance.currentTextAlignement
+        )
+        
+        let priority = DispatchQueue.GlobalQueuePriority.high
+        DispatchQueue.global(priority: priority).async(execute: {
             Void in
             var isDir: ObjCBool = false
-            let fileManager = NSFileManager.defaultManager()
+            let fileManager = FileManager.default
             
-            if fileManager.fileExistsAtPath(path, isDirectory: &isDir) {
-                if isDir {
+            if fileManager.fileExists(atPath: path, isDirectory: &isDir) {
+                if isDir.boolValue {
+//                    print("Epub loaded from dir")
                     book = FREpubParser().readEpub(epubPath: path)
                 } else {
+//                    print("Epub lodaded from file [shouldRemove=\(self.shouldRemoveEpub)]")
                     book = FREpubParser().readEpub(epubPath: path, removeEpub: self.shouldRemoveEpub)
                 }
             } else {
@@ -116,19 +149,20 @@ public class FolioReaderBaseContainer: UIViewController {
             
             FolioReader.sharedInstance.isReaderOpen = true
             
-            dispatch_async(dispatch_get_main_queue(), self.ebookDidLoad)
+            DispatchQueue.main.async(execute: self.ebookDidLoad)
         })
-        
     }
+    
+    
     
     /**
      Called when `loadEbook` function finishes getting the file from the disk.
      
      - precondition: `book` should be set.
-    */
-    public func ebookDidLoad() {
-        print("[INFO] - FolioReaderBaseContainer::ebookDidLoad()")
-        self.centerViewController.reloadData()
+     */
+    open func ebookDidLoad() {
+//        print("BaseContainer.\(#function)")
+        centerViewController.reloadData()
         
         if shouldSetupAudioPlayer {
             setupAudioPlayer()
@@ -142,9 +176,8 @@ public class FolioReaderBaseContainer: UIViewController {
     /**
      Initializes a `FolioReaderCenter`, sets itself as the container, and sets it on the `FolioReader` singleton.
      */
-    public func setupCenterViewController() {
+    open func setupReaderCenter() {
         centerViewController = FolioReaderCenter()
-        centerViewController.folioReaderContainer = self
         FolioReader.sharedInstance.readerCenter = centerViewController
     }
     
@@ -154,94 +187,129 @@ public class FolioReaderBaseContainer: UIViewController {
      
      - precondition: `centerViewController` has already been set.
      */
-    public func setupNavigationController() {
-        // TODO: maybe use customNavigationController
-        centerNavigationController = UINavigationController(rootViewController: centerViewController)
+    open func setupReaderNavigationController() {
+        centerNavigationController = FolioReaderNavigationController(rootViewController: centerViewController)
         centerNavigationController.setNavigationBarHidden(readerConfig.shouldHideNavigationOnTap, animated: false)
         
         view.addSubview(centerNavigationController.view)
         addChildViewController(centerNavigationController)
-        centerNavigationController.didMoveToParentViewController(self)
+        centerNavigationController.didMove(toParentViewController: self)
     }
     
-    func setupNavigationBar() {
+    /**
+     Setup FolioReader's default navigation bar.
+     
+     - precondition: `shouldUseDefaultNavigationBar` must be true.
+    */
+    open func setupNavigationBar() {
         print("[INFO] - setupping navigation bar")
         automaticallyAdjustsScrollViewInsets = false
         extendedLayoutIncludesOpaqueBars = true
         
-        let navBackground = isNight(readerConfig.nightModeBackground, UIColor.whiteColor())
+        let navBackground = isNight(readerConfig.nightModeBackground, UIColor.white)
         let tintColor = readerConfig.tintColor
-        let navText = isNight(UIColor.whiteColor(), UIColor.blackColor())
+        let navText = isNight(UIColor.white, UIColor.black)
         let font = UIFont(name: "Avenir-Light", size: 10)!
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
     }
     
-    private func setupAudioPlayer() {
+    /**
+     Setup FolioReader's audio player.
+     
+     - precondition: `shouldSetupAudioPlayer` must be true.
+    */
+    func setupAudioPlayer() {
         // TODO: verify if audioplayer has SMILS
         audioPlayer = FolioReaderAudioPlayer()
-        
         FolioReader.sharedInstance.readerAudioPlayer = audioPlayer
     }
     
-    func showShadowForCenterViewController(shouldShowShadow: Bool) {
-        if (shouldShowShadow) {
-            centerNavigationController.view.layer.shadowOpacity = 0.2
-            centerNavigationController.view.layer.shadowRadius = 6
-            centerNavigationController.view.layer.shadowPath = UIBezierPath(rect: centerNavigationController.view.bounds).CGPath
-            centerNavigationController.view.clipsToBounds = false
-        } else {
-            centerNavigationController.view.layer.shadowOpacity = 0
-            centerNavigationController.view.layer.shadowRadius = 0
-        }
-    }
+    // MARK: Status bar and Navigation bar
     
+    /**
+     Called to hide the `centerNavigationController` navigation bar.
+    */
     func hideNavigationBar() {
-        print("[INFO] - hiding navigation bar")
-        guard readerConfig.shouldHideNavigationOnTap else { return }
+        guard !readerConfig.shouldHideNavigationOnTap else { return }
         
         shouldHideStatusBar = true
-        UIView.animateWithDuration(0.25, animations: {
+        UIView.animate(withDuration: 0.25, animations: {
             self.setNeedsStatusBarAppearanceUpdate()
-        })
+        }) 
         centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
+    /**
+     Called to show the `centerNavigationController` navigation bar.
+     */
     func showNavigationBar() {
-        print("[INFO] - showing navigation bar")
         setupNavigationBar()
         
         shouldHideStatusBar = false
-        UIView.animateWithDuration(0.25, animations: {
+        UIView.animate(withDuration: 0.25, animations: {
             self.setNeedsStatusBarAppearanceUpdate()
-        })
+        }) 
         centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
-    public func toggleNavigationBar() {
-        print("[INFO] - toggling navigation bar")
+    /**
+     Called to toggle the `centerNavigationController` navigation bar.
+     */
+    open func toggleNavigationBar() {
         guard readerConfig.shouldHideNavigationOnTap else { return }
         
-        let shouldHide = !centerNavigationController.navigationBarHidden
+        let shouldHide = !centerNavigationController.isNavigationBarHidden
         if !shouldHide { setupNavigationBar() }
-        
-        print("[INFO] - left bar: \(centerNavigationController.navigationItem.leftBarButtonItem)")
-        
         shouldHideStatusBar = shouldHide
-        UIView.animateWithDuration(0.25, animations: {
+        UIView.animate(withDuration: 0.25, animations: {
             self.setNeedsStatusBarAppearanceUpdate()
-        })
+        }) 
         centerNavigationController.setNavigationBarHidden(shouldHideStatusBar, animated: true)
     }
     
-    public func addGestureRecognizer(gesture: UIGestureRecognizer) {
-        print("adding gesture base container")
-        centerNavigationController.view.addGestureRecognizer(gesture)
-    }
+    /**
+     Called when the chapter changes.
+    */
+    open func chapterDidChanged(_ chapter: String) {}
     
-    public func dismissViewController() {
-        print("[INFO] - deinit called")
-        FolioReader.sharedInstance.isReaderOpen = false
-        FolioReader.sharedInstance.isReaderReady = false
-        FolioReader.sharedInstance.readerAudioPlayer.stop()
-    }
+    /**
+     Called when the page is turned.
+    */
+    open func pageDidChanged(_ centerState: ReaderState, pageState: ReaderState) {}
+    
+    /**
+     Called when the chapter page is turned.
+     */
+    open func webviewPageDidChanged(_ pageState: ReaderState) {}
+    
+    /**
+     Called when the reading time is updated
+    */
+    open func readingTimeDidChanged(_ readingTime: Int) {}
+    
+    // MARK: - Highlight callbacks
+    /**
+     Called when a highlight is persisted.
+    */
+    open func highlightWasPersisted(_ highlight: Highlight) {}
+    
+    /**
+     Called when a highlight is updated.
+     */
+    open func highlightWasUpdated(_ highlightId: String, style: Int) {}
+    
+    /**
+     Called when a highlight is removed.
+     */
+    open func highlightWasRemoved(_ highlightId: String) {}
+    
+    /**
+     Called to create a discussion from a highlight
+    */
+    open func createDiscussion(from highlight: Highlight) {}
+    
+    /**
+     Verifies if the highlight with the given Id is a discussion on the app namespace
+    */
+    open func isDiscussion(highlightWith id: String) -> Bool { return false }
 }

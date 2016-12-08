@@ -15,6 +15,7 @@ class ViewController: UIViewController {
     @IBOutlet var bookTwo: UIButton!
     let epubSampleFiles = [
         "The Silver Chair", // standard eBook
+//        "Medcel",
         "The Adventures Of Sherlock Holmes - Adventure I", // audio-eBook
     ]
 
@@ -29,9 +30,10 @@ class ViewController: UIViewController {
         openEpub(sender.tag);
     }
     
-    func openEpub(sampleNum:Int) {
+    func openEpub(sampleNum: Int) {
         let config = FolioReaderConfig()
         config.shouldHideNavigationOnTap = sampleNum == 1 ? true : false
+        config.scrollDirection = sampleNum == 1 ? .horizontal : .vertical
         
         // See more at FolioReaderConfig.swift
 //        config.enableTTS = false

@@ -80,38 +80,37 @@ class FRMediaType: NSObject {
     static var mediatypes = [XHTML, EPUB, NCX, OPF, JPG, PNG, GIF, CSS, SVG, TTF, TTF1, TTF2, OPENTYPE, WOFF, SMIL, XPGT, PLS, JAVASCRIPT, MP3, MP4, OGG]
     
     /**
-    Gets the MediaType based on the file mimetype.
+     Gets the MediaType based on the file mimetype.
      
-     - Parameters:
-        - name: The mediaType name
-        - filename: The file name to extract the extension
+     - parameter name:     The mediaType name
+     - parameter fileName: The file name to extract the extension
      
-     - Returns: A know mediatype or create a new one.
-    */
-    static func mediaTypeByName(name: String, fileName: String) -> MediaType {
+     - returns: A know mediatype or create a new one.
+     */
+    static func mediaTypeByName(_ name: String, fileName: String) -> MediaType {
         for mediatype in mediatypes {
             if mediatype.name == name {
                 return mediatype
             }
         }
-        let ext = "."+NSURL(string: fileName ?? "")!.pathExtension!
+        let ext = ".\(URL(string: fileName)!.pathExtension)"
         return MediaType(name: name, defaultExtension: ext)
     }
     
     /**
-    Compare if the resource is a image.
+     Compare if the resource is a image.
      
-     - Returns: `true` if is a image and `false` if not
+     - returns: `true` if is a image and `false` if not
     */
-    static func isBitmapImage(mediaType: MediaType) -> Bool {
+    static func isBitmapImage(_ mediaType: MediaType) -> Bool {
         return mediaType == JPG || mediaType == PNG || mediaType == GIF
     }
     
     
     /**
-    Gets the MediaType based on the file extension.
+     Gets the MediaType based on the file extension.
     */
-    static func determineMediaType(fileName: String) -> MediaType? {
+    static func determineMediaType(_ fileName: String) -> MediaType? {
         for mediatype in mediatypes {
             let ext = "."+(fileName as NSString).pathExtension
             if mediatype.extensions.contains(ext) {

@@ -19,13 +19,13 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     var bookBasePath: String!
     var resourcesBasePath: String!
     var shouldRemoveEpub = true
-    private var epubPathToRemove: String?
+    fileprivate var epubPathToRemove: String?
     
     /**
      Parse the Cover Image from an epub file.
      Returns an UIImage.
      */
-    func parseCoverImage(epubPath: String)-> UIImage? {
+    func parseCoverImage(_ epubPath: String)-> UIImage? {
 
         let book = readEpub(epubPath: epubPath, removeEpub: false)
         
@@ -38,8 +38,8 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     }
     
     /**
-    Unzip, delete and read an epub file.
-    Returns a FRBook.
+     Unzip, delete and read an epub file.
+     Returns a FRBook.
     */
     func readEpub(epubPath withEpubPath: String, removeEpub: Bool = true) -> FRBook {
         epubPathToRemove = withEpubPath
@@ -47,11 +47,11 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
         
         // Unzip   
         let bookName = (withEpubPath as NSString).lastPathComponent
-        bookBasePath = (kApplicationDocumentsDirectory as NSString).stringByAppendingPathComponent(bookName)
-        SSZipArchive.unzipFileAtPath(withEpubPath, toDestination: bookBasePath, delegate: self)
+        bookBasePath = (kApplicationDocumentsDirectory as NSString).appendingPathComponent(bookName)
+        SSZipArchive.unzipFile(atPath: withEpubPath, toDestination: bookBasePath, delegate: self)
         
         // Skip from backup this folder
-        addSkipBackupAttributeToItemAtURL(NSURL(fileURLWithPath: bookBasePath, isDirectory: true))
+        _ = addSkipBackupAttributeToItemAtURL(URL(fileURLWithPath: bookBasePath, isDirectory: true))
         
         kBookId = bookName
         readContainer()
@@ -61,8 +61,8 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     
     
     /**
-    Read an unziped epub file.
-    Returns a FRBook.
+     Read an unziped epub file.
+     Returns a FRBook.
     */
     func readEpub(filePath withFilePath: String) -> FRBook {
         bookBasePath = withFilePath
@@ -73,40 +73,40 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     }
     
     /**
-    Read and parse container.xml file.
+     Read and parse container.xml file.
     */
-    private func readContainer() {
+    fileprivate func readContainer() {
         let containerPath = "META-INF/container.xml"
-        let containerData = try? NSData(contentsOfFile: (bookBasePath as NSString).stringByAppendingPathComponent(containerPath), options: .DataReadingMappedAlways)
+        let containerData = try? Data(contentsOf: URL(fileURLWithPath: (bookBasePath as NSString).appendingPathComponent(containerPath)), options: .alwaysMapped)
         
         do {
-            let xmlDoc = try AEXMLDocument(xmlData: containerData!)
+            let xmlDoc = try AEXMLDocument(xml: containerData!)
             let opfResource = FRResource()
             opfResource.href = xmlDoc.root["rootfiles"]["rootfile"].attributes["full-path"]
             opfResource.mediaType = FRMediaType.determineMediaType(xmlDoc.root["rootfiles"]["rootfile"].attributes["full-path"]!)
             book.opfResource = opfResource
-            resourcesBasePath = (bookBasePath as NSString).stringByAppendingPathComponent((book.opfResource.href as NSString).stringByDeletingLastPathComponent)
+            resourcesBasePath = (bookBasePath as NSString).appendingPathComponent((book.opfResource.href as NSString).deletingLastPathComponent)
         } catch {
             print("Cannot read container.xml")
         }
     }
     
     /**
-    Read and parse .opf file.
+     Read and parse .opf file.
     */
-    private func readOpf() {
-        let opfPath = (bookBasePath as NSString).stringByAppendingPathComponent(book.opfResource.href)
-        let opfData = try? NSData(contentsOfFile: opfPath, options: .DataReadingMappedAlways)
+    fileprivate func readOpf() {
+        let opfPath = (bookBasePath as NSString).appendingPathComponent(book.opfResource.href)
+        let opfData = try? Data(contentsOf: URL(fileURLWithPath: opfPath), options: .alwaysMapped)
         
         do {
-            let xmlDoc = try AEXMLDocument(xmlData: opfData!)
+            let xmlDoc = try AEXMLDocument(xml: opfData!)
             
             // parse and save each "manifest item"
             for item in xmlDoc.root["manifest"]["item"].all! {
                 let resource = FRResource()
                 resource.id = item.attributes["id"]
                 resource.href = item.attributes["href"]
-                resource.fullHref = (resourcesBasePath as NSString).stringByAppendingPathComponent(item.attributes["href"]!).stringByRemovingPercentEncoding
+                resource.fullHref = (NSString(string: resourcesBasePath).appendingPathComponent(item.attributes["href"]!).removingPercentEncoding)
                 resource.mediaType = FRMediaType.mediaTypeByName(item.attributes["media-type"]!, fileName: resource.href)
                 resource.mediaOverlay = item.attributes["media-overlay"]
                 
@@ -134,6 +134,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
             
             // The book TOC
             book.tableOfContents = findTableOfContents()
+            book.flatTableOfContents = createFlatTOC()
             
             // Read metadata
             book.metadata = readMetadata(xmlDoc.root["metadata"].children)
@@ -152,20 +153,20 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     }
     
     /**
-    Reads and parses a .smil file
+     Reads and parses a .smil file
     */
-    private func readSmilFile(resource: FRResource){
-        let smilData = try? NSData(contentsOfFile: resource.fullHref, options: .DataReadingMappedAlways)
+    fileprivate func readSmilFile(_ resource: FRResource){
+        let smilData = try? Data(contentsOf: URL(fileURLWithPath: resource.fullHref), options: .alwaysMapped)
         
         var smilFile = FRSmilFile(resource: resource);
         
         do {
-            let xmlDoc = try AEXMLDocument(xmlData: smilData!)
+            let xmlDoc = try AEXMLDocument(xml: smilData!)
             
             let children = xmlDoc.root["body"].children
 
             if( children.count > 0 ){
-                smilFile.data.appendContentsOf( readSmilFileElements(children) )
+                smilFile.data.append(contentsOf: readSmilFileElements(children) )
             }
             
         } catch {
@@ -175,7 +176,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
         book.smils.add(smilFile);
     }
     
-    private func readSmilFileElements(children:[AEXMLElement]) -> [FRSmilElement] {
+    fileprivate func readSmilFileElements(_ children:[AEXMLElement]) -> [FRSmilElement] {
 
         var data = [FRSmilElement]()
 
@@ -186,7 +187,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
 
             // if this element has children, convert them to objects too
             if( item.children.count > 0 ){
-                smil.children.appendContentsOf( readSmilFileElements(item.children) )
+                smil.children.append( contentsOf: readSmilFileElements(item.children) )
             }
 
             data.append(smil)
@@ -196,15 +197,15 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     }
 
     /**
-    Read and parse the Table of Contents.
+     Read and parse the Table of Contents.
     */
-    private func findTableOfContents() -> [FRTocReference] {
-        let ncxPath = (resourcesBasePath as NSString).stringByAppendingPathComponent(book.ncxResource.href)
-        let ncxData = try? NSData(contentsOfFile: ncxPath, options: .DataReadingMappedAlways)
+    fileprivate func findTableOfContents() -> [FRTocReference] {
+        let ncxPath = (resourcesBasePath as NSString).appendingPathComponent(book.ncxResource.href)
+        let ncxData = try? Data(contentsOf: URL(fileURLWithPath: ncxPath), options: .alwaysMapped)
         var tableOfContent = [FRTocReference]()
         
         do {
-            let xmlDoc = try AEXMLDocument(xmlData: ncxData!)
+            let xmlDoc = try AEXMLDocument(xml: ncxData!)
             for item in xmlDoc.root["navMap"]["navPoint"].all! {
                 tableOfContent.append(readTOCReference(item))
             }
@@ -214,7 +215,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
         return tableOfContent
     }
     
-    private func readTOCReference(navpointElement: AEXMLElement) -> FRTocReference {
+    fileprivate func readTOCReference(_ navpointElement: AEXMLElement) -> FRTocReference {
         var label = ""
         
         if let labelText = navpointElement["navLabel"]["text"].value {
@@ -237,10 +238,33 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
         return toc
     }
     
+    // MARK: - Recursive add items to a list
+    
+    func createFlatTOC() -> [FRTocReference] {
+        var tocItems = [FRTocReference]()
+        
+        for item in book.tableOfContents {
+            tocItems.append(item)
+            tocItems.append(contentsOf: countTocChild(item))
+        }
+        return tocItems
+    }
+    
+    func countTocChild(_ item: FRTocReference) -> [FRTocReference] {
+        var tocItems = [FRTocReference]()
+        
+        if item.children.count > 0 {
+            for item in item.children {
+                tocItems.append(item)
+            }
+        }
+        return tocItems
+    }
+    
     /**
-    Read and parse <metadata>.
+     Read and parse <metadata>.
     */
-    private func readMetadata(tags: [AEXMLElement]) -> FRMetadata {
+    fileprivate func readMetadata(_ tags: [AEXMLElement]) -> FRMetadata {
         let metadata = FRMetadata()
         
         for tag in tags {
@@ -253,7 +277,8 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
             }
             
             if tag.name == "dc:language" {
-                metadata.language = tag.value ?? ""
+                let language = tag.value ?? metadata.language
+                metadata.language = language != "en" ? language : metadata.language
             }
             
             if tag.name == "dc:creator" {
@@ -304,9 +329,9 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     }
     
     /**
-    Read and parse <spine>.
+     Read and parse <spine>.
     */
-    private func readSpine(tags: [AEXMLElement]) -> FRSpine {
+    fileprivate func readSpine(_ tags: [AEXMLElement]) -> FRSpine {
         let spine = FRSpine()
         
         for tag in tags {
@@ -325,13 +350,13 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     }
     
     /**
-    Add skip to backup file.
+     Add skip to backup file.
     */
-    private func addSkipBackupAttributeToItemAtURL(URL: NSURL) -> Bool {
-        assert(NSFileManager.defaultManager().fileExistsAtPath(URL.path!))
+    fileprivate func addSkipBackupAttributeToItemAtURL(_ URL: Foundation.URL) -> Bool {
+        assert(FileManager.default.fileExists(atPath: URL.path))
         
         do {
-            try URL.setResourceValue(true, forKey: NSURLIsExcludedFromBackupKey)
+            try (URL as NSURL).setResourceValue(true, forKey: URLResourceKey.isExcludedFromBackupKey)
             return true
         } catch let error as NSError {
             print("Error excluding \(URL.lastPathComponent) from backup \(error)")
@@ -341,10 +366,10 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
     
     // MARK: - SSZipArchive delegate
     
-    func zipArchiveWillUnzipArchiveAtPath(path: String!, zipInfo: unz_global_info) {
+    func zipArchiveWillUnzipArchive(atPath path: String, zipInfo: unz_global_info) {
         if shouldRemoveEpub {
             do {
-                try NSFileManager.defaultManager().removeItemAtPath(epubPathToRemove!)
+                try FileManager.default.removeItem(atPath: epubPathToRemove!)
             } catch let error as NSError {
                 print(error)
             }

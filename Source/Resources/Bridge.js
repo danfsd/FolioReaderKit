@@ -8,7 +8,7 @@
 
 var thisHighlight;
 var audioMarkClass;
-var wordsPerMinute = 200;
+var wordsPerMinute = 180;
 
 document.addEventListener("DOMContentLoaded", function(event) {
 //    var lnk = document.getElementsByClassName("lnk");
@@ -76,6 +76,14 @@ function setFontSize(cls) {
     removeClass(elm, "textSizeFour");
     removeClass(elm, "textSizeFive");
     addClass(elm, cls);
+    
+    window.location = "font-changed://{" + cls + "}";
+}
+
+// Set text alignment
+function setTextAlignment(style) {
+    var html = document.getElementsByTagName("html")[0]
+    html.style.textAlign = style
 }
 
 /*
@@ -83,6 +91,8 @@ function setFontSize(cls) {
  */
 function highlightString(style) {
     var range = window.getSelection().getRangeAt(0);
+    var startOffset = range.startOffset;
+    var endOffset = range.endOffset;
     var selectionContents = range.extractContents();
     var elm = document.createElement("highlight");
     var id = guid();
@@ -96,7 +106,7 @@ function highlightString(style) {
     thisHighlight = elm;
     
     var params = [];
-    params.push({id: id, rect: getRectForSelectedText(elm)});
+    params.push({id: id, rect: getRectForSelectedText(elm), startOffset: startOffset.toString(), endOffset: endOffset.toString()});
     
     return JSON.stringify(params);
 }
@@ -118,8 +128,12 @@ function removeHighlightById(elmId) {
     return elm.id;
 }
 
+function getThisHighlight() {
+    return JSON.stringify(thisHighlight);
+}
+
 function getHighlightContent() {
-    return thisHighlight.textContent
+    return thisHighlight.textContent;
 }
 
 function getBodyText() {
@@ -147,7 +161,7 @@ var callHighlightURL = function(elm) {
     var currentHighlightRect = getRectForSelectedText(elm);
     thisHighlight = elm;
     
-    window.location = URLBase + encodeURIComponent(currentHighlightRect);
+    window.location = URLBase + "{" + thisHighlight.getAttribute("id") + "}," + encodeURIComponent(currentHighlightRect);
 }
 
 
@@ -158,9 +172,26 @@ function getReadingTime() {
     var wordsPerSecond = wordsPerMinute / 60; //define words per second based on words per minute
     var totalReadingTimeSeconds = totalWords / wordsPerSecond; //define total reading time in seconds
     var readingTimeMinutes = Math.round(totalReadingTimeSeconds / 60);
+
     return readingTimeMinutes;
 }
 
+/**
+ Get Vertical or Horizontal paged #anchor offset
+ */
+var getAnchorOffset = function(target, horizontal) {
+    var elem = document.getElementById(target);
+    
+    if (!elem) {
+        elem = document.getElementsByName(target)[0];
+    }
+    
+    if (horizontal) {
+        return document.body.clientWidth * Math.floor(elem.offsetTop / window.innerHeight);
+    }
+    
+    return elem.offsetTop;
+}
 
 function findElementWithID(node) {
     if( !node || node.tagName == "BODY")
@@ -185,9 +216,22 @@ function findElementWithIDInView() {
     // @NOTE: is `span` too limiting?
     var els = document.querySelectorAll("span[id]")
 
-    for(indx in els){
-        if( els[indx].offsetTop > document.body.scrollTop )
-            return els[indx]
+    for(indx in els) {
+        var element = els[indx];
+
+        // Horizontal scroll
+        if (document.body.scrollTop == 0) {
+            var elLeft = document.body.clientWidth * Math.floor(element.offsetTop / window.innerHeight);
+            // document.body.scrollLeft = elLeft;
+
+            if (elLeft == document.body.scrollLeft) {
+                return element;
+            }
+
+        // Vertical
+        } else if(element.offsetTop > document.body.scrollTop) {
+            return element;
+        }
     }
 
     return null
@@ -233,6 +277,18 @@ function goToEl(el) {
 
     if(elBottom > bottom || elTop < top) {
         document.body.scrollTop = el.offsetTop - 20
+    }
+    
+    /* Set scroll left in case horz scroll is activated.
+    
+        The following works because el.offsetTop accounts for each page turned
+        as if the document was scrolling vertical. We then divide by the window
+        height to figure out what page the element should appear on and set scroll left
+        to scroll to that page.
+    */
+    if( document.body.scrollTop == 0 ){
+        var elLeft = document.body.clientWidth * Math.floor(el.offsetTop / window.innerHeight);
+        document.body.scrollLeft = elLeft;
     }
 
     return el;
@@ -280,13 +336,23 @@ var currentIndex = -1;
 
 function findSentenceWithIDInView(els) {
     // @NOTE: is `span` too limiting?
+    for(indx in els) {
+        var element = els[indx];
 
-    for(indx in els)
-    {
-        if( els[indx].offsetTop > document.body.scrollTop )
-        {
+        // Horizontal scroll
+        if (document.body.scrollTop == 0) {
+            var elLeft = document.body.clientWidth * Math.floor(element.offsetTop / window.innerHeight);
+            // document.body.scrollLeft = elLeft;
+
+            if (elLeft == document.body.scrollLeft) {
+                currentIndex = indx;
+                return element;
+            }
+
+        // Vertical
+        } else if(element.offsetTop > document.body.scrollTop) {
             currentIndex = indx;
-            return els[indx]
+            return element;
         }
     }
     
@@ -294,8 +360,7 @@ function findSentenceWithIDInView(els) {
 }
 
 function findNextSentenceInArray(els) {
-    if( currentIndex >= 0)
-    {
+    if(currentIndex >= 0) {
         currentIndex ++;
         return els[currentIndex];
     }
@@ -307,14 +372,35 @@ function resetCurrentSentenceIndex() {
     currentIndex = -1;
 }
 
-function getSentenceWithIndex(className){
+function getSentenceWithIndex(className) {
     var sentence;
-    if(currentIndex < 0){
-        sentence = findSentenceWithIDInView(document.querySelectorAll("span.sentence"));
-    }else{
-        sentence = findNextSentenceInArray(document.querySelectorAll("span.sentence"));
+    var sel = getSelection();
+    var node = null;
+    var elements = document.querySelectorAll("span.sentence");
+
+    // Check for a selected text, if found start reading from it
+    if (sel.toString() != "") {
+        console.log(sel.anchorNode.parentNode);
+        node = sel.anchorNode.parentNode;
+
+        if (node.className == "sentence") {
+            sentence = node
+
+            for(var i = 0, len = elements.length; i < len; i++) {
+                if (elements[i] === sentence) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+        } else {
+            sentence = findSentenceWithIDInView(elements);
+        }
+    } else if (currentIndex < 0) {
+        sentence = findSentenceWithIDInView(elements);
+    } else {
+        sentence = findNextSentenceInArray(elements);
     }
-    
+
     var text = sentence.innerText || sentence.textContent;
     
     goToEl(sentence);
@@ -506,6 +592,3 @@ function wrappingSentencesWithinPTags(){
     
     guessSenetences();
 }
-                                                         
-                                                         
-
