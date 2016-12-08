@@ -105,6 +105,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open var isFirstLoadOrientation = true
     var lastContentOffset : CGFloat!
     
+    
+    var onChangePageDelayed: ((FolioReaderCenter) -> ())?
+    
     // MARK: - Init
     
     init() {
@@ -640,10 +643,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             currentPageNumber = page.pageNumber
         } else {
             let currentIndexPath = getCurrentIndexPath()
-            currentPage = collectionView.cellForItem(at: currentIndexPath) as? FolioReaderPage
+            currentPage = self.collectionView.cellForItem(at: currentIndexPath) as? FolioReaderPage
             
-            previousPageNumber = (currentIndexPath as NSIndexPath).row
-            currentPageNumber = (currentIndexPath as NSIndexPath).row+1
+            previousPageNumber = currentIndexPath.row
+            currentPageNumber = currentIndexPath.row+1
         }
         
         nextPageNumber = currentPageNumber + 1 <= totalPages ? currentPageNumber + 1 : currentPageNumber
@@ -1519,6 +1522,10 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         
         isFirstLoadOrientation = false
         print("### pageDidLoad ###\n")
+        
+        if let finally = onChangePageDelayed {
+            finally(self)
+        }
     }
 }
 
