@@ -17,10 +17,10 @@ internal let isPhone = UIDevice.current.userInterfaceIdiom == .phone
 // MARK: - Internal constants
 
 internal let kApplicationDocumentsDirectory = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
-internal let kCurrentTextAlignment = "com.folioreader.kCurrentTextAlignment"
+public let kCurrentTextAlignment = "com.folioreader.kCurrentTextAlignment"
 internal let kCurrentFontFamily = "com.folioreader.kCurrentFontFamily"
-internal let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
-internal let kCurrentAudioRate = "com.folioreader.kCurrentAudioRate"
+public let kCurrentFontSize = "com.folioreader.kCurrentFontSize"
+public let kCurrentAudioRate = "com.folioreader.kCurrentAudioRate"
 internal let kCurrentHighlightStyle = "com.folioreader.kCurrentHighlightStyle"
 internal var kCurrentMediaOverlayStyle = "com.folioreader.kMediaOverlayStyle"
 // TODO: add last offset for orientation
@@ -57,7 +57,7 @@ enum MediaOverlayStyle: Int {
 */
 open class FolioReader : NSObject {
     static let sharedInstance = FolioReader()
-    static let defaults = UserDefaults.standard
+    open static let defaults = UserDefaults.standard
     weak var readerCenter: FolioReaderCenter!
     weak var readerContainer: FolioReaderBaseContainer!
     weak var readerAudioPlayer: FolioReaderAudioPlayer!
@@ -78,28 +78,30 @@ open class FolioReader : NSObject {
         }
     }
     
-    var currentTextAlignement: Int {
-        get { return FolioReader.defaults.value(forKey: kCurrentTextAlignment) as! Int }
+    open var currentTextAlignement: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentTextAlignment) as? Int ?? 0 }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentTextAlignment)
         }
     }
     
-    var currentFontName: Int {
-        get { return FolioReader.defaults.value(forKey: kCurrentFontFamily) as! Int }
+    open var currentFontName: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentFontFamily) as? Int ?? 0 }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentFontFamily)
         }
     }
     
-    var currentFontSize: Int {
-        get { return FolioReader.defaults.value(forKey: kCurrentFontSize) as! Int }
+    open var currentFontSize: Int {
+        get { return FolioReader.defaults.value(forKey: kCurrentFontSize) as? Int ?? 2 }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentFontSize)
         }
     }
     
-    var currentAudioRate: Int {
+ 
+
+    open var currentAudioRate: Int {
         get { return FolioReader.defaults.value(forKey: kCurrentAudioRate) as! Int }
         set (value) {
             FolioReader.defaults.setValue(value, forKey: kCurrentAudioRate)
@@ -209,8 +211,37 @@ open class FolioReader : NSObject {
         FolioReader.saveReaderState()
         FolioReader.sharedInstance.isReaderOpen = false
         FolioReader.sharedInstance.isReaderReady = false
-        FolioReader.sharedInstance.readerAudioPlayer.stop(true)
+        FolioReader.sharedInstance.readerAudioPlayer.stop(immediate: true)
         FolioReader.defaults.set(0, forKey: kCurrentTOCMenu)
+    }
+    
+    
+    open class func getFRbook(path: String, completion: @escaping (FRBook?) -> Void) {
+        let priority = DispatchQueue.GlobalQueuePriority.high
+        DispatchQueue.global(priority: priority).async(execute: {
+            Void in
+            let controlStates = (
+                fontSize: FolioReader.sharedInstance.currentFontSize,
+                fontFamily: FolioReader.sharedInstance.currentFontName,
+                textAlignment: FolioReader.sharedInstance.currentTextAlignement
+            )
+            let book : FRBook!
+            
+            var isDir: ObjCBool = false
+            let fileManager = FileManager.default
+                
+            if fileManager.fileExists(atPath: path, isDirectory: &isDir) {
+                if isDir.boolValue {
+                    book = FREpubParser().readEpub(epubPath: path)
+                } else {
+                    book = FREpubParser().readEpub(epubPath: path, removeEpub: false)
+                }
+            } else {
+                print("Erro on laod.")
+                return completion(nil)
+            }
+            completion(book)
+        })
     }
 }
 
@@ -222,47 +253,76 @@ func isNight<T> (_ f: T, _ l: T) -> T {
 
 // MARK: - Scroll Direction Functions
 
-func isVerticalDirection<T> (_ f: T, _ l: T) -> T {
-    return readerConfig.scrollDirection == .vertical ? f : l
+/**
+ Simplify attibution of values based on direction, basically is to avoid too much usage of `switch`,
+ `if` and `else` statements to check. So basically this is like a shorthand version of the `switch` verification.
+ 
+ For example:
+ ```
+ let pageOffsetPoint = isDirection(CGPoint(x: 0, y: pageOffset), CGPoint(x: pageOffset, y: 0), CGPoint(x: 0, y: pageOffset))
+ ```
+ 
+ As usually the `vertical` direction and `horizontalContentVertical` has similar statements you can basically hide the last
+ value and it will assume the value from `vertical` as fallback.
+ ```
+ let pageOffsetPoint = isDirection(CGPoint(x: 0, y: pageOffset), CGPoint(x: pageOffset, y: 0))
+ ```
+ 
+ - parameter vertical:                  Value for `vertical` direction
+ - parameter horizontal:                Value for `horizontal` direction
+ - parameter horizontalContentVertical: Value for `horizontalWithVerticalContent` direction, if nil will fallback to `vertical` value
+ 
+ - returns: The right value based on direction.
+ */
+func isDirection<T> (_ vertical: T, _ horizontal: T, _ horizontalContentVertical: T? = nil) -> T {
+    switch readerConfig.scrollDirection {
+    case .vertical: return vertical
+    case .horizontal: return horizontal
+    case .horizontalWithVerticalContent: return horizontalContentVertical ?? vertical
+    }
 }
 
 extension UICollectionViewScrollDirection {
     static func direction() -> UICollectionViewScrollDirection {
-        return isVerticalDirection(.vertical, .horizontal)
+        return isDirection(.vertical, .horizontal, .horizontal)
     }
 }
 
 extension UICollectionViewScrollPosition {
     static func direction() -> UICollectionViewScrollPosition {
-        return isVerticalDirection(.top, .left)
+        return isDirection(.top, .left, .left)
     }
 }
 
 extension CGPoint {
     func forDirection() -> CGFloat {
-        return isVerticalDirection(self.y, self.x)
+        return isDirection(y, x, y)
     }
 }
 
 extension CGSize {
     func forDirection() -> CGFloat {
-        return isVerticalDirection(self.height, self.width)
+        return isDirection(height, width, height)
+    }
+    
+    func forReverseDirection() -> CGFloat {
+        return isDirection(width, height, width)
     }
 }
 
 extension CGRect {
     func forDirection() -> CGFloat {
-        return isVerticalDirection(self.height, self.width)
+        return isDirection(height, width, height)
     }
 }
 
 extension ScrollDirection {
     static func negative() -> ScrollDirection {
-        return isVerticalDirection(.down, .right)
+        return isDirection(.down, .right, .right)
     }
     
     static func positive() -> ScrollDirection {
-        return isVerticalDirection(.up, .left)
+        return isDirection(.up, .left, .left)
     }
 }
 

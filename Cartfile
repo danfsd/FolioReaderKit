@@ -1,7 +1,7 @@
-github "ZipArchive/ZipArchive"
+github "ZipArchive/ZipArchive" ~> 1.0
 github "danfsd/UIMenuItem-CXAImageSupport"
-github "jessesquires/JSQWebViewController"
+github "jessesquires/JSQWebViewController" ~> 5.0
 github "alexpopov/ZFDragableModalTransition" "merge-carthage-into-zoonooz"
-github "tadija/AEXML"
-github "ArtSabintsev/FontBlaster"
-github "realm/realm-cocoa"
+github "tadija/AEXML" ~> 4.0
+github "ArtSabintsev/FontBlaster" ~> 3.0
+github "realm/realm-cocoa" ~> 2.0

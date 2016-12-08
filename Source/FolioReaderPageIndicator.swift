@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 class FolioReaderPageIndicator: UIView {
     var pagesLabel: UILabel!
@@ -79,6 +80,10 @@ class FolioReaderPageIndicator: UIView {
             pagesLabel.text = " \(pagesRemaining) \(readerConfig.localizedReaderManyPagesLeft)."
         }
         
+        FolioReader.sharedInstance.readerContainer.updateReadInfos(totalPages: totalPages,
+                                                                   actualPage: page,chapter: FolioReader.sharedInstance.readerCenter.currentPage.pageNumber)
+
+    
         let minutesRemaining = Int(ceil(CGFloat((pagesRemaining * totalMinutes)/totalPages)))
         if minutesRemaining > 1 {
             minutesLabel.text = "\(minutesRemaining) "+readerConfig.localizedReaderManyMinutes+" ·"

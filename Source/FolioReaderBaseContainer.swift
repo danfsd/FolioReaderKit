@@ -20,7 +20,8 @@ open class FolioReaderBaseContainer: UIViewController {
     open var centerNavigationController: UINavigationController!
     open var controlStates: (fontSize: Int, fontFamily: Int, textAlignment: Int)!
     open var centerViewController: FolioReaderCenter!
-    var audioPlayer: FolioReaderAudioPlayer?
+    open var scrollDirection: FolioReaderScrollDirection!
+    open var audioPlayer: FolioReaderAudioPlayer?
     
     /**
      Indicates whether the `statusBar` will be visible.
@@ -32,7 +33,7 @@ open class FolioReaderBaseContainer: UIViewController {
     */
     open var shouldUseDefaultNavigationBar = true {
         didSet {
-            readerConfig.shouldHideNavigation = !shouldUseDefaultNavigationBar
+//            readerConfig.shouldHideNavigation = !shouldUseDefaultNavigationBar
         }
     }
     
@@ -50,7 +51,6 @@ open class FolioReaderBaseContainer: UIViewController {
         didSet {
             if errorOnLoad {
                 print("[INFO] - Error loading container")
-                // TODO: dismissViewControllerAnimated
                 closeReader()
             }
         }
@@ -211,6 +211,8 @@ open class FolioReaderBaseContainer: UIViewController {
         let navText = isNight(UIColor.white, UIColor.black)
         let font = UIFont(name: "Avenir-Light", size: 10)!
         setTranslucentNavigation(color: navBackground, tintColor: tintColor, titleColor: navText, andFont: font)
+        
+        // TODO: chamar função do próprio leitor para configurar leftBarButtons, rightBarButtons, titleView e sobrescrever no TabletReaderContainer
     }
     
     /**
@@ -219,7 +221,6 @@ open class FolioReaderBaseContainer: UIViewController {
      - precondition: `shouldSetupAudioPlayer` must be true.
     */
     func setupAudioPlayer() {
-        // TODO: verify if audioplayer has SMILS
         audioPlayer = FolioReaderAudioPlayer()
         FolioReader.sharedInstance.readerAudioPlayer = audioPlayer
     }
@@ -312,4 +313,11 @@ open class FolioReaderBaseContainer: UIViewController {
      Verifies if the highlight with the given Id is a discussion on the app namespace
     */
     open func isDiscussion(highlightWith id: String) -> Bool { return false }
+    
+    open func updateReadInfos(totalPages: Int, actualPage: Int, chapter: Int) {}
+      
+    open func updateChapterPosition(chapter: Int, position: Float) {}
+    
+    open func getChapterPosition(chapter: Int) -> Float{ return 0.0 }
+
 }

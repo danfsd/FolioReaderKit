@@ -8,23 +8,23 @@
 
 import UIKit
 fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l < r
-  case (nil, _?):
-    return true
-  default:
-    return false
-  }
+    switch (lhs, rhs) {
+    case let (l?, r?):
+        return l < r
+    case (nil, _?):
+        return true
+    default:
+        return false
+    }
 }
 
 fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
-  switch (lhs, rhs) {
-  case let (l?, r?):
-    return l > r
-  default:
-    return rhs < lhs
-  }
+    switch (lhs, rhs) {
+    case let (l?, r?):
+        return l > r
+    default:
+        return rhs < lhs
+    }
 }
 
 
@@ -55,21 +55,28 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     var scrollDelta: CGFloat!
     var scrollDeltaTimer: Timer!
     
+    var frame: CGRect! {
+        didSet {
+            self.slider.frame = frame
+        }
+    }
+    
     init(frame:CGRect) {
         super.init()
         
         slider = UISlider()
         slider.layer.anchorPoint = CGPoint(x: 0, y: 0)
         slider.transform = CGAffineTransform(rotationAngle: CGFloat(M_PI_2))
-        slider.frame = frame
         slider.alpha = 0
         
-        updateColors()
+        self.frame = frame
+        
+        reloadColors()
         
         // less obtrusive knob and fixes jump: http://stackoverflow.com/a/22301039/484780
         let thumbImg = UIImage(readerImageNamed: "knob")
         let thumbImgColor = thumbImg!.imageTintColor(readerConfig.tintColor).withRenderingMode(.alwaysOriginal)
-        slider.setThumbImage(thumbImgColor, for: .normal)
+        slider.setThumbImage(thumbImgColor, for: UIControlState())
         slider.setThumbImage(thumbImgColor, for: .selected)
         slider.setThumbImage(thumbImgColor, for: .highlighted)
         
@@ -79,7 +86,7 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
         slider.addTarget(self, action: #selector(ScrollScrubber.sliderTouchUp(_:)), for: .touchUpOutside)
     }
     
-    func updateColors() {
+    func reloadColors() {
         slider.minimumTrackTintColor = readerConfig.tintColor
         slider.maximumTrackTintColor = isNight(readerConfig.nightModeSeparatorColor, readerConfig.menuSeparatorColor)
     }
@@ -97,8 +104,8 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     }
     
     func sliderChange(_ slider:UISlider) {
-        let offset = isVerticalDirection(CGPoint(x: 0, y: height()*CGFloat(slider.value)),
-                                         CGPoint(x: height()*CGFloat(slider.value), y: 0))
+        let movePosition = height()*CGFloat(slider.value)
+        let offset = isDirection(CGPoint(x: 0, y: movePosition), CGPoint(x: movePosition, y: 0))
         scrollView().setContentOffset(offset, animated: false)
     }
     
@@ -115,8 +122,8 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
                 
                 self.slider.alpha = 1
                 
-                }, completion: { (Bool) -> Void in
-                    self.hideAfterDelay()
+            }, completion: { (Bool) -> Void in
+                self.hideAfterDelay()
             })
         } else {
             slider.alpha = 1
@@ -167,7 +174,9 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard readerConfig.scrollDirection == .vertical else { return }
+        guard readerConfig.scrollDirection == .vertical || readerConfig.scrollDirection == .horizontalWithVerticalContent else {
+            return
+        }
         
         if visible && usingSlider == false {
             setSliderVal()
@@ -215,14 +224,14 @@ class ScrollScrubber: NSObject, UIScrollViewDelegate {
     // MARK: - utility methods
     
     fileprivate func scrollView() -> UIScrollView {
-        return delegate.currentPage.webView.scrollView
+        return delegate.currentPage!.webView.scrollView
     }
     
     fileprivate func height() -> CGFloat {
-        return delegate.currentPage.webView.scrollView.contentSize.height - pageHeight + 44
+        return delegate.currentPage!.webView.scrollView.contentSize.height - pageHeight/* + 44*/
     }
     
     fileprivate func scrollTop() -> CGFloat {
-        return delegate.currentPage.webView.scrollView.contentOffset.forDirection()
+        return delegate.currentPage!.webView.scrollView.contentOffset.forDirection()
     }
 }

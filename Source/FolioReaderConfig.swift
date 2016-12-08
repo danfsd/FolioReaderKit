@@ -8,9 +8,21 @@
 
 import UIKit
 
+// MARK: - FolioReaderScrollDirection
+
+/**
+ Defines the Reader scrolling direction
+ */
 public enum FolioReaderScrollDirection: Int {
+    
+    /// Section and content scroll on vertical
     case vertical
+    
+    /// Section and content scroll on horizontal
     case horizontal
+    
+    /// Sections scroll horizontal and content scroll on vertical
+    case horizontalWithVerticalContent
     
     /**
      The current scroll direction
@@ -21,13 +33,121 @@ public enum FolioReaderScrollDirection: Int {
         switch self {
         case .vertical:
             return .vertical
-        case .horizontal:
+        case .horizontal, .horizontalWithVerticalContent:
             return .horizontal
         }
     }
 }
 
+
+public enum FolioReaderSkipPageMode: Int {
+    case hybrid
+    case page
+    case chapter
+}
+
+public enum FolioReaderFontName: Int {
+    case andada
+    case lato
+    case lora
+    case raleway
+    
+    /**
+     The font name that will be used
+     
+     - returns: Returns `String`
+    */
+    public func fontName() -> String {
+        switch self {
+        case .andada: return "andada"
+        case .lato: return "lato"
+        case .lora: return "lora"
+        case .raleway: return "raleway"
+        }
+    }
+    
+    public func buttonSelected() -> (serif: Bool, sansSerif: Bool) {
+        switch self {
+        case .andada: return (serif: true, sansSerif: false)
+        case .lato: return (serif: false, sansSerif: true)
+        case .lora: return (serif: true, sansSerif: false)
+        case .raleway: return (serif: false, sansSerif: true)
+        }
+    }
+}
+
+public enum FolioReaderFontSize: Int {
+    case sizeOne
+    case sizeTwo
+    case sizeThree
+    case sizeFour
+    case sizeFive
+    
+    /**
+     The html font size class
+     
+     - returns: Returns `String`
+    */
+    public func fontSize() -> String {
+        switch self {
+        case .sizeOne: return "textSizeOne"
+        case .sizeTwo: return "textSizeTwo"
+        case .sizeThree: return "textSizeThree"
+        case .sizeFour: return "textSizeFour"
+        case .sizeFive: return "textSizeFive"
+        }
+    }
+    
+    /**
+     The slider threshold to trigger the size class
+     
+     - returns: Returns `Float`
+    */
+    public func sliderValue() -> Float {
+        switch self {
+        case .sizeOne: return 0.0
+        case .sizeTwo: return 0.21
+        case .sizeThree: return 0.41
+        case .sizeFour: return 0.61
+        case .sizeFive: return 0.81
+        }
+    }
+}
+
+public enum FolioReaderTextAlignemnt: Int {
+    case left
+    case right
+    case center
+    case justify
+    
+    /**
+     The CSS value for the `text-align` property
+     
+     - returns: Returns `String`
+    */
+    public func textAlignment() -> String {
+        switch self {
+        case .left: return "left"
+        case .right: return "right"
+        case .center: return "center"
+        case .justify: return "justify"
+        }
+    }
+    
+    public func buttonSelected() -> (left: Bool, justify: Bool) {
+        switch self {
+        case .left: return (left: true, justify: false)
+        case .justify: return (left: false, justify: true)
+            
+        // Not used
+        case .right: return (left: true, justify: false)
+        case .center: return (left: true, justify: false)
+        }
+    }
+}
+
 open class FolioReaderConfig: NSObject {
+    
     // Colors
     open var tintColor = UIColor(rgba: "#6ACC50")
     open var menuBackgroundColor = UIColor.white
@@ -39,6 +159,10 @@ open class FolioReaderConfig: NSObject {
     open lazy var mediaOverlayColor: UIColor! = self.tintColor
     
     // Custom actions
+    
+    /// hide the navigation bar and the bottom status view
+    open var hideBars = false
+    
     open var scrollDirection: FolioReaderScrollDirection = .vertical
     open var shouldHideNavigation = false
     open var shouldHideNavigationOnTap = true

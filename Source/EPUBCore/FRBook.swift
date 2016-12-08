@@ -9,10 +9,10 @@
 
 import UIKit
 
-class FRBook: NSObject {
+open class FRBook: NSObject {
     var resources = FRResources()
     var metadata = FRMetadata()
-    var spine = FRSpine()
+    open var spine = FRSpine()
     var smils = FRSmils()
     var tableOfContents: [FRTocReference]!
     var flatTableOfContents: [FRTocReference]!
@@ -24,13 +24,13 @@ class FRBook: NSObject {
         return smils.smils.count > 0 ? true : false
     }
 
-    func title() -> String? {
+    open func title() -> String? {
         return metadata.titles.first
     }
     
     // MARK: - Table of Contents
     
-    func getTableOfContents() -> [FRTocReference]! {
+    open func getTableOfContents() -> [FRTocReference]! {
         var value = [FRTocReference]()
         
         for item in tableOfContents {
