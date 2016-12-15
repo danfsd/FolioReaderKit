@@ -19,7 +19,7 @@ open class FolioReaderBaseContainer: UIViewController {
     
     open var centerNavigationController: UINavigationController!
     open var controlStates: (fontSize: Int, fontFamily: Int, textAlignment: Int)!
-    open var centerViewController: FolioReaderCenter!
+    open var centerViewController: FolioReaderCenter?
     open var scrollDirection: FolioReaderScrollDirection!
     open var audioPlayer: FolioReaderAudioPlayer?
     
@@ -88,12 +88,34 @@ open class FolioReaderBaseContainer: UIViewController {
             ])
     }
     
+    open func changeEbook(epub epubPathOrNil: String? = nil, withAction finally: @escaping (FolioReaderCenter) -> ()) {
+        FolioReader.sharedInstance.isReaderOpen = false
+        FolioReader.sharedInstance.isReaderReady = false
+        epubPath = epubPathOrNil
+        book = FRBook()
+        replaceReaderCenter()
+        centerViewController!.onChangePageDelayed = finally
+        setupBackMenuView()
+        setupNavigationItens()
+//        centerNavigationController!.popToRootViewController(animated: true)
+        
+        loadEbook()
+    }
+    
+    open func setupNavigationItens() { }
+    
+    open func setupBackMenuView() { }
+    
     // MARK: - View life cycle
     
     open override func viewDidLoad() {
 //        print("BaseContainer.\(#function)")
         super.viewDidLoad()
         
+        setupReaderAndLoadBook()
+    }
+    
+    open func setupReaderAndLoadBook() {
         setupReaderCenter()
         setupReaderNavigationController()
         if shouldUseDefaultNavigationBar {
@@ -162,7 +184,7 @@ open class FolioReaderBaseContainer: UIViewController {
      */
     open func ebookDidLoad() {
 //        print("BaseContainer.\(#function)")
-        centerViewController.reloadData()
+        centerViewController!.reloadData()
         
         if shouldSetupAudioPlayer {
             setupAudioPlayer()
@@ -182,13 +204,31 @@ open class FolioReaderBaseContainer: UIViewController {
     }
     
     /**
+     Replaces the actual `FolioReaderCenter` instance, with a new one, waiting for a book to load.
+     */
+    open func replaceReaderCenter() {
+        var newControllers = centerNavigationController.viewControllers.filter { (vc) -> Bool in
+            return vc != centerViewController
+        }
+        
+        setupReaderCenter()
+//        newControllers.insert(centerViewController!, at: 0)
+        centerNavigationController.pushViewController(centerViewController!, animated: true)
+//        /centerNavigationController.setViewControllers(newControllers, animated: true)
+    }
+    
+    /**
      Initializes the `centerNavigationController` with `centerViewController` as the root view controller, adds it to the view hierarchy,
      and configures the navigation bar.
      
      - precondition: `centerViewController` has already been set.
      */
-    open func setupReaderNavigationController() {
-        centerNavigationController = FolioReaderNavigationController(rootViewController: centerViewController)
+    open func setupReaderNavigationController(rootController: UIViewController? = nil) {
+        if rootController == nil {
+            centerNavigationController = FolioReaderNavigationController(rootViewController: centerViewController!)
+        } else {
+            centerNavigationController = FolioReaderNavigationController(rootViewController: rootController!)
+        }
         centerNavigationController.setNavigationBarHidden(readerConfig.shouldHideNavigationOnTap, animated: false)
         
         view.addSubview(centerNavigationController.view)

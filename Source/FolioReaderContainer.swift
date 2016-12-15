@@ -21,6 +21,10 @@ open class FolioReaderContainer: FolioReaderBaseContainer {
         shouldSetupAudioPlayer = true
     }
     
+    open override func setupNavigationItens() { super.setupNavigationItens() }
+    
+    open override func setupBackMenuView() { super.setupBackMenuView() }
+    
     // MARK: - View life cicle
     
     override open func viewDidLoad() {

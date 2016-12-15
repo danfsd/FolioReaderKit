@@ -105,6 +105,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open var isFirstLoadOrientation = true
     var lastContentOffset : CGFloat!
     
+    
+    var onChangePageDelayed: ((FolioReaderCenter) -> ())?
+    
     // MARK: - Init
     
     init() {
@@ -194,11 +197,23 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        let navController = self.navigationController as! FolioReaderNavigationController
+        navController.restoreNavigationBar()
+        
+//        let navController2 = FolioReader.sharedInstance.readerContainer.centerNavigationController
+//        navController2.restoreNavigationBar()
         
         // Update pages
         pagesForCurrentPage(currentPage)
         pageIndicatorView?.reloadView(true)
     }
+    
+    open override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+    }
+    
+    
     
     override open func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -307,7 +322,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     // MARK: Status bar and Navigation bar
     
-    func hideBars() {
+    public func hideBars() {
         if readerConfig.shouldHideNavigationOnTap == false { return }
 
         let shouldHide = true
@@ -640,10 +655,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             currentPageNumber = page.pageNumber
         } else {
             let currentIndexPath = getCurrentIndexPath()
-            currentPage = collectionView.cellForItem(at: currentIndexPath) as? FolioReaderPage
+            currentPage = self.collectionView.cellForItem(at: currentIndexPath) as? FolioReaderPage
             
-            previousPageNumber = (currentIndexPath as NSIndexPath).row
-            currentPageNumber = (currentIndexPath as NSIndexPath).row+1
+            previousPageNumber = currentIndexPath.row
+            currentPageNumber = currentIndexPath.row+1
         }
         
         nextPageNumber = currentPageNumber + 1 <= totalPages ? currentPageNumber + 1 : currentPageNumber
@@ -1519,6 +1534,10 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         
         isFirstLoadOrientation = false
         print("### pageDidLoad ###\n")
+        
+        if let finally = onChangePageDelayed {
+            finally(self)
+        }
     }
 }
 

@@ -647,7 +647,9 @@ internal extension UIViewController {
     
     func pop() {
         DispatchQueue.main.async {
-            _ = self.navigationController?.popViewController(animated: true)
+            
+//            _ = self.navigationController?.popViewController(animated: true)
+            _ = FolioReader.sharedInstance.readerCenter.navigationController?.popViewController(animated: true)
         }
     }
     
