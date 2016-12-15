@@ -97,7 +97,7 @@ open class FolioReaderBaseContainer: UIViewController {
         centerViewController!.onChangePageDelayed = finally
         setupBackMenuView()
         setupNavigationItens()
-        centerNavigationController!.popToRootViewController(animated: true)
+//        centerNavigationController!.popToRootViewController(animated: true)
         
         loadEbook()
     }
@@ -212,8 +212,9 @@ open class FolioReaderBaseContainer: UIViewController {
         }
         
         setupReaderCenter()
-        newControllers.insert(centerViewController!, at: 0)
-        centerNavigationController.setViewControllers(newControllers, animated: true)
+//        newControllers.insert(centerViewController!, at: 0)
+        centerNavigationController.pushViewController(centerViewController!, animated: true)
+//        /centerNavigationController.setViewControllers(newControllers, animated: true)
     }
     
     /**

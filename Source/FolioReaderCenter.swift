@@ -197,11 +197,23 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        let navController = self.navigationController as! FolioReaderNavigationController
+        navController.restoreNavigationBar()
+        
+//        let navController2 = FolioReader.sharedInstance.readerContainer.centerNavigationController
+//        navController2.restoreNavigationBar()
         
         // Update pages
         pagesForCurrentPage(currentPage)
         pageIndicatorView?.reloadView(true)
     }
+    
+    open override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+    }
+    
+    
     
     override open func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
