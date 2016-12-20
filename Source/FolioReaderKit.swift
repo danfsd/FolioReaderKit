@@ -231,10 +231,11 @@ open class FolioReader : NSObject {
             let fileManager = FileManager.default
                 
             if fileManager.fileExists(atPath: path, isDirectory: &isDir) {
+                print(path)
                 if isDir.boolValue {
                     book = FREpubParser().readEpub(epubPath: path)
                 } else {
-                    book = FREpubParser().readEpub(epubPath: path, removeEpub: false)
+                    book = FREpubParser().readEpub(epubPath: path, removeEpub: true)
                 }
             } else {
                 print("Erro on laod.")
