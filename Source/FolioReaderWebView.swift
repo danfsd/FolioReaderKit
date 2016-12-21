@@ -24,13 +24,22 @@ open class FolioReaderWebView: UIWebView {
             }
             
             if isDiscussion {
-                if action == #selector(self.colors(_:)) || (action == #selector(self.share(_:)) && readerConfig.allowSharing) || action == #selector(self.remove(_:)) || action == #selector(self.copyText(_:)){
+                if action == #selector(self.colors(_:)) ||
+                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
+                    action == #selector(self.remove(_:)) ||
+                    action == #selector(self.copyText(_:)) ||
+                    action == #selector(self.createAnnotation(_:)) {
                     
                     return true
                 }
                 return false
             } else {
-                if action == #selector(self.colors(_:)) || (action == #selector(self.share(_:)) && readerConfig.allowSharing) || action == #selector(self.remove(_:)) || action == #selector(self.copyText(_:)) || action == #selector(self.createDiscussion(_:)) {
+                if action == #selector(self.colors(_:)) ||
+                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
+                    action == #selector(self.remove(_:)) ||
+                    action == #selector(self.copyText(_:)) ||
+                    action == #selector(self.createDiscussion(_:)) ||
+                    action == #selector(self.createAnnotation(_:)) {
                     
                     return true
                 }
@@ -53,7 +62,10 @@ open class FolioReaderWebView: UIWebView {
                 isOneWord = true
             }
             
-            if (action == #selector(self.highlight(_:)) || action == #selector(self.copyText(_:)) || action == #selector(self.createDiscussion(_:)))
+            if (action == #selector(self.highlight(_:)) ||
+                action == #selector(self.copyText(_:)) ||
+                action == #selector(self.createDiscussion(_:)) ||
+                action == #selector(self.createAnnotation(_:)))
                 || (action == #selector(self.define(_:)) && isOneWord)
                 || (action == #selector(self.play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
                 || (action == #selector(self.share(_:)) && readerConfig.allowSharing)
@@ -119,6 +131,10 @@ open class FolioReaderWebView: UIWebView {
         } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
             FolioReader.sharedInstance.readerContainer.createDiscussion(from: selectedHighlight)
         }
+    }
+    
+    func createAnnotation(_ sender: UIMenuController?) {
+        FolioReader.sharedInstance.readerContainer.createAnnotation()
     }
     
     func createHighlight() -> (highlight: Highlight?, rect: CGRect?) {
@@ -230,6 +246,7 @@ open class FolioReaderWebView: UIWebView {
         
         let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(self.copyText(_:)))
         let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(self.highlight(_:)))
+        let annotationItem = UIMenuItem(title: readerConfig.localizedAnnotationMenu, action: #selector(self.createAnnotation(_:)))
         let discussionItem = UIMenuItem(title: "D", image: discussion!, action: #selector(self.createDiscussion(_:)))
         
         let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(self.play(_:)))
@@ -246,7 +263,7 @@ open class FolioReaderWebView: UIWebView {
         
         //        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
         
-        let menuItems = [copyItem, highlightItem, colorsItem, removeItem, discussionItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+        let menuItems = [copyItem, highlightItem, annotationItem, colorsItem, removeItem, discussionItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
         
         UIMenuController.shared.menuItems = menuItems
     }

@@ -176,6 +176,7 @@ open class FolioReaderConfig: NSObject {
     open var localizedCopyMenu = NSLocalizedString("Copiar", comment: "")
     open var localizedDiscussionMenu = NSLocalizedString("Criar Discussão", comment: "")
     open var localizedHighlightMenu = NSLocalizedString("Destaque", comment: "")
+    open var localizedAnnotationMenu = NSLocalizedString("Anotação", comment: "")
     open var localizedDefineMenu = NSLocalizedString("Definir", comment: "")
     open var localizedPlayMenu = NSLocalizedString("Ouvir", comment: "")
     open var localizedPauseMenu = NSLocalizedString("Pausar", comment: "")

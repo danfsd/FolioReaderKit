@@ -350,6 +350,11 @@ open class FolioReaderBaseContainer: UIViewController {
     open func createDiscussion(from highlight: Highlight) {}
     
     /**
+     Called to create a annotation from a highlight
+     */
+    open func createAnnotation(/*from highlight: Highlight*/) {}
+    
+    /**
      Verifies if the highlight with the given Id is a discussion on the app namespace
     */
     open func isDiscussion(highlightWith id: String) -> Bool { return false }
