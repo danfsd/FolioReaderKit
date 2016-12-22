@@ -134,7 +134,24 @@ open class FolioReaderWebView: UIWebView {
     }
     
     func createAnnotation(_ sender: UIMenuController?) {
-        FolioReader.sharedInstance.readerContainer.createAnnotation()
+        let jsonString = js("createAnnotation()")
+        let jsonData = jsonString?.data(using: String.Encoding.utf8)
+        
+        do {
+            let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
+            let dic = json.firstObject as! [String: String]
+            
+            let highlight = Highlight()
+            highlight.content = dic["content"]!
+            highlight.contentPre = dic["contentPre"]!
+            highlight.contentPost = dic["contentPost"]!
+            highlight.page = currentPageNumber
+            highlight.date = Foundation.Date()
+            
+            FolioReader.sharedInstance.readerContainer.createAnnotation(from: highlight)
+        } catch {
+            print("Could not receive JSON")
+        }
     }
     
     func createHighlight() -> (highlight: Highlight?, rect: CGRect?) {

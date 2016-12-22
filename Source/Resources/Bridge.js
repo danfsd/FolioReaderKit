@@ -86,6 +86,32 @@ function setTextAlignment(style) {
     html.style.textAlign = style
 }
 
+
+// http://stackoverflow.com/questions/4811822/get-a-ranges-start-and-end-offsets-relative-to-its-parent-container
+
+function createAnnotation() {
+    var selection = window.getSelection();
+    var range = selection.getRangeAt(0);
+    var additionalRange = 30
+    
+    var selectedText = selection.toString();
+    var selectedOffset = selection.focusOffset;
+    var fullText = selection.focusNode.textContent;
+    
+    var pre = fullText.substr(0, selectedOffset - selectedText.length);
+    var post = fullText.substr(selectedOffset, fullText.length);
+    
+    console.log("Texto selecionado: \"" + selectedText + "\"");
+    console.log("Texto completo: \"" + fullText + "\"");
+    console.log("Pré anotação: \"" + pre + "\"");
+    console.log("Pós anotação: \"" + post + "\"");
+    
+    var params = [];
+    params.push({content: selectedText, contentPre: pre, contentPost: post});
+    
+    return JSON.stringify(params);
+}
+
 /*
  *	Native bridge Highlight text
  */
