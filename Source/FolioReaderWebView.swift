@@ -134,24 +134,32 @@ open class FolioReaderWebView: UIWebView {
     }
     
     func createAnnotation(_ sender: UIMenuController?) {
-        let jsonString = js("createAnnotation()")
-        let jsonData = jsonString?.data(using: String.Encoding.utf8)
+        var highlight: Highlight!
         
-        do {
-            let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
-            let dic = json.firstObject as! [String: String]
-            
-            let highlight = Highlight()
-            highlight.content = dic["content"]!
-            highlight.contentPre = dic["contentPre"]!
-            highlight.contentPost = dic["contentPost"]!
-            highlight.page = currentPageNumber
-            highlight.date = Foundation.Date()
-            
-            FolioReader.sharedInstance.readerContainer.createAnnotation(from: highlight)
-        } catch {
-            print("Could not receive JSON")
+        if let jsonString = js("createAnnotation()") {
+            let jsonData = jsonString.data(using: String.Encoding.utf8)
+            do {
+                let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
+                let dic = json.firstObject as! [String: String]
+                
+                highlight = Highlight()
+                highlight.content = dic["content"]!
+                highlight.contentPre = dic["contentPre"]!
+                highlight.contentPost = dic["contentPost"]!
+                highlight.page = currentPageNumber
+            } catch {
+                print("Could not receive JSON")
+            }
+        } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
+            highlight = Highlight()
+            highlight.content = selectedHighlight.content
+            highlight.contentPre = selectedHighlight.contentPre
+            highlight.contentPost = selectedHighlight.contentPost
+            highlight.page = selectedHighlight.page
         }
+        
+        highlight.date = Foundation.Date()
+        FolioReader.sharedInstance.readerContainer.createAnnotation(from: highlight)
     }
     
     func createHighlight() -> (highlight: Highlight?, rect: CGRect?) {
