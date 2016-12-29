@@ -47,7 +47,7 @@ class FREpubParser: NSObject, SSZipArchiveDelegate {
         
         // Unzip   
         let bookName = (withEpubPath as NSString).lastPathComponent
-        bookBasePath = (kApplicationDocumentsDirectory as NSString).appendingPathComponent(bookName)
+        bookBasePath = (kApplicationDocumentsDirectory as NSString).appendingPathComponent("book/\(bookName)")
         SSZipArchive.unzipFile(atPath: withEpubPath, toDestination: bookBasePath, delegate: self)
         
         // Skip from backup this folder

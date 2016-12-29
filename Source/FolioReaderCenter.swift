@@ -669,7 +669,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         print("Current page number: \(currentPageNumber!)")
         print("Next page number: \(nextPageNumber!)")
         
-        currentPage.webView.becomeFirstResponder()
+        if currentPage != nil {
+            currentPage.webView.becomeFirstResponder()
+        }
+        
         scrollScrubber?.setSliderVal()
         
         // Set navigation title
