@@ -306,12 +306,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         collectionView.reloadData()
         configureNavBarButtons()
         
-        if let position = FolioReader.defaults.value(forKey: kBookId) as? NSDictionary,
-            let pageNumber = position["pageNumber"] as? Int , pageNumber > 0 {
-            changePageWith(page: pageNumber)
-            currentPageNumber = pageNumber
-            print("a")
-            return
+        if let key = kBookId {
+            if let position = FolioReader.defaults.value(forKey: key) as? NSDictionary,
+                let pageNumber = position["pageNumber"] as? Int , pageNumber > 0 {
+                changePageWith(page: pageNumber)
+                currentPageNumber = pageNumber
+                print("a")
+                return
+            }
         }
         
         currentPageNumber = 1
@@ -1078,11 +1080,15 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     */
     func getCurrentChapter() -> FRResource? {
         if let currentPageNumber = currentPageNumber {
-            for item in book.flatTableOfContents {
-                if let reference = book.spine.spineReferences[safe: currentPageNumber-1], let resource = item.resource
-                    , resource == reference.resource {
-                    return item.resource
+            if book.flatTableOfContents != nil {
+                for item in book.flatTableOfContents {
+                    if let reference = book.spine.spineReferences[safe: currentPageNumber-1], let resource = item.resource
+                        , resource == reference.resource {
+                        return item.resource
+                    }
                 }
+            } else {
+                return nil
             }
         }
         return nil

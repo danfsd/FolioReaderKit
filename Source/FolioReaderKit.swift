@@ -211,7 +211,9 @@ open class FolioReader : NSObject {
         FolioReader.saveReaderState()
         FolioReader.sharedInstance.isReaderOpen = false
         FolioReader.sharedInstance.isReaderReady = false
-        FolioReader.sharedInstance.readerAudioPlayer.stop(immediate: true)
+        if let audioPlayer = FolioReader.sharedInstance.readerAudioPlayer {
+            audioPlayer.stop(immediate: true)
+        }
         FolioReader.defaults.set(0, forKey: kCurrentTOCMenu)
     }
     
@@ -732,3 +734,4 @@ internal extension Array {
         return indices ~= index ? self[index] : nil
     }
 }
+    

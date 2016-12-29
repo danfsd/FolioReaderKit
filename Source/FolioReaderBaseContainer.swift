@@ -51,7 +51,6 @@ open class FolioReaderBaseContainer: UIViewController {
         didSet {
             if errorOnLoad {
                 print("[INFO] - Error loading container")
-                closeReader()
             }
         }
     }
