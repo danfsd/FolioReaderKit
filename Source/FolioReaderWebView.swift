@@ -38,7 +38,7 @@ open class FolioReaderWebView: UIWebView {
                     (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
                     action == #selector(self.remove(_:)) ||
                     action == #selector(self.copyText(_:)) ||
-                    action == #selector(self.createDiscussion(_:)) ||
+//                    action == #selector(self.createDiscussion(_:)) ||
                     action == #selector(self.createAnnotation(_:)) {
                     
                     return true
@@ -64,7 +64,7 @@ open class FolioReaderWebView: UIWebView {
             
             if (action == #selector(self.highlight(_:)) ||
                 action == #selector(self.copyText(_:)) ||
-                action == #selector(self.createDiscussion(_:)) ||
+//                action == #selector(self.createDiscussion(_:)) ||
                 action == #selector(self.createAnnotation(_:)))
                 || (action == #selector(self.define(_:)) && isOneWord)
                 || (action == #selector(self.play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
