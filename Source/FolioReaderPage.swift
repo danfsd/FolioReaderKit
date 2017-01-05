@@ -74,6 +74,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         tapGestureRecognizer.numberOfTapsRequired = 1
         tapGestureRecognizer.delegate = self
         webView.addGestureRecognizer(tapGestureRecognizer)
+        
+        let doubleTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTapGesture(_:)))
+        doubleTapGestureRecognizer.numberOfTapsRequired = 2
+        doubleTapGestureRecognizer.delegate = self
+        webView.addGestureRecognizer(doubleTapGestureRecognizer)
     }
 
     required public init?(coder aDecoder: NSCoder) {
@@ -435,6 +440,16 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     func handleTap(withTimer timer: Timer) {
         let tapLocation = timer.userInfo as! CGPoint
         handleTap(tapLocation)
+    }
+    
+    open func handleDoubleTapGesture(_ recognizer: UITapGestureRecognizer) {
+        var seconds = 0.4
+        let delay = seconds * Double(NSEC_PER_SEC)  // nanoseconds per seconds
+        let dispatchTime = DispatchTime.now() + Double(Int64(delay)) / Double(NSEC_PER_SEC)
+        
+        DispatchQueue.main.asyncAfter(deadline: dispatchTime, execute: {
+            FolioReader.sharedInstance.readerContainer.toggleNavigationBar()
+        })
     }
     
     open func handleTapGesture(_ recognizer: UITapGestureRecognizer) {
