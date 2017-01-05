@@ -7,16 +7,38 @@
 //
 
 import UIKit
+import MenuItemKit
 
 open class FolioReaderWebView: UIWebView {
     
     var isColors = false
     var isShare = false
     var isOneWord = false
+    var createDiscussionAction: MenuItemAction!
 
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        initialization()
+    }
+    
+    required public init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        initialization()
+    }
+    
+    fileprivate func initialization() {
+        readerConfig.allowSharing = false
+        createDiscussionAction = { [weak self] item in
+            self?.createDiscussion(nil)
+        }
+    }
+    
     open override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         
-        // menu on existing highlight
+        guard readerConfig != nil else {
+            return super.canPerformAction(action, withSender: sender)
+        }
+        
         if isShare {
             var isDiscussion = false
             if let highlightId = selectedHighlightId {
@@ -24,56 +46,85 @@ open class FolioReaderWebView: UIWebView {
             }
             
             if isDiscussion {
-                if action == #selector(self.colors(_:)) ||
-                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
-                    action == #selector(self.remove(_:)) ||
-                    action == #selector(self.copyText(_:)) ||
-                    action == #selector(self.createAnnotation(_:)) {
-                    
-                    return true
-                }
-                return false
-            } else {
-                if action == #selector(self.colors(_:)) ||
-                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
-                    action == #selector(self.remove(_:)) ||
-                    action == #selector(self.copyText(_:)) ||
-                    action == #selector(self.createDiscussion(_:)) ||
-                    action == #selector(self.createAnnotation(_:)) {
-                    
-                    return true
-                }
-                return false
-            }
-            return false
-            // menu for selecting highlight color
-        } else if isColors {
-            if action == #selector(self.setYellow(_:)) || action == #selector(self.setGreen(_:)) || action == #selector(self.setBlue(_:)) || action == #selector(self.setPink(_:)) || action == #selector(self.setUnderline(_:)) {
-                return true
                 
+            } else {
+                if action == #selector(copyText(_:))
+                    || action == #selector(createAnnotation(_:)) {
+                    return true
+                }
             }
-            
             return false
-            
-            // default menu
+        } else if isColors {
+            return false
         } else {
-            var isOneWord = false
-            if let result = js("getSelectedText()") , result.components(separatedBy: " ").count == 1 {
-                isOneWord = true
-            }
-            
-            if (action == #selector(self.highlight(_:)) ||
-                action == #selector(self.copyText(_:)) ||
-                action == #selector(self.createDiscussion(_:)) ||
-                action == #selector(self.createAnnotation(_:)))
-                || (action == #selector(self.define(_:)) && isOneWord)
-                || (action == #selector(self.play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
-                || (action == #selector(self.share(_:)) && readerConfig.allowSharing)
-                || (action == #selector(NSObject.copy) && readerConfig.allowSharing) {
+            if action == #selector(highlight(_:))
+                || action == #selector(createAnnotation(_:))
+                || (action == #selector(define(_:)) && isOneWord)
+                || (action == #selector(play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
+                || (action == #selector(share(_:)) && readerConfig.allowSharing)
+                || action == #selector(copyText(_:)) {
                 return true
             }
             return false
         }
+        
+//        if isShare {
+//            var isDiscussion = false
+//            if let highlightId = selectedHighlightId {
+//                isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlightId)
+//            }
+//            
+//            if isDiscussion {
+//                if action == #selector(self.colors(_:)) ||
+//                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
+//                    action == #selector(self.remove(_:)) ||
+//                    action == #selector(self.copyText(_:)) ||
+//                    action == #selector(self.createAnnotation(_:)) {
+//                    
+//                    return true
+//                }
+//                return false
+//            } else {
+//                if action == #selector(self.colors(_:)) ||
+//                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
+//                    action == #selector(self.remove(_:)) ||
+//                    action == #selector(self.copyText(_:)) ||
+//                    action == #selector(self.createDiscussion(_:)) ||
+//                    action == #selector(self.createAnnotation(_:)) {
+//                    
+//                    return true
+//                }
+//                return false
+//            }
+//            return false
+//            // menu for selecting highlight color
+//        } else if isColors {
+//            if action == #selector(self.setYellow(_:)) || action == #selector(self.setGreen(_:)) || action == #selector(self.setBlue(_:)) || action == #selector(self.setPink(_:)) || action == #selector(self.setUnderline(_:)) {
+//                return true
+//                
+//            }
+//            
+//            return false
+//            
+//            // default menu
+//        } else {
+//            var isOneWord = false
+//            if let result = js("getSelectedText()") , result.components(separatedBy: " ").count == 1 {
+//                isOneWord = true
+//            }
+//            
+//            if (action == #selector(self.highlight(_:)) ||
+//                action == #selector(self.copyText(_:)) ||
+//                action == #selector(self.createDiscussion(_:)) ||
+//                action == #selector(self.createAnnotation(_:)))
+//                || (action == #selector(self.define(_:)) && isOneWord)
+//                || (action == #selector(self.play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
+//                || (action == #selector(self.share(_:)) && readerConfig.allowSharing)
+//                || (action == #selector(NSObject.copy) && readerConfig.allowSharing) {
+//                return true
+//            }
+//            return false
+//        }
     }
     
     open override var canBecomeFirstResponder : Bool {
@@ -99,7 +150,7 @@ open class FolioReaderWebView: UIWebView {
     
     func colors(_ sender: UIMenuController?) {
         isColors = true
-        createMenu(false)
+        createMenu(options: false)
         setMenuVisible(true)
     }
     
@@ -194,7 +245,7 @@ open class FolioReaderWebView: UIWebView {
     
     func highlight(_ sender: UIMenuController?) {
         if let rect = createHighlight().rect {
-            createMenu(true)
+            createMenu(options: true)
             setMenuVisible(true, andRect: rect)
         }
     }
@@ -256,7 +307,7 @@ open class FolioReaderWebView: UIWebView {
     
     // MARK: - Create and show menu
     
-    open func createMenu(_ options: Bool) {
+    open func createMenu(options options: Bool) {
         isShare = options
         
         let colors = UIImage(readerImageNamed: "colors-marker")
@@ -269,28 +320,70 @@ open class FolioReaderWebView: UIWebView {
         let pink = UIImage(readerImageNamed: "pink-marker")
         let underline = UIImage(readerImageNamed: "underline-marker")
         
-        let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(self.copyText(_:)))
-        let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(self.highlight(_:)))
+        let menuController = UIMenuController.shared
+        
+        let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(copyText(_:)))
         let annotationItem = UIMenuItem(title: readerConfig.localizedAnnotationMenu, action: #selector(self.createAnnotation(_:)))
-        let discussionItem = UIMenuItem(title: "D", image: discussion!, action: #selector(self.createDiscussion(_:)))
+        let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(highlight(_:)))
+        let discussionItem = UIMenuItem(title: "D", image: discussion!, action: createDiscussionAction)
         
-        let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(self.play(_:)))
-        let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(self.define(_:)))
+//        let discussionItem = UIMenuItem(title: "D", image: discussion!) { [weak self] _ in
+//            self?.createHighlight()
+//        }
         
-        let colorsItem = UIMenuItem(title: "C", image: colors!, action: #selector(self.colors(_:)))
-        let shareItem = UIMenuItem(title: "S", image: share!, action: #selector(self.share(_:)))
-        let removeItem = UIMenuItem(title: "R", image: remove!, action: #selector(self.remove(_:)))
-        let yellowItem = UIMenuItem(title: "Y", image: yellow!, action: #selector(self.setYellow(_:)))
-        let greenItem = UIMenuItem(title: "G", image: green!, action: #selector(self.setGreen(_:)))
-        let blueItem = UIMenuItem(title: "B", image: blue!, action: #selector(self.setBlue(_:)))
-        let pinkItem = UIMenuItem(title: "P", image: pink!, action: #selector(self.setPink(_:)))
-        let underlineItem = UIMenuItem(title: "U", image: underline!, action: #selector(self.setUnderline(_:)))
+        let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(play(_:)))
+        let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(define(_:)))
+        let colorsItem = UIMenuItem(title: "C", image: colors) { [weak self] _ in
+            self?.colors(menuController)
+        }
+        let shareItem = UIMenuItem(title: "S", image: share) { [weak self] _ in
+            self?.share(menuController)
+        }
+        let removeItem = UIMenuItem(title: "R", image: remove) { [weak self] _ in
+            self?.remove(menuController)
+        }
+        let yellowItem = UIMenuItem(title: "Y", image: yellow) { [weak self] _ in
+            self?.setYellow(menuController)
+        }
+        let greenItem = UIMenuItem(title: "G", image: green) { [weak self] _ in
+            self?.setGreen(menuController)
+        }
+        let blueItem = UIMenuItem(title: "B", image: blue) { [weak self] _ in
+            self?.setBlue(menuController)
+        }
+        let pinkItem = UIMenuItem(title: "P", image: pink) { [weak self] _ in
+            self?.setPink(menuController)
+        }
+        let underlineItem = UIMenuItem(title: "U", image: underline) { [weak self] _ in
+            self?.setUnderline(menuController)
+        }
         
-        //        let menuItems = [playAudioItem, highlightItem, defineItem, colorsItem, removeItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem, shareItem]
+        var menuItems = [shareItem]
         
-        let menuItems = [copyItem, highlightItem, annotationItem, colorsItem, removeItem, discussionItem, yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+        // menu on existing highlight
+        if isShare {
+            // [Copiar, Anotação, Cores, Remover]
+            menuItems = [copyItem, annotationItem,  colorsItem, removeItem]
+            if readerConfig.allowSharing {
+                menuItems.append(shareItem)
+            }
+        } else if isColors {
+            // menu for selecting highlight color
+            menuItems = [yellowItem, greenItem, blueItem, pinkItem, underlineItem]
+        } else {
+            // default menu [Copiar, Destaque, Anotação, Criar discussão (desabilitado)]
+            menuItems = [copyItem, highlightItem, annotationItem, shareItem]
+            
+//            if book.hasAudio() || readerConfig.enableTTS {
+//                menuItems.insert(playAudioItem, at: 0)
+//            }
+            
+            if !readerConfig.allowSharing {
+                menuItems.removeLast()
+            }
+        }
         
-        UIMenuController.shared.menuItems = menuItems
+        menuController.menuItems = menuItems
     }
     
     open func setMenuVisible(_ menuVisible: Bool, animated: Bool = true, andRect rect: CGRect = CGRect.zero) {

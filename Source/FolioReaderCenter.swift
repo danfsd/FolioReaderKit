@@ -1274,7 +1274,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         currentPage.disableInteraction()
         
         if let currentPage = currentPage {
-            currentPage.webView.createMenu(true)
+            currentPage.webView.createMenu(options: true)
             currentPage.webView.setMenuVisible(false)
         }
         

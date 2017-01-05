@@ -8,7 +8,7 @@
 
 import UIKit
 import SafariServices
-import UIMenuItem_CXAImageSupport
+import MenuItemKit
 import JSQWebViewController
 
 var selectedHighlightId: String?
@@ -236,7 +236,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         
         UIView.animate(withDuration: 0.2, animations: {webView.alpha = 1}, completion: { finished in
             webView.isColors = false
-            self.webView.createMenu(false)
+            self.webView.createMenu(options: false)
         })
         
         if let highlightsToSync = FolioReader.sharedInstance.readerCenter.highlightsToSync {
@@ -270,7 +270,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             
             let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 51)))
             
-            webView.createMenu(true)
+            webView.createMenu(options: true)
             webView.setMenuVisible(true, andRect: rect)
             menuIsVisible = true
             
@@ -559,13 +559,13 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     override open func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if UIMenuController.shared.menuItems?.count == 0 {
             webView.isColors = false
-            webView.createMenu(false)
+            webView.createMenu(options: false)
         }
         
         if !webView.isShare && !webView.isColors {
             if let result = webView.js("getSelectedText()") , result.components(separatedBy: " ").count == 1 {
                 webView.isOneWord = true
-                webView.createMenu(false)
+                webView.createMenu(options: false)
             } else {
                 webView.isOneWord = false
             }
@@ -597,19 +597,5 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
      */
     open func performJavaScript(_ javaScriptCode: String) -> String? {
         return webView.js(javaScriptCode)
-    }
-}
-
-extension UIMenuItem {
-    convenience init(title: String, image: UIImage, action: Selector) {
-      #if COCOAPODS
-        self.init(title: title, action: action)
-        self.cxa_init(withTitle: title, action: action, image: image, hidesShadow: true)
-      #else
-        let settings = CXAMenuItemSettings()
-        settings.image = image
-        settings.shadowDisabled = true
-        self.init(title: title, action: action, settings: settings)
-      #endif
     }
 }
