@@ -52,7 +52,8 @@ open class FolioReaderWebView: UIWebView {
                 }
             } else {
                 if action == #selector(copyText(_:))
-                    || action == #selector(createAnnotation(_:)) {
+                    || action == #selector(createAnnotation(_:))
+                    || action == #selector(createDiscussion(_:)) {
                     return true
                 }
             }
@@ -67,6 +68,7 @@ open class FolioReaderWebView: UIWebView {
 
             if action == #selector(highlight(_:))
                 || action == #selector(createAnnotation(_:))
+                || action == #selector(createDiscussion(_:))
                 || (action == #selector(define(_:)) && isOneWord)
                 || (action == #selector(play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
                 || (action == #selector(share(_:)) && readerConfig.allowSharing)
@@ -75,64 +77,6 @@ open class FolioReaderWebView: UIWebView {
             }
             return false
         }
-        
-//        if isShare {
-//            var isDiscussion = false
-//            if let highlightId = selectedHighlightId {
-//                isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlightId)
-//            }
-//            
-//            if isDiscussion {
-//                if action == #selector(self.colors(_:)) ||
-//                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
-//                    action == #selector(self.remove(_:)) ||
-//                    action == #selector(self.copyText(_:)) ||
-//                    action == #selector(self.createAnnotation(_:)) {
-//                    
-//                    return true
-//                }
-//                return false
-//            } else {
-//                if action == #selector(self.colors(_:)) ||
-//                    (action == #selector(self.share(_:)) && readerConfig.allowSharing) ||
-//                    action == #selector(self.remove(_:)) ||
-//                    action == #selector(self.copyText(_:)) ||
-//                    action == #selector(self.createDiscussion(_:)) ||
-//                    action == #selector(self.createAnnotation(_:)) {
-//                    
-//                    return true
-//                }
-//                return false
-//            }
-//            return false
-//            // menu for selecting highlight color
-//        } else if isColors {
-//            if action == #selector(self.setYellow(_:)) || action == #selector(self.setGreen(_:)) || action == #selector(self.setBlue(_:)) || action == #selector(self.setPink(_:)) || action == #selector(self.setUnderline(_:)) {
-//                return true
-//                
-//            }
-//            
-//            return false
-//            
-//            // default menu
-//        } else {
-//            var isOneWord = false
-//            if let result = js("getSelectedText()") , result.components(separatedBy: " ").count == 1 {
-//                isOneWord = true
-//            }
-//            
-//            if (action == #selector(self.highlight(_:)) ||
-//                action == #selector(self.copyText(_:)) ||
-//                action == #selector(self.createDiscussion(_:)) ||
-//                action == #selector(self.createAnnotation(_:)))
-//                || (action == #selector(self.define(_:)) && isOneWord)
-//                || (action == #selector(self.play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
-//                || (action == #selector(self.share(_:)) && readerConfig.allowSharing)
-//                || (action == #selector(NSObject.copy) && readerConfig.allowSharing) {
-//                return true
-//            }
-//            return false
-//        }
     }
     
     open override var canBecomeFirstResponder : Bool {
@@ -333,11 +277,7 @@ open class FolioReaderWebView: UIWebView {
         let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(copyText(_:)))
         let annotationItem = UIMenuItem(title: readerConfig.localizedAnnotationMenu, action: #selector(self.createAnnotation(_:)))
         let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(highlight(_:)))
-        let discussionItem = UIMenuItem(title: "D", image: discussion!, action: createDiscussionAction)
-        
-//        let discussionItem = UIMenuItem(title: "D", image: discussion!) { [weak self] _ in
-//            self?.createHighlight()
-//        }
+        let discussionItem = UIMenuItem(title: readerConfig.localizedDiscussionMenu, action: #selector(createDiscussion(_:)))
         
         let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(play(_:)))
         let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(define(_:)))
@@ -371,7 +311,7 @@ open class FolioReaderWebView: UIWebView {
         // menu on existing highlight
         if isShare {
             // [Copiar, Anotação, Cores, Remover]
-            menuItems = [copyItem, annotationItem,  colorsItem, removeItem]
+            menuItems = [copyItem, annotationItem, discussionItem, colorsItem, removeItem]
             if readerConfig.allowSharing {
                 menuItems.append(shareItem)
             }
@@ -380,7 +320,7 @@ open class FolioReaderWebView: UIWebView {
             menuItems = [yellowItem, greenItem, blueItem, pinkItem, underlineItem]
         } else {
             // default menu [Copiar, Destaque, Anotação, Criar discussão (desabilitado)]
-            menuItems = [copyItem, highlightItem, annotationItem, shareItem]
+            menuItems = [copyItem, highlightItem, annotationItem, discussionItem, shareItem]
             
 //            if book.hasAudio() || readerConfig.enableTTS {
 //                menuItems.insert(playAudioItem, at: 0)
