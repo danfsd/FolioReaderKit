@@ -46,7 +46,10 @@ open class FolioReaderWebView: UIWebView {
             }
             
             if isDiscussion {
-                
+                if action == #selector(copyText(_:))
+                    || action == #selector(createAnnotation(_:)) {
+                    return true
+                }
             } else {
                 if action == #selector(copyText(_:))
                     || action == #selector(createAnnotation(_:)) {
@@ -57,6 +60,11 @@ open class FolioReaderWebView: UIWebView {
         } else if isColors {
             return false
         } else {
+			var isOneWord = false
+            if let result = js("getSelectedText()"), result.components(separatedBy: " ").count == 1 {
+                isOneWord = true
+            }
+
             if action == #selector(highlight(_:))
                 || action == #selector(createAnnotation(_:))
                 || (action == #selector(define(_:)) && isOneWord)
