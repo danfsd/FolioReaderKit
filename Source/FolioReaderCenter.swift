@@ -668,29 +668,29 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         print("Previous page number: \(previousPageNumber!)")
         print("Current page number: \(currentPageNumber!)")
         print("Next page number: \(nextPageNumber!)")
-        
+        //TODO validar de onde vem o currenPage, fixed temporario
         if currentPage != nil {
             currentPage.webView.becomeFirstResponder()
+            scrollScrubber?.setSliderVal()
+            // Set navigation title
+            if let chapterName = getCurrentChapterName() {
+                title = chapterName
+                delegate?.center?(chapter: currentPage, nameDidChanged: chapterName)
+            } else { title = ""}
+            
+            // Updating remainder reading time
+            var readingTime = 0
+            if let readingTimeString = currentPage.webView.js("getReadingTime()") {
+                readingTime = Int(readingTimeString)!
+            }
+            pageIndicatorView?.totalMinutes = readingTime
+            delegate?.center?(chapter: currentPage, readingTimeDidChanged: readingTime)
+            
+            pagesForCurrentPage(currentPage)
+            delegate?.pageDidAppear?(currentPage)
         }
         
-        scrollScrubber?.setSliderVal()
-        
-        // Set navigation title
-        if let chapterName = getCurrentChapterName() {
-            title = chapterName
-            delegate?.center?(chapter: currentPage, nameDidChanged: chapterName)
-        } else { title = ""}
-        
-        // Updating remainder reading time
-        var readingTime = 0
-        if let readingTimeString = currentPage.webView.js("getReadingTime()") {
-            readingTime = Int(readingTimeString)!
-        }
-        pageIndicatorView?.totalMinutes = readingTime
-        delegate?.center?(chapter: currentPage, readingTimeDidChanged: readingTime)
-        
-        pagesForCurrentPage(currentPage)
-        delegate?.pageDidAppear?(currentPage)
+      
         
         print("### updateCurrentPage ###\n")
         
