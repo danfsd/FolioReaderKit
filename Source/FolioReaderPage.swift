@@ -204,6 +204,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         webView.loadHTMLString(html as String, baseURL: baseURL)
     }
     
+    open func search(withTerm term: String) {
+        webView.highlightAllOccurrences(ofString: term)
+    }
+    
     // MARK: - UIWebView Delegate
     
     open func webViewDidFinishLoad(_ webView: UIWebView) {
@@ -247,6 +251,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         if let highlightsToSync = FolioReader.sharedInstance.readerCenter.highlightsToSync {
             insertHighlights(highlightsToSync)
         }
+        
+        
         
         print("### webViewDidFinishLoad ###\n")
         

@@ -83,6 +83,21 @@ open class FolioReaderWebView: UIWebView {
         return true
     }
     
+    // MARK: - Search functions
+    
+    func highlightAllOccurrences(ofString string: String) {
+        js("performMark(\"\(string)\")")
+        
+    }
+    
+    func removeAllSearchResultsHighlights() {
+        js("removeAllSearchResultsHighlights()")
+    }
+    
+    func scroll(toIndex idx: Int) {
+        js("scrollToSearchResultHighlight(\(idx))")
+    }
+    
     // MARK: - UIMenuController - Actions
     
     func share(_ sender: UIMenuController) {

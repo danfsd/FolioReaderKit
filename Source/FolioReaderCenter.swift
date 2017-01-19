@@ -200,9 +200,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let navController = self.navigationController as! FolioReaderNavigationController
         navController.restoreNavigationBar()
         
-//        let navController2 = FolioReader.sharedInstance.readerContainer.centerNavigationController
-//        navController2.restoreNavigationBar()
-        
         // Update pages
         pagesForCurrentPage(currentPage)
         pageIndicatorView?.reloadView(true)
@@ -212,8 +209,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         super.viewWillDisappear(animated)
         
     }
-    
-    
     
     override open func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -258,8 +253,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
     }
     
-    func test() {
-        print("hello")
+    open func search(withTerm term: String) {
+        currentPage.webView.highlightAllOccurrences(ofString: term)
     }
     
     func configureNavBarButtons() {
@@ -444,10 +439,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         // Inject CSS
         let jsFilePath = Bundle.frameworkBundle().path(forResource: "Bridge", ofType: "js")
+        let markJsFilePath = Bundle.frameworkBundle().path(forResource: "mark.min", ofType: "js")
+        
         let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
         let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
-        let jsTag = "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>" +
-        "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>"
+        
+        let jsTag = "<script type=\"text/javascript\" src=\"\(markJsFilePath!)\"></script>" +
+                    "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>" +
+                    "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>"
         
         let toInject = "\n\(cssTag)\n\(jsTag)\n</head>"
         html = html?.replacingOccurrences(of: "</head>", with: toInject)

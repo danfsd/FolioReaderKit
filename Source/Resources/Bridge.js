@@ -9,13 +9,19 @@
 var thisHighlight;
 var audioMarkClass;
 var wordsPerMinute = 180;
+var markInstance = null;
 
 document.addEventListener("DOMContentLoaded", function(event) {
-//    var lnk = document.getElementsByClassName("lnk");
-//    for (var i=0; i<lnk.length; i++) {
-//        lnk[i].setAttribute("onclick","return callVerseURL(this);");
-//    }
+    markInstance = new Mark(document.querySelector("body"));
 });
+
+function performMark(keyword) {
+    markInstance.unmark({
+        done: function() {
+            markInstance.mark(keyword, {"debug": true});
+        }
+    });
+}
 
 // Generate a GUID
 function guid() {
