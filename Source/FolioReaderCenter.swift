@@ -451,6 +451,13 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let toInject = "\n\(cssTag)\n\(jsTag)\n</head>"
         html = html?.replacingOccurrences(of: "</head>", with: toInject)
         
+        let searchButtons = "<button id=\"previous_search_result_button\"data-search=\"prev\" style=\"display: none\">Anterior</button>" +
+                            "<button id=\"next_search_result_button\"data-search=\"next\" style=\"display: none\">Próximo</button></body>"
+//        let searchButtons = "<button data-search=\"prev\">Anterior</button>" +
+//                            "<button data-search=\"next\">Próximo</button></body>"
+
+        html = html?.replacingOccurrences(of: "</body>", with: searchButtons)
+        
         // Font class name
         var classes = ""
         let currentFontName = FolioReader.sharedInstance.currentFontName
