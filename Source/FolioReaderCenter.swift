@@ -66,6 +66,8 @@ public typealias ReaderState = (current: Int, total: Int)
     // Refactored from highlightWasRemoved
     @objc optional func center(chapter: FolioReaderPage, highlightWasRemoved highlight: Highlight)
     
+    @objc optional func center(searchDidJumped toResult: Int, ofTotal total: Int)
+    
     @objc optional func center(willHideBars page: FolioReaderPage)
     
 }
@@ -257,6 +259,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         currentPage.webView.highlightAllOccurrences(ofString: term)
     }
     
+    open func skipToNextSearchResult() {
+        currentPage.webView.js("skipToNextMark()")
+    }
+    
+    open func skipToPreviousSearchResult() {
+        currentPage.webView.js("skipToPreviousMark()")
+    }
+    
     func configureNavBarButtons() {
         if !readerConfig.shouldHideNavigation {
 //            let backBarButton = UIBarButtonItem(title: "Voltar", style: .plain, target: self, action: #selector(self.test))
@@ -440,11 +450,13 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         // Inject CSS
         let jsFilePath = Bundle.frameworkBundle().path(forResource: "Bridge", ofType: "js")
         let markJsFilePath = Bundle.frameworkBundle().path(forResource: "mark.min", ofType: "js")
+        let jqueryJsFilePath = Bundle.frameworkBundle().path(forResource: "jquery-3.1.1.min", ofType: "js")
         
         let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
         let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
         
-        let jsTag = "<script type=\"text/javascript\" src=\"\(markJsFilePath!)\"></script>" +
+        let jsTag = "<script type=\"text/javascript\" src=\"\(jqueryJsFilePath!)\"></script>" +
+                    "<script type=\"text/javascript\" src=\"\(markJsFilePath!)\"></script>" +
                     "<script type=\"text/javascript\" src=\"\(jsFilePath!)\"></script>" +
                     "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>"
         

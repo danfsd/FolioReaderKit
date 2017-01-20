@@ -10,6 +10,16 @@ var thisHighlight;
 var audioMarkClass;
 var wordsPerMinute = 180;
 var markInstance = null;
+var searchResults = 0;
+var currentResultIndex = 0;
+var currentClass = "current";
+var offsetTop = 50;
+
+// prev button
+var prevBtn = $("button[data-search='prev']");
+
+// next button
+var nextBtn = $("button[data-search='next']");
 
 document.addEventListener("DOMContentLoaded", function(event) {
     markInstance = new Mark(document.querySelector("body"));
@@ -19,8 +29,70 @@ function performMark(keyword) {
     markInstance.unmark({
         done: function() {
             markInstance.mark(keyword, {"debug": true});
+            searchResults = $("body").find("mark");
+            currentResult = 0;
+            jumpTo();
         }
     });
+}
+
+/**
+ * Jumps to the element matching the currentIndex
+ */
+function jumpTo() {
+    if (searchResults.length) {
+        var position, current = searchResults.eq(currentResultIndex);
+        searchResults.removeClass(currentClass);
+        if (current.length) {
+            current.addClass(currentClass);
+            position = current.offset().top - offsetTop;
+            window.scrollTo(0, position);
+        }
+    }
+    
+    window.location = "search-jumped://" + (currentResultIndex + 1) + "," + searchResults.length;
+}
+
+/**
+ * Next and previous search jump to
+ */
+nextBtn.add(prevBtn).on("click", function() {
+    if (searchResults.length) {
+        currentResultIndex += $(this).is(prevBtn) ? -1 : 1;
+        if (currentResultIndex < 0) {
+            currentResultIndex = searchResults.length - 1;
+        }
+        if (currentResultIndex > searchResults.length - 1) {
+            currentResultIndex = 0;
+        }
+        jumpTo();
+    }
+});
+
+function skipToPreviousMark() {
+    if (searchResults.length) {
+        currentResultIndex -= 1;
+        if (currentResultIndex < 0) {
+            currentResultIndex = searchResults.length - 1;
+        }
+        if (currentResultIndex > searchResults.length - 1) {
+            currentResultIndex = 0;
+        }
+        jumpTo();
+    }
+}
+
+function skipToNextMark() {
+    if (searchResults.length) {
+        currentResultIndex += 1;
+        if (currentResultIndex < 0) {
+            currentResultIndex = searchResults.length - 1;
+        }
+        if (currentResultIndex > searchResults.length - 1) {
+            currentResultIndex = 0;
+        }
+        jumpTo();
+    }
 }
 
 // Generate a GUID

@@ -351,6 +351,16 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             return false
         } else if url?.scheme == "font-changed" {
             Timer.scheduledTimer(timeInterval: TimeInterval(0.5), target: self, selector: #selector(fontDidChanged), userInfo: nil, repeats: false)
+        } else if url?.scheme == "search-jumped" {
+            print(url!.absoluteString)
+            
+            let decoded = url!.absoluteString.removingPercentEncoding!
+            let schemeIndex = decoded.index(decoded.startIndex, offsetBy: "search-jumped://".characters.count)
+            let decodedSchemeless = decoded.substring(from: schemeIndex)
+            
+            let values = decodedSchemeless.components(separatedBy: ",")
+            
+            centerDelegate?.center?(searchDidJumped: Int(values[0])!, ofTotal: Int(values[1])!)
         }
         
         print("### shouldStartLoadWith ###\n")
