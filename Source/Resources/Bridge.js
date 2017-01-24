@@ -36,6 +36,10 @@ function performMark(keyword) {
     });
 }
 
+function clearMarks() {
+    markInstance.unmark();
+}
+
 /**
  * Jumps to the element matching the currentIndex
  */
@@ -46,7 +50,7 @@ function jumpTo() {
         if (current.length) {
             current.addClass(currentClass);
             position = current.offset().top - offsetTop;
-            window.scrollTo(0, position);
+            window.scrollTo(0, position - 150);
         }
     }
     

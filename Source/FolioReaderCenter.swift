@@ -259,6 +259,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         currentPage.webView.highlightAllOccurrences(ofString: term)
     }
     
+    open func clearSearch() {
+        currentPage.webView.js("clearMarks()")
+    }
+    
     open func skipToNextSearchResult() {
         currentPage.webView.js("skipToNextMark()")
     }
