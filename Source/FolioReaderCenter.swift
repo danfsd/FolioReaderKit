@@ -81,9 +81,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var totalPages: Int!
     var tempFragment: String?
     
-    var currentPage: FolioReaderPage!
     var highlightsToSync: [Highlight]?
+    var annotationsToSync: [Highlight]?
+    
+    var currentPage: FolioReaderPage!
     open var delegate: FolioReaderCenterDelegate?
+    
     var animator: ZFModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator!
     var bookShareLink: String?
@@ -270,42 +273,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open func skipToPreviousSearchResult() {
         currentPage.webView.js("skipToPreviousMark()")
     }
-    
-    func configureNavBarButtons() {
-        if !readerConfig.shouldHideNavigation {
-//            let backBarButton = UIBarButtonItem(title: "Voltar", style: .plain, target: self, action: #selector(self.test))
-//            navigationItem.rightBarButtonItems = [backBarButton]
-            
-//            // Navbar buttons
-//            let shareIcon = UIImage(readerImageNamed: "icon-navbar-share")?.ignoreSystemTint()
-//            let audioIcon = UIImage(readerImageNamed: "icon-navbar-tts")?.ignoreSystemTint() //man-speech-icon
-//            let closeIcon = UIImage(readerImageNamed: "icon-navbar-close")?.ignoreSystemTint()
-//            let tocIcon = UIImage(readerImageNamed: "icon-navbar-toc")?.ignoreSystemTint()
-//            let fontIcon = UIImage(readerImageNamed: "icon-navbar-font")?.ignoreSystemTint()
-//            let space = 70 as CGFloat
-//
-//            let menu = UIBarButtonItem(image: closeIcon, style: .plain, target: self, action:#selector(closeReader(_:)))
-//            let toc = UIBarButtonItem(image: tocIcon, style: .plain, target: self, action:#selector(presentChapterList(_:)))
-//            
-//            navigationItem.leftBarButtonItems = [menu, toc]
-//            
-//            var rightBarIcons = [UIBarButtonItem]()
-//
-//            if readerConfig.allowSharing {
-//                rightBarIcons.append(UIBarButtonItem(image: shareIcon, style: .plain, target: self, action:#selector(shareChapter(_:))))
-//            }
-//
-//            if book.hasAudio() || readerConfig.enableTTS {
-//                rightBarIcons.append(UIBarButtonItem(image: audioIcon, style: .plain, target: self, action:#selector(presentPlayerMenu(_:))))
-//            }
-//            
-//            let font = UIBarButtonItem(image: fontIcon, style: .plain, target: self, action: #selector(presentFontsMenu))
-//            font.width = space
-//            
-//            rightBarIcons.append(contentsOf: [font])
-//            navigationItem.rightBarButtonItems = rightBarIcons
-        }
-    }
 
     func reloadData() {
         loadingView.stopAnimating()
@@ -313,7 +280,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         totalPages = book.spine.spineReferences.count
 
         collectionView.reloadData()
-        configureNavBarButtons()
         
         if let key = kBookId {
             if let position = FolioReader.defaults.value(forKey: key) as? NSDictionary,
@@ -447,6 +413,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let mediaOverlayStyleColors = "\"\(readerConfig.mediaOverlayColor.hexString(false))\", \"\(readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
         
         // Inject CSS
+        let annotationSVGPath = Bundle.frameworkBundle().path(forResource: "btn_anot", ofType: "svg")
+        let discussionSVGPath = Bundle.frameworkBundle().path(forResource: "btn_disc", ofType: "svg")
+        
         let jqueryJsFilePath = Bundle.frameworkBundle().path(forResource: "jquery-3.1.1.min", ofType: "js")
         let markJsFilePath = Bundle.frameworkBundle().path(forResource: "mark.min", ofType: "js")
         let jsFilePath = Bundle.frameworkBundle().path(forResource: "bridge", ofType: "js")
@@ -461,13 +430,14 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                     "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>"
         
         let toInject = "\n\(cssTag)\n\(jsTag)\n</head>"
-//        let toInject = "\n\(cssTag)\n\(jsTag)\n</head><annotation id=\"10\"></annotation>A Imunologia faz parte do aprendizado em medicina há alguns anos,<annotation id=\"20\" data-type=\"discussion\"></annotation> mas o conhecimento e o aprofundamento tornaram-se essenciais no século 21 para qualquer médico.<annotation id=\"30\"></annotation>As aplicações são inúmeras, e para citar alguns exemplos temos tratamentos com vacinas, imunomoduladores, terapia de supressão viral e uso de marcadores imunológicos para detecção precoce de doenças. Da mesma maneira, as áreas são diversas, como Infectologia, Reumatologia, Gastroenterologia, Dermatologia e Cirurgia do Aparelho Digestivo. O objetivo deste capítulo é relembrarnoções básicas de Imunologia e sua aplicabilidade prática, direcionando para os assuntos cobrados nas provas de Residência Médica.<br/><br/>"
+//        let toInject = "\n\(cssTag)\n\(jsTag)\n</head><annotation id=\"10\"></annotation>A Imunologia faz parte do aprendizado em medicina há alguns anos,<annotation id=\"20\" data-type=\"discussion\"></annotation> mas o conhecimento e o aprofundamento tornaram-se essenciais no século 21 para qualquer médico. <annotation id=\"30\"></annotation>As aplicações são inúmeras, e para citar alguns exemplos temos tratamentos com vacinas, imunomoduladores, terapia de supressão viral e uso de marcadores imunológicos para detecção precoce de doenças. Da mesma maneira, as áreas são diversas, como Infectologia, Reumatologia, Gastroenterologia, Dermatologia e Cirurgia do Aparelho Digestivo. O objetivo deste capítulo é relembrarnoções básicas de Imunologia e sua aplicabilidade prática, direcionando para os assuntos cobrados nas provas de Residência Médica.<br/><br/>"
         
         html = html?.replacingOccurrences(of: "</head>", with: toInject)
         
         let searchButtons = "<button id=\"previous_search_result_button\"data-search=\"prev\" style=\"display: none\">Anterior</button>" +
                             "<button id=\"next_search_result_button\"data-search=\"next\" style=\"display: none\">Próximo</button>"
-        let annotationsTag = "<script type\"text/javascript\" src=\"\(annotationsJsFilePath!)\"></script>"
+        let annotationsTag = "<script type=\"text/javascript\">var annotationSvg = \"\(annotationSVGPath!)\"; var discussionSvg = \"\(discussionSVGPath!)\";</script>\n" +
+                             "<script type=\"text/javascript\" src=\"\(annotationsJsFilePath!)\"></script>"
 
         html = html?.replacingOccurrences(of: "</body>", with: "\(searchButtons)\n\(annotationsTag)\n</body>")
         
@@ -1149,13 +1119,20 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         changePageWith(href: href, andAudioMarkID: fragmentID)
     }
     
-    // MARK: - Highlight
+    // MARK: - Highlight & Annotations
     
-    open func synchronizeHighlights(_ highlights: [Highlight]) {
+    open func sync(highlights: [Highlight]?, annotations: [Highlight]?) {
         if let _ = currentPage {
-            currentPage.insertHighlights(highlights)
+            if let highlights = highlights {
+                currentPage.insertHighlights(highlights)
+            }
+            
+            if let annotations = annotations {
+                // TODO: currentPage.insertAnnotations(annotations)
+            }
         } else {
             highlightsToSync = highlights
+            annotationsToSync = annotations
         }
     }
     

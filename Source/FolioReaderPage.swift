@@ -137,18 +137,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         var didChanged = false
         
         for highlight in highlights {
-            if let _ = Highlight.findByHighlightId(highlight.highlightId) {
-                
-            } else {
-                if highlight.page != pageNumber {
-                } else {
+            if Highlight.findByHighlightId(highlight.highlightId) == nil {
+                if highlight.page == pageNumber {
                     let highlightTag = createHighlightTag(highlight)
                     
-                    let range: NSRange = newHtml.range(of: highlightTag.locator, options: .literal)
-                    if range.location != NSNotFound {
-                        let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
-                        newHtml = newHtml.replacingCharacters(in: newRange, with: highlightTag.tag) as NSString
-                    }
+                    newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
                     
                     highlight.persist()
                     didChanged = true
@@ -159,6 +152,17 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         if didChanged {
             webView.loadHTMLString(newHtml as String, baseURL: baseURL)
         }
+    }
+    
+    func insertTag(into html: NSString, from highlight: Highlight, tag: String, locator: String) -> NSString {
+        var newHtml = html
+        let range: NSRange = newHtml.range(of: locator, options: .literal)
+        if range.location != NSNotFound {
+            let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
+            newHtml = html.replacingCharacters(in: newRange, with: tag) as NSString
+        }
+        
+        return newHtml
     }
     
     func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {

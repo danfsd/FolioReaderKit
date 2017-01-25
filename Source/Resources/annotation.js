@@ -12,7 +12,7 @@ function addMarkers(gap) {
     }
     
     var DEFAULT_GAP = 10;
-    var BTN_TYPE_DISCUSSION = 'url(btn_disc.svg)';
+    var BTN_TYPE_DISCUSSION = 'url(' + discussionSvg + ')';
     
     var annotations = document.getElementsByTagName('annotation');
     var gap = gap == undefined ? DEFAULT_GAP : gap;
