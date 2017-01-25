@@ -24,6 +24,22 @@ time, mark, audio, video {
     vertical-align: baseline;
 }
 
+/** MARKERS **/
+annotation {
+    font-size: 15px; /** IMPORTANTE: deve ser aplicado o tamanho da fonte correto nesta tag **/
+}
+
+.marker-annotation {
+    position: absolute;
+    right: 20px;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    background-image: url('btn_anot.svg');
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
 mark {
     background: rgb(231,255, 0);
 }

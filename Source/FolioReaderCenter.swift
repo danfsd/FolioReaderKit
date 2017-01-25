@@ -436,11 +436,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         // Configure the cell
         if let resource = book.spine.spineReferences[indexPath.row].resource, let html = epubToHtml(resource) {
-            // Let the delegate adjust the html string
-//            if let modifiedHtmlContent = self.delegate?.htmlContentForPage?(cell, htmlContent: html) {
-//                html = modifiedHtmlContent
-//            }
-            
             cell.loadHTMLString(html, baseURL: URL(fileURLWithPath: (NSString(string: resource.fullHref)).deletingLastPathComponent))
         }
         
@@ -452,9 +447,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let mediaOverlayStyleColors = "\"\(readerConfig.mediaOverlayColor.hexString(false))\", \"\(readerConfig.mediaOverlayColor.highlightColor().hexString(false))\""
         
         // Inject CSS
-        let jsFilePath = Bundle.frameworkBundle().path(forResource: "Bridge", ofType: "js")
-        let markJsFilePath = Bundle.frameworkBundle().path(forResource: "mark.min", ofType: "js")
         let jqueryJsFilePath = Bundle.frameworkBundle().path(forResource: "jquery-3.1.1.min", ofType: "js")
+        let markJsFilePath = Bundle.frameworkBundle().path(forResource: "mark.min", ofType: "js")
+        let jsFilePath = Bundle.frameworkBundle().path(forResource: "bridge", ofType: "js")
+        let annotationsJsFilePath = Bundle.frameworkBundle().path(forResource: "annotation", ofType: "js")
         
         let cssFilePath = Bundle.frameworkBundle().path(forResource: "Style", ofType: "css")
         let cssTag = "<link rel=\"stylesheet\" type=\"text/css\" href=\"\(cssFilePath!)\">"
@@ -465,14 +461,15 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                     "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>"
         
         let toInject = "\n\(cssTag)\n\(jsTag)\n</head>"
+//        let toInject = "\n\(cssTag)\n\(jsTag)\n</head><annotation id=\"10\"></annotation>A Imunologia faz parte do aprendizado em medicina há alguns anos,<annotation id=\"20\" data-type=\"discussion\"></annotation> mas o conhecimento e o aprofundamento tornaram-se essenciais no século 21 para qualquer médico.<annotation id=\"30\"></annotation>As aplicações são inúmeras, e para citar alguns exemplos temos tratamentos com vacinas, imunomoduladores, terapia de supressão viral e uso de marcadores imunológicos para detecção precoce de doenças. Da mesma maneira, as áreas são diversas, como Infectologia, Reumatologia, Gastroenterologia, Dermatologia e Cirurgia do Aparelho Digestivo. O objetivo deste capítulo é relembrarnoções básicas de Imunologia e sua aplicabilidade prática, direcionando para os assuntos cobrados nas provas de Residência Médica.<br/><br/>"
+        
         html = html?.replacingOccurrences(of: "</head>", with: toInject)
         
         let searchButtons = "<button id=\"previous_search_result_button\"data-search=\"prev\" style=\"display: none\">Anterior</button>" +
-                            "<button id=\"next_search_result_button\"data-search=\"next\" style=\"display: none\">Próximo</button></body>"
-//        let searchButtons = "<button data-search=\"prev\">Anterior</button>" +
-//                            "<button data-search=\"next\">Próximo</button></body>"
+                            "<button id=\"next_search_result_button\"data-search=\"next\" style=\"display: none\">Próximo</button>"
+        let annotationsTag = "<script type\"text/javascript\" src=\"\(annotationsJsFilePath!)\"></script>"
 
-        html = html?.replacingOccurrences(of: "</body>", with: searchButtons)
+        html = html?.replacingOccurrences(of: "</body>", with: "\(searchButtons)\n\(annotationsTag)\n</body>")
         
         // Font class name
         var classes = ""

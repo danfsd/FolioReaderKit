@@ -1,5 +1,5 @@
 //
-//  Bridge.js
+//  bridge.js
 //  FolioReaderKit
 //
 //  Created by Heberti Almeida on 06/05/15.
