@@ -448,7 +448,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             FolioReader.sharedInstance.readerCenter.hideBars()
         }
         
-        // Reset menu\
+        // Reset menu
         if menuIsVisible {
             menuIsVisible = false
         } else {

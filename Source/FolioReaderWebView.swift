@@ -154,7 +154,13 @@ open class FolioReaderWebView: UIWebView {
     func createAnnotation(_ sender: UIMenuController?) {
         var highlight: Highlight!
         
-        if let jsonString = js("createAnnotation()") {
+        if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
+            highlight = Highlight()
+            highlight.content = selectedHighlight.content
+            highlight.contentPre = selectedHighlight.contentPre
+            highlight.contentPost = selectedHighlight.contentPost
+            highlight.page = selectedHighlight.page
+        } else if let jsonString = js("createAnnotation()") {
             let jsonData = jsonString.data(using: String.Encoding.utf8)
             do {
                 let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
@@ -168,12 +174,6 @@ open class FolioReaderWebView: UIWebView {
             } catch {
                 print("Could not receive JSON")
             }
-        } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
-            highlight = Highlight()
-            highlight.content = selectedHighlight.content
-            highlight.contentPre = selectedHighlight.contentPre
-            highlight.contentPost = selectedHighlight.contentPost
-            highlight.page = selectedHighlight.page
         }
         
         highlight.date = Foundation.Date()
@@ -276,7 +276,7 @@ open class FolioReaderWebView: UIWebView {
     
     open func createMenu(options options: Bool) {
         isShare = options
-        
+            
         let colors = UIImage(readerImageNamed: "colors-marker")
         let discussion = UIImage(readerImageNamed: "discussion-marker")
         let share = UIImage(readerImageNamed: "share-marker")

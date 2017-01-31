@@ -1121,6 +1121,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     // MARK: - Highlight & Annotations
     
+    open func clearSelectedHighlightId() {
+        selectedHighlightId = nil
+    }
+    
     open func sync(highlights: [Highlight]?, annotations: [Highlight]?) {
         if let _ = currentPage {
             if let highlights = highlights {
