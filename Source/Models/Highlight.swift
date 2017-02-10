@@ -20,6 +20,9 @@ open class Highlight: Object {
     open dynamic var type: Int = 0
     open dynamic var startOffset: Int = -1
     open dynamic var endOffset: Int = -1
+    open dynamic var deleted : Bool = false
+    open dynamic var user: Int = 0
+    
     
     override open class func primaryKey()-> String {
         return "highlightId"
