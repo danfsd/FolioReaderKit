@@ -167,7 +167,13 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
         let style = HighlightStyle.classForStyle(highlight.type)
-        let tag = "<highlight id=\"\(highlight.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content!)</highlight>"
+        let tag : String
+        if highlight.type == 4 || highlight.deleted {
+            tag = "<marker id=\"\(highlight.highlightId!)-m\"></marker>\(highlight.content!)"
+        }else{
+            tag = "<marker id=\"\(highlight.highlightId!)-m\"></marker><highlight id=\"\(highlight.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content!)</highlight>"
+        }
+        
         var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
         locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
         
@@ -187,7 +193,12 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         if highlights.count > 0 {
             for item in highlights {
                 let style = HighlightStyle.classForStyle(item.type)
-                let tag = "<highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
+                let tag : String
+                if item.type == 4 || item.deleted {
+                    tag = "<marker id=id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
+                }else{
+                    tag = "<marker id=id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
+                }
                 var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
                 locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
                 let range: NSRange = html.range(of: locator, options: .literal)

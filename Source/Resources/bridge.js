@@ -288,7 +288,7 @@ function getReadingTime() {
  Get Vertical or Horizontal paged #anchor offset
  */
 var getAnchorOffset = function(target, horizontal) {
-    var elem = document.getElementById(target);
+    var elem = document.getElementById(target+"-m");
     
     if (!elem) {
         elem = document.getElementsByName(target)[0];
