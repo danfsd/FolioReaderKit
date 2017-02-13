@@ -434,8 +434,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         html = html?.replacingOccurrences(of: "</head>", with: toInject)
         
-        let searchButtons = "<button id=\"previous_search_result_button\"data-search=\"prev\" style=\"display: none\">Anterior</button>" +
-                            "<button id=\"next_search_result_button\"data-search=\"next\" style=\"display: none\">Próximo</button>"
+        let searchButtons = "<button id=\"previous_search_result_button\"data-search=\"prev\" style=\"visibility: hidden\">Anterior</button>" +
+                            "<button id=\"next_search_result_button\"data-search=\"next\" style=\"visibility: hidden\">Próximo</button>"
         let annotationsTag = "<script type=\"text/javascript\">var annotationSvg = \"\(annotationSVGPath!)\"; var discussionSvg = \"\(discussionSVGPath!)\";</script>\n" +
                              "<script type=\"text/javascript\" src=\"\(annotationsJsFilePath!)\"></script>"
 
