@@ -678,9 +678,9 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             pagesForCurrentPage(currentPage)
             delegate?.pageDidAppear?(currentPage)
         }
+        currentPage.annotationSync = true
         
       
-        
         print("### updateCurrentPage ###\n")
         
         completion?()
@@ -1132,7 +1132,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             }
             
             if let annotations = annotations {
-                // TODO: currentPage.insertAnnotations(annotations)
+                currentPage.insertAnnotations(annotations)
             }
         } else {
             highlightsToSync = highlights

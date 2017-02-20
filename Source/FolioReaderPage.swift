@@ -42,7 +42,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     fileprivate var menuIsVisible = false
     fileprivate var currentHtml: NSString!
     fileprivate var selectedHighlight: Highlight?
-    
+    var annotationSync : Bool = true
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
@@ -154,6 +154,40 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         }
     }
     
+    open func insertAnnotations(_ highlights: [Highlight]) {
+        var newHtml = NSString(string: currentHtml).copy() as! NSString
+        
+        var didChanged = false
+        
+        for highlight in highlights {
+            if highlight.page == pageNumber {
+                let highlightTag = createAnnotationTag(highlight)
+                
+                newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
+                
+                didChanged = true
+            }
+        }
+        annotationSync = false
+        if didChanged {
+            webView.loadHTMLString(newHtml as String, baseURL: baseURL)
+        }
+    }
+    
+    func createAnnotationTag(_ highlight: Highlight) -> (tag: String, locator: String) {
+        let style = HighlightStyle.classForStyle(highlight.type)
+        let tag : String
+        let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlight.highlightId)
+        
+        tag = "<marker data-show=\"true\" id=\"\(highlight.highlightId!)-a\"></marker>\(highlight.content!)"
+        
+        var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
+        locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
+        
+        return (tag: tag, locator: locator)
+    }
+
+    
     func insertTag(into html: NSString, from highlight: Highlight, tag: String, locator: String) -> NSString {
         var newHtml = html
         let range: NSRange = newHtml.range(of: locator, options: .literal)
@@ -164,14 +198,16 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         
         return newHtml
     }
+
     
     func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
         let style = HighlightStyle.classForStyle(highlight.type)
         let tag : String
+        let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlight.highlightId)
         if highlight.type == 4 || highlight.deleted {
-            tag = "<marker id=\"\(highlight.highlightId!)-m\"></marker>\(highlight.content!)"
+            tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(highlight.highlightId!)-m\"></marker>\(highlight.content!)"
         }else{
-            tag = "<marker id=\"\(highlight.highlightId!)-m\"></marker><highlight id=\"\(highlight.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content!)</highlight>"
+            tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(highlight.highlightId!)-m\"></marker><highlight id=\"\(highlight.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content!)</highlight>"
         }
         
         var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
@@ -194,10 +230,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             for item in highlights {
                 let style = HighlightStyle.classForStyle(item.type)
                 let tag : String
+                let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: item.highlightId)
                 if item.type == 4 || item.deleted {
-                    tag = "<marker id=id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
+                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
                 }else{
-                    tag = "<marker id=id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
+                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
                 }
                 var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
                 locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
@@ -265,6 +302,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         
         if let highlightsToSync = FolioReader.sharedInstance.readerCenter.highlightsToSync {
             insertHighlights(highlightsToSync)
+        }
+        
+        if annotationSync {
+            insertAnnotations(FolioReader.sharedInstance.readerCenter.annotationsToSync!)
         }
         
         

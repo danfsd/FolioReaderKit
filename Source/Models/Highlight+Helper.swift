@@ -263,7 +263,7 @@ extension Highlight {
         
         var pattern = "<span class=\"sentence\">((.|\\s)*?)</span>"
         var cleanText = removeFrom(text, withPattern: pattern)
-        
+
 //        pattern = "<em class=\"((.|\\s)*?)\">((.|\\s)*?)<\\/em>"
 //        cleanText = removeFrom(cleanText, withPattern: pattern)
         

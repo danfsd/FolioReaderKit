@@ -14,7 +14,7 @@ function addMarkers(gap) {
     var DEFAULT_GAP = 10;
     var BTN_TYPE_DISCUSSION = 'url(' + discussionSvg + ')';
     
-    var annotations = document.getElementsByTagName('annotation');
+    var annotations = document.getElementsByTagName('marker');
     var gap = gap == undefined ? DEFAULT_GAP : gap;
     
     var height = 30;
@@ -25,6 +25,12 @@ function addMarkers(gap) {
         // Id Attribute
         var id = annotations[i].getAttribute('id');
         var type = annotations[i].dataset.type;
+        
+        var show = annotations[i].dataset.show;
+        
+        if(show == "false"){
+            continue
+        }
         
         // Create Marker
         var markerAnnotation = document.createElement('span');
