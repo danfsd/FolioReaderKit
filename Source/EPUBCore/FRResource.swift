@@ -9,8 +9,8 @@
 import UIKit
 
 open class FRResource: NSObject {
-    var id: String!
-    var title: String!
+    open var id: String!
+    open var title: String!
     var href: String!
     open var fullHref: String!
     var mediaType: MediaType!
