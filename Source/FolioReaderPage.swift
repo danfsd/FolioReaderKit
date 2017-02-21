@@ -42,7 +42,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     fileprivate var menuIsVisible = false
     fileprivate var currentHtml: NSString!
     fileprivate var selectedHighlight: Highlight?
+    
+    // TODO: Essa lógica está quebrada, para fazer funcionar precisamos fazer com que inicie como false (pois lá na frente forçamos if annotationsSync então insere lista de annotationsToSync, que pode estar nil.
     var annotationSync : Bool = true
+    
+    var didInsertedAnnotations = false
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
@@ -168,8 +172,9 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 didChanged = true
             }
         }
-        annotationSync = false
+        
         if didChanged {
+            didInsertedAnnotations = true
             webView.loadHTMLString(newHtml as String, baseURL: baseURL)
         }
     }
@@ -229,11 +234,11 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         if highlights.count > 0 {
             for item in highlights {
                 let style = HighlightStyle.classForStyle(item.type)
-                let tag : String
+                let tag: String
                 let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: item.highlightId)
                 if item.type == 4 || item.deleted {
                     tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
-                }else{
+                } else {
                     tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
                 }
                 var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
@@ -304,11 +309,9 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             insertHighlights(highlightsToSync)
         }
         
-        if annotationSync {
-            insertAnnotations(FolioReader.sharedInstance.readerCenter.annotationsToSync!)
-        }
-        
-        
+//        if let annotationsToSync = FolioReader.sharedInstance.readerCenter.annotationsToSync, !didInsertedAnnotations {
+//            insertAnnotations(annotationsToSync)
+//        }
         
         print("### webViewDidFinishLoad ###\n")
         
