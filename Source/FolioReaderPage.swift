@@ -209,9 +209,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         let style = HighlightStyle.classForStyle(highlight.type)
         let tag : String
         let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlight.highlightId)
-        if highlight.type == 4 || highlight.deleted {
+        
+        if highlight.type == HighlightStyle.underline.rawValue || highlight.deleted {
             tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(highlight.highlightId!)-m\"></marker>\(highlight.content!)"
-        }else{
+        } else {
             tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(highlight.highlightId!)-m\"></marker><highlight id=\"\(highlight.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(highlight.content!)</highlight>"
         }
         
@@ -225,7 +226,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         var html = (string as NSString)
         self.currentHtml = html
         
-        print("loadHTMLString html count: \(currentHtml.length)")
+//        print("loadHTMLString html count: \(currentHtml.length)")
         
         self.baseURL = baseURL
         // Restore highlights
@@ -236,7 +237,10 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 let style = HighlightStyle.classForStyle(item.type)
                 let tag: String
                 let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: item.highlightId)
-                if item.type == 4 || item.deleted {
+                
+                print("\(item.content!) (\(item.highlightId!), deleted=\(item.deleted), style=\(item.type))")
+                
+                if item.type == HighlightStyle.underline.rawValue || item.deleted {
                     tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
                 } else {
                     tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
@@ -248,8 +252,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
                 if range.location != NSNotFound {
                     let newRange = NSRange(location: range.location + item.contentPre.characters.count, length: item.content.characters.count)
                     html = html.replacingCharacters(in: newRange, with: tag) as (NSString)
-                } else {
-                    
                 }
             }
         }
@@ -268,7 +270,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     // MARK: - UIWebView Delegate
     
     open func webViewDidFinishLoad(_ webView: UIWebView) {
-        print("\n### webViewDidFinishLoad ###")
+//        print("\n### webViewDidFinishLoad ###")
         
         guard let webView = webView as? FolioReaderWebView else {
             return
@@ -287,8 +289,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             }
         }
         
-        print("Is scrolling back: \(scrollDirection == .negative())")
-        print("Is scrolling: \(isScrolling)")
+//        print("Is scrolling back: \(scrollDirection == .negative())")
+//        print("Is scrolling: \(isScrolling)")
         
         if readerConfig.scrollDirection != .horizontalWithVerticalContent {
             if scrollDirection == .negative() && isScrolling {
@@ -309,17 +311,18 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             insertHighlights(highlightsToSync)
         }
         
+        // TODO: está acontecendo RaceCondition entre discussion e annotation pois ambos estão sendo buscados do servidor paralelamente. ver TODO #001
 //        if let annotationsToSync = FolioReader.sharedInstance.readerCenter.annotationsToSync, !didInsertedAnnotations {
 //            insertAnnotations(annotationsToSync)
 //        }
         
-        print("### webViewDidFinishLoad ###\n")
+//        print("### webViewDidFinishLoad ###\n")
         
         delegate?.pageDidLoad?(self)
     }
     
     open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-        print("\n### shouldStartLoadWith ###")
+//        print("\n### shouldStartLoadWith ###")
         
         guard let webView = webView as? FolioReaderWebView else {
             return false
@@ -422,7 +425,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             centerDelegate?.center?(searchDidJumped: Int(values[0])!, ofTotal: Int(values[1])!)
         }
         
-        print("### shouldStartLoadWith ###\n")
+//        print("### shouldStartLoadWith ###\n")
         
         return true
     }
@@ -574,7 +577,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             CGPoint(x: webView.scrollView.contentSize.width - webView.scrollView.bounds.width, y: 0)
         )
         
-        print("Bottom Offset is: \(bottomOffset.forDirection())")
+//        print("Bottom Offset is: \(bottomOffset.forDirection())")
         
         if bottomOffset.forDirection() >= 0 {
             DispatchQueue.main.async(execute: {
