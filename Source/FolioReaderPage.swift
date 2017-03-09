@@ -223,8 +223,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     
     func loadHTMLString(_ string: String!, baseURL: URL!) {
-        var html = (string as NSString)
-        self.currentHtml = html
+        currentHtml = (string as NSString)
+        var newHtml = NSString(string: currentHtml).copy() as! NSString
         
 //        print("loadHTMLString html count: \(currentHtml.length)")
         
@@ -234,25 +234,28 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         
         if highlights.count > 0 {
             for item in highlights {
-                let style = HighlightStyle.classForStyle(item.type)
-                let tag: String
-                let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: item.highlightId)
+                let highlightTag = createHighlightTag(item)
                 
-                print("\(item.content!) (\(item.highlightId!), deleted=\(item.deleted), style=\(item.type))")
-                
-                if item.type == HighlightStyle.underline.rawValue || item.deleted {
-                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
-                } else {
-                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
-                }
-                var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
-                locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
-                let range: NSRange = html.range(of: locator, options: .literal)
-                
-                if range.location != NSNotFound {
-                    let newRange = NSRange(location: range.location + item.contentPre.characters.count, length: item.content.characters.count)
-                    html = html.replacingCharacters(in: newRange, with: tag) as (NSString)
-                }
+                newHtml = insertTag(into: newHtml, from: item, tag: highlightTag.tag, locator: highlightTag.locator)
+//                let style = HighlightStyle.classForStyle(item.type)
+//                let tag: String
+//                let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: item.highlightId)
+//                
+//                print("\(item.content!) (\(item.highlightId!), deleted=\(item.deleted), style=\(item.type))")
+//                
+//                if item.type == HighlightStyle.underline.rawValue || item.deleted {
+//                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
+//                } else {
+//                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
+//                }
+//                var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
+//                locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
+//                let range: NSRange = html.range(of: locator, options: .literal)
+//                
+//                if range.location != NSNotFound {
+//                    let newRange = NSRange(location: range.location + item.contentPre.characters.count, length: item.content.characters.count)
+//                    html = html.replacingCharacters(in: newRange, with: tag) as (NSString)
+//                }
             }
         }
         
@@ -260,7 +263,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         
         disableInteraction()
         
-        webView.loadHTMLString(html as String, baseURL: baseURL)
+        webView.loadHTMLString(newHtml as String, baseURL: baseURL)
     }
     
     open func search(withTerm term: String) {
