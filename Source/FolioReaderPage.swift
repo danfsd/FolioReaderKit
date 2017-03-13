@@ -136,24 +136,39 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     
     open func insertHighlights(_ highlights: [Highlight]) {
+        guard let center = FolioReader.sharedInstance.readerCenter else { return }
+        
         var newHtml = NSString(string: currentHtml).copy() as! NSString
-    
         var didChanged = false
         
         for highlight in highlights {
-            if Highlight.findByHighlightId(highlight.highlightId) == nil {
+//            if Highlight.findByHighlightId(highlight.highlightId) == nil {
                 if highlight.page == pageNumber {
-                    let highlightTag = createHighlightTag(highlight)
+                    var highlightTag: (tag: String, locator: String)
+                    
+                    if highlight.type == HighlightStyle.annotation.rawValue {
+                        highlightTag = createAnnotationTag(highlight)
+                    } else {
+                        highlightTag = createHighlightTag(highlight)
+                    }
                     
                     newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
-                    
                     highlight.persist()
+                    
                     didChanged = true
+                } else {
+                    print("Highlight with id \(highlight.highlightId) not persisted, but it's on another page")
                 }
-            }
+//            } else {
+//                // Caso achar aqui, não irá ser persistido repetidamente nem inserido no HTML neste momento
+//                // Será inserido no page.loadHTMLString chamado pelo FolioReaderCenter no cellForItemAt
+//                print("Found Highlight with id \(highlight.highlightId)")
+//            }
         }
         
         if didChanged {
+            center.pendingHighlights.removeAll()
+            currentHtml = newHtml
             webView.loadHTMLString(newHtml as String, baseURL: baseURL)
         }
     }
@@ -223,47 +238,14 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     
     func loadHTMLString(_ string: String!, baseURL: URL!) {
+        let center = FolioReader.sharedInstance.readerCenter!
+        
         currentHtml = (string as NSString)
-        var newHtml = NSString(string: currentHtml).copy() as! NSString
-        
-//        print("loadHTMLString html count: \(currentHtml.length)")
-        
         self.baseURL = baseURL
-        // Restore highlights
-        let highlights = Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?)
         
-        if highlights.count > 0 {
-            for item in highlights {
-                let highlightTag = createHighlightTag(item)
-                
-                newHtml = insertTag(into: newHtml, from: item, tag: highlightTag.tag, locator: highlightTag.locator)
-//                let style = HighlightStyle.classForStyle(item.type)
-//                let tag: String
-//                let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: item.highlightId)
-//                
-//                print("\(item.content!) (\(item.highlightId!), deleted=\(item.deleted), style=\(item.type))")
-//                
-//                if item.type == HighlightStyle.underline.rawValue || item.deleted {
-//                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker>\(item.content!)"
-//                } else {
-//                    tag = "<marker data-type=\"discussion\" data-show=\"\(isDiscussion)\" id=\"\(item.highlightId!)-m\"></marker><highlight id=\"\(item.highlightId!)\" onclick=\"callHighlightURL(this);\" class=\"\(style)\">\(item.content!)</highlight>"
-//                }
-//                var locator = "\(item.contentPre!)\(item.content!)\(item.contentPost!)"
-//                locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
-//                let range: NSRange = html.range(of: locator, options: .literal)
-//                
-//                if range.location != NSNotFound {
-//                    let newRange = NSRange(location: range.location + item.contentPre.characters.count, length: item.content.characters.count)
-//                    html = html.replacingCharacters(in: newRange, with: tag) as (NSString)
-//                }
-            }
-        }
+        center.pendingHighlights.append(contentsOf: Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?))
         
-        webView.alpha = 0
-        
-        disableInteraction()
-        
-        webView.loadHTMLString(newHtml as String, baseURL: baseURL)
+        webView.loadHTMLString(currentHtml as String, baseURL: baseURL)
     }
     
     open func search(withTerm term: String) {
@@ -273,9 +255,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     // MARK: - UIWebView Delegate
     
     open func webViewDidFinishLoad(_ webView: UIWebView) {
-//        print("\n### webViewDidFinishLoad ###")
-        
-        guard let webView = webView as? FolioReaderWebView else {
+        guard let webView = webView as? FolioReaderWebView, let center = FolioReader.sharedInstance.readerCenter else {
             return
         }
         
@@ -292,9 +272,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             }
         }
         
-//        print("Is scrolling back: \(scrollDirection == .negative())")
-//        print("Is scrolling: \(isScrolling)")
-        
         if readerConfig.scrollDirection != .horizontalWithVerticalContent {
             if scrollDirection == .negative() && isScrolling {
                 scrollPageToBottom()
@@ -310,125 +287,128 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             self.webView.createMenu(options: false)
         })
         
-        if let highlightsToSync = FolioReader.sharedInstance.readerCenter.highlightsToSync {
-            insertHighlights(highlightsToSync)
-        }
-        
-        // TODO: está acontecendo RaceCondition entre discussion e annotation pois ambos estão sendo buscados do servidor paralelamente. ver TODO #001
-//        if let annotationsToSync = FolioReader.sharedInstance.readerCenter.annotationsToSync, !didInsertedAnnotations {
-//            insertAnnotations(annotationsToSync)
-//        }
-        
-//        print("### webViewDidFinishLoad ###\n")
+        // TODO: insert pending annotations & discussions
+        insertHighlights(center.pendingHighlights)
         
         delegate?.pageDidLoad?(self)
     }
     
-    open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-//        print("\n### shouldStartLoadWith ###")
+    // MARK: - UIWebView interactions
+    
+    fileprivate func handleHighlightInteraction(url: URL) {
+        shouldShowBar = false
+        let decoded = url.absoluteString.removingPercentEncoding!
+        let schemeIndex = decoded.index(decoded.startIndex, offsetBy: 13)
+        let decodedSchemeless = decoded.substring(from: schemeIndex)
         
-        guard let webView = webView as? FolioReaderWebView else {
-            return false
-        }
+        selectedHighlightId = decodedSchemeless.substring(to: decoded.index(decodedSchemeless.startIndex, offsetBy: 36))
         
-        let url = request.url
+        let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 51)))
         
-        if url?.scheme == "highlight" {
+        webView.createMenu(options: true)
+        webView.setMenuVisible(true, andRect: rect)
+        menuIsVisible = true
+    }
+    
+    fileprivate func handlePlayAudio(url: URL) {
+        guard let audioPlayer = FolioReader.sharedInstance.readerAudioPlayer else { return }
+        
+        let decoded = url.absoluteString.removingPercentEncoding!
+        let playID = decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 13))
+        let chapter = FolioReader.sharedInstance.readerCenter.getCurrentChapter()
+        let href = chapter != nil ? chapter!.href : "";
+        audioPlayer.playAudio(href!, fragmentID: playID)
+    }
+    
+    fileprivate func handleFileInteraction(url: URL) -> Bool {
+        let anchorFromURL = url.fragment
+        
+        // Handle internal url
+        if (url.path as NSString).pathExtension != "" {
+            let base = (book.opfResource.href as NSString).deletingLastPathComponent
+            let path = url.path
+            let splitedPath = path.components(separatedBy: base.isEmpty ? kBookId : base)
             
-            print("highlight was pressed")
-            
-            shouldShowBar = false
-            let decoded = url!.absoluteString.removingPercentEncoding!
-            let schemeIndex = decoded.index(decoded.startIndex, offsetBy: 13)
-            let decodedSchemeless = decoded.substring(from: schemeIndex)
-            
-            selectedHighlightId = decodedSchemeless.substring(to: decoded.index(decodedSchemeless.startIndex, offsetBy: 36))
-            
-            let rect = CGRectFromString(decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 51)))
-            
-            webView.createMenu(options: true)
-            webView.setMenuVisible(true, andRect: rect)
-            menuIsVisible = true
-            
-            return false
-        } else if url?.scheme == "play-audio" {
-
-            let decoded = url!.absoluteString.removingPercentEncoding!
-            let playID = decoded.substring(from: decoded.index(decoded.startIndex, offsetBy: 13))
-            let chapter = FolioReader.sharedInstance.readerCenter.getCurrentChapter()
-            let href = chapter != nil ? chapter!.href : "";
-            FolioReader.sharedInstance.readerAudioPlayer.playAudio(href!, fragmentID: playID)
-
-            return false
-        } else if url?.scheme == "file" {
-            
-            let anchorFromURL = url?.fragment
-            
-            // Handle internal url
-            if (url!.path as NSString).pathExtension != "" {
-                let base = (book.opfResource.href as NSString).deletingLastPathComponent
-                let path = url?.path
-                let splitedPath = path!.components(separatedBy: base.isEmpty ? kBookId : base)
-                
-                // Return to avoid crash
-                if splitedPath.count <= 1 || splitedPath[1].isEmpty {
-                    return true
-                }
-                
-                let href = splitedPath[1].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-                let hrefPage = FolioReader.sharedInstance.readerCenter.findPageByHref(href)+1
-                
-                if hrefPage == pageNumber {
-                    // Handle internal #anchor
-                    if anchorFromURL != nil {
-                        handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animated: true)
-                        return false
-                    }
-                } else {
-                    FolioReader.sharedInstance.readerCenter.changePageWith(href: href, animated: true, completion: nil)
-                }
-                
-                return false
+            // Return to avoid crash
+            if splitedPath.count <= 1 || splitedPath[1].isEmpty {
+                return true
             }
             
-            // Handle internal #anchor
-            if anchorFromURL != nil {
-                handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animated: true)
-                return false
-            }
+            let href = splitedPath[1].trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let hrefPage = FolioReader.sharedInstance.readerCenter.findPageByHref(href)+1
             
-            return true
-        } else if url?.scheme == "mailto" {
-            print("Email")
-            return true
-        } else if request.url!.absoluteString != "about:blank" && navigationType == .linkClicked {
-            
-            if #available(iOS 9.0, *) {
-                let safariVC = SFSafariViewController(url: request.url!)
-                safariVC.view.tintColor = readerConfig.tintColor
-                FolioReader.sharedInstance.readerCenter.present(safariVC, animated: true, completion: nil)
+            if hrefPage == pageNumber {
+                // Handle internal #anchor
+                if anchorFromURL != nil {
+                    handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animated: true)
+                    return false
+                }
             } else {
-                let webViewController = WebViewController(url: request.url!)
-                let nav = UINavigationController(rootViewController: webViewController)
-                nav.view.tintColor = readerConfig.tintColor
-                FolioReader.sharedInstance.readerCenter.present(nav, animated: true, completion: nil)
+                FolioReader.sharedInstance.readerCenter.changePageWith(href: href, animated: true, completion: nil)
             }
+            
             return false
-        } else if url?.scheme == "font-changed" {
-            Timer.scheduledTimer(timeInterval: TimeInterval(0.5), target: self, selector: #selector(fontDidChanged), userInfo: nil, repeats: false)
-        } else if url?.scheme == "search-jumped" {
-            print(url!.absoluteString)
-            
-            let decoded = url!.absoluteString.removingPercentEncoding!
-            let schemeIndex = decoded.index(decoded.startIndex, offsetBy: "search-jumped://".characters.count)
-            let decodedSchemeless = decoded.substring(from: schemeIndex)
-            
-            let values = decodedSchemeless.components(separatedBy: ",")
-            
-            centerDelegate?.center?(searchDidJumped: Int(values[0])!, ofTotal: Int(values[1])!)
         }
         
-//        print("### shouldStartLoadWith ###\n")
+        // Handle internal #anchor
+        if anchorFromURL != nil {
+            handleAnchor(anchorFromURL!, avoidBeginningAnchors: false, animated: true)
+            return false
+        }
+        
+        return true
+    }
+    
+    fileprivate func handleAboutBlank(url: URL) {
+        if #available(iOS 9.0, *) {
+            let safariVC = SFSafariViewController(url: url)
+            safariVC.view.tintColor = readerConfig.tintColor
+            FolioReader.sharedInstance.readerCenter.present(safariVC, animated: true, completion: nil)
+        } else {
+            let webViewController = WebViewController(url: url)
+            let nav = UINavigationController(rootViewController: webViewController)
+            nav.view.tintColor = readerConfig.tintColor
+            FolioReader.sharedInstance.readerCenter.present(nav, animated: true, completion: nil)
+        }
+    }
+    
+    fileprivate func handleFontChanged() {
+        Timer.scheduledTimer(timeInterval: TimeInterval(0.5), target: self, selector: #selector(fontDidChanged), userInfo: nil, repeats: false)
+    }
+    
+    fileprivate func handleSearchJumped(url: URL) {
+        let decoded = url.absoluteString.removingPercentEncoding!
+        let schemeIndex = decoded.index(decoded.startIndex, offsetBy: "search-jumped://".characters.count)
+        let decodedSchemeless = decoded.substring(from: schemeIndex)
+        
+        let values = decodedSchemeless.components(separatedBy: ",")
+        
+        centerDelegate?.center?(searchDidJumped: Int(values[0])!, ofTotal: Int(values[1])!)
+    }
+    
+    open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
+        guard let webView = webView as? FolioReaderWebView, let url = request.url else {
+            return false
+        }
+        
+        if url.scheme == "highlight" {
+            handleHighlightInteraction(url: url)
+            return false
+        } else if url.scheme == "play-audio" {
+            handlePlayAudio(url: url)
+            return false
+        } else if url.scheme == "file" {
+            return handleFileInteraction(url: url)
+        } else if url.scheme == "mailto" {
+            return true
+        } else if url.absoluteString != "about:blank" && navigationType == .linkClicked {
+            handleAboutBlank(url: url)
+            return false
+        } else if url.scheme == "font-changed" {
+            handleFontChanged()
+        } else if url.scheme == "search-jumped" {
+            handleSearchJumped(url: url)
+        }
         
         return true
     }

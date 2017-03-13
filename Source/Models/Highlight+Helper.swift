@@ -18,6 +18,7 @@ public enum HighlightStyle: Int {
     case blue
     case pink
     case underline
+    case annotation
     
     public init () { self = .yellow }
     

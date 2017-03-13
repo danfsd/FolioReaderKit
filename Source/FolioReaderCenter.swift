@@ -81,11 +81,20 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     var totalPages: Int!
     var tempFragment: String?
     
-    var highlightsToSync: [Highlight]?
-    var annotationsToSync: [Highlight]?
-    
     var currentPage: FolioReaderPage!
     open var delegate: FolioReaderCenterDelegate?
+    
+    open var pendingHighlights = [Highlight]()
+//    open var pendingDiscussions = [Highlight]() {
+//        didSet {
+//            pendingHighlights.append(contentsOf: pendingDiscussions)
+//        }
+//    }
+//    open var pendingAnnotations = [Highlight]() {
+//        didSet {
+//            pendingHighlights.append(contentsOf: pendingAnnotations)
+//        }
+//    }
     
     var animator: ZFModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator!
@@ -109,7 +118,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     open var isFirstLoadOrientation = true
     var lastContentOffset : CGFloat!
-    
     
     var onChangePageDelayed: ((FolioReaderCenter) -> ())?
     
@@ -292,10 +300,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         }
         
         currentPageNumber = 1
-        print("b")
     }
-    
-    
     
     // MARK: Status bar and Navigation bar
     
@@ -370,22 +375,16 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
 
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-//        print("\n### willDisplayCell ###")
         let chapter = cell as! FolioReaderPage
         
         if readerConfig.scrollDirection != .horizontalWithVerticalContent {
             chapter.enableInteraction()
-            
-//            print("Is scrolling back: \(scrollDirection == .negative())")
-//            print("Is scrolling: \(isScrolling)")
             if scrollDirection == .negative() && isScrolling {
                 chapter.scrollPageToBottom()
             } else {
                 chapter.scrollPageToOffset(0.0, animated: false)
             }
         }
-        
-//        print("### willDisplayCell ###\n")
     }
     
     open func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -639,7 +638,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     func updateCurrentPage(_ page: FolioReaderPage!, completion: (() -> Void)? = nil) {
-//        print("\n### updateCurrentPage ###")
         if let page = page {
             currentPage = page
             previousPageNumber = page.pageNumber-1
@@ -654,11 +652,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         nextPageNumber = currentPageNumber + 1 <= totalPages ? currentPageNumber + 1 : currentPageNumber
         
-//        print("Previous page number: \(previousPageNumber!)")
-//        print("Current page number: \(currentPageNumber!)")
-//        print("Next page number: \(nextPageNumber!)")
-        
-        //TODO validar de onde vem o currenPage, fixed temporario
         if currentPage != nil {
             currentPage.webView.becomeFirstResponder()
             scrollScrubber?.setSliderVal()
@@ -680,10 +673,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             delegate?.pageDidAppear?(currentPage)
         }
         currentPage.annotationSync = true
-        
-      
-//        print("### updateCurrentPage ###\n")
-        
         completion?()
     }
     
@@ -696,7 +685,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         pageIndicatorView.totalPages = totalWebviewPages
         pageIndicatorView.currentPage = webViewPage
-//        print("Updating folio reader current page indicator to \(webViewPage)/\(totalWebviewPages)")
         
         var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
         var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
@@ -818,7 +806,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
             currentPage.scrollPageToOffset(0.0, animated: true)
         } else {
-//            changeToPage(1, scrolling: false)
             changePageWith(page: 1)
         }
     }
@@ -834,7 +821,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
             currentPage.scrollPageToOffset(0.0, animated: true)
         } else {
-//            changeToPage(2, scrolling: false)
             changePageWith(page: 2)
         }
     }
@@ -845,7 +831,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.x, pageHeight: pageSize!)
         
         let currentOffset = currentPage.webView.scrollView.contentOffset
-//        print("scrolling webview \(page)/\(totalPages)")
         let pageState = ReaderState(current: page + 1, total: totalWebviewPages)
         
         delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
@@ -853,7 +838,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     open func skipPageForward(_ skipMode: FolioReaderSkipPageMode = .hybrid) {
-//        print("\n### skipPageForward ###")
         guard currentPage.webView.isUserInteractionEnabled else { return }
         
         let pageSize = isDirection(pageHeight, pageWidth)
@@ -865,37 +849,21 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         switch skipMode {
         case .hybrid:
-//            print("Hybrid Mode")
             if webViewPage < totalWebviewPages {
-//                print("Skipping on Webview page (\(webViewPage)/\(totalWebviewPages))")
-//                print("### skipPageForward ###\n")
-                
                 let currentOffset = currentPage.webView.scrollView.contentOffset
                 let pageState = ReaderState(current: webViewPage + 1, total: totalWebviewPages)
                 delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
                 currentPage.scrollPageToOffset(currentOffset.x + pageSize!, animated: true)
             } else if nextPageNumber <= totalPages {
-//                print("Skipping on Collectionview chapter (\(currentPageNumber)\(totalPages))")
-//                print("### skipPageForward ###\n")
-                
-//                changeToPage(nextPageNumber, scrolling: false)
                 changePageWith(page: nextPageNumber)
             }
             break
         case .chapter:
             guard nextPageNumber <= totalPages else { return }
-//            print("Chapter mode")
-//            print("Skipping on Collectionview chapter (\(currentPageNumber)\(totalPages))")
-//            print("### skipPageForward ###\n")
-            
-//            changeToPage(nextPageNumber, scrolling: false)
             changePageWith(page: nextPageNumber)
             break
         case .page:
             guard webViewPage < totalWebviewPages else { return }
-//            print("Page mode")
-//            print("Skipping on Webview page (\(webViewPage)/\(totalWebviewPages))")
-//            print("### skipPageForward ###\n")
             
             let currentOffset = currentPage.webView.scrollView.contentOffset
             let pageState = ReaderState(current: webViewPage + 1, total: totalWebviewPages)
@@ -908,7 +876,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     open func skipPageBackward(_ skipMode: FolioReaderSkipPageMode = .hybrid) {
-//        print("\n### skipPageBackward ###")
         guard currentPage.webView.isUserInteractionEnabled else { return }
         
         let pageSize = isDirection(pageHeight, pageWidth)
@@ -920,20 +887,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         switch skipMode {
         case .hybrid:
-//            print("Hybrid Mode")
             if webViewPage > 1 {
-//                print("Skipping on Webview page (\(webViewPage)/\(totalWebviewPages))")
-//                print("### skipPageBackward ###\n")
-                
                 let currentOffset = currentPage.webView.scrollView.contentOffset
                 let pageState = ReaderState(current: webViewPage - 1, total: totalWebviewPages)
                 delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
                 currentPage.scrollPageToOffset(currentOffset.x - pageSize!, animated: true)
             } else if previousPageNumber >= 1 {
-//                print("Skipping on Collectionview chapter (\(currentPageNumber)\(totalPages))")
-//                print("### skipPageBackward ###\n")
-                
-//                changeToPage(previousPageNumber, scrolling: true)
                 changePageWith(page: previousPageNumber)
             } else {
                 currentPage.enableInteraction()
@@ -942,18 +901,10 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         case .chapter:
             guard previousPageNumber >= 1 else { return }
             
-//            print("Chapter mode")
-//            print("Skipping on Collectionview chapter (\(currentPageNumber)\(totalPages))")
-//            print("### skipPageBackward ###\n")
-            
-//            changeToPage(previousPageNumber, scrolling: false)
             changePageWith(page: previousPageNumber)
             break
         case .page:
             guard webViewPage > 1 else { return }
-//            print("Page mode")
-//            print("Skipping on Webview page (\(webViewPage)/\(totalWebviewPages))")
-//            print("### skipPageBackward ###\n")
             
             let currentOffset = currentPage.webView.scrollView.contentOffset
             let pageState = ReaderState(current: webViewPage - 1, total: totalWebviewPages)
@@ -980,35 +931,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             completion?()
         }
     }
-    
-//    func changeToPage(_ page: Int, scrolling: Bool = true, animated: Bool = false, completion: (() -> Void)? = nil) {
-//        if page > 0 && page-1 < totalPages {
-//            let indexPath = IndexPath(row: page-1, section: 0)
-//            changeToPage(atIndexPath: indexPath, scrolling: scrolling, animated: animated, completion: { () -> Void in
-//                self.updateCurrentPage({ () -> Void in
-//                    completion?()
-//                })
-//            })
-//        }
-//    }
-//    
-//    func changeToPage(atIndexPath indexPath: IndexPath, scrolling: Bool = true, animated: Bool = false, completion: (() -> Void)? = nil) {
-//        guard indexPathIsValid(indexPath) else {
-//            print("ERROR: Attempt to scroll at invalid index path")
-//            completion?()
-//            return
-//        }
-//        
-//        pointNow = collectionView.contentOffset
-//        
-//        UIView.animate(withDuration: animated ? 0.3 : 0, delay: 0, options: UIViewAnimationOptions(), animations: {
-//            
-//            self.collectionView.scrollToItem(at: indexPath, at: .direction(), animated: false)
-//        }) { (finished: Bool) -> Void in
-//            completion?()
-//        }
-//        
-//    }
     
     func indexPathIsValid(_ indexPath: IndexPath) -> Bool {
         let section = indexPath.section
@@ -1122,28 +1044,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     // MARK: - Highlight & Annotations
     
-    open func clearSelectedHighlightId() {
-        selectedHighlightId = nil
+    open func insertIntoCurrentPage(highlights: [Highlight]) {
+        guard let page = currentPage else {
+            pendingHighlights.append(contentsOf: highlights)
+            return
+        }
+        
+        page.insertHighlights(pendingHighlights)
     }
     
-    open func sync(highlights: [Highlight]?, annotations: [Highlight]?) {
-        if let _ = currentPage {
-            if let highlights = highlights {
-                currentPage.insertHighlights(highlights)
-            }
-            
-            if let annotations = annotations {
-                currentPage.insertAnnotations(annotations)
-            }
-        } else {
-            if let highlights = highlights {
-                highlightsToSync = highlights
-            }
-            
-            if let annotations = annotations {
-                annotationsToSync = annotations
-            }
-        }
+    open func clearSelectedHighlightId() {
+        selectedHighlightId = nil
     }
     
     open func removeHighlight(withId highlightId: String) {
@@ -1335,7 +1246,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         if readerConfig.scrollDirection != .horizontalWithVerticalContent {
             // Removing offsets for orientations
-//            print("Removing offsets for both orientations")
             saveOffset(forOrientation: .portrait, offset: nil)
             saveOffset(forOrientation: .landscapeLeft, offset: nil)
         }
@@ -1371,8 +1281,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     open func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         recentlyScrolledTimer = Timer(timeInterval:recentlyScrolledDelay, target: self, selector: #selector(FolioReaderCenter.clearRecentlyScrolled), userInfo: nil, repeats: false)
         RunLoop.current.add(recentlyScrolledTimer, forMode: RunLoopMode.commonModes)
-        
-//        print("will Decelerate? \(decelerate)")
         isScrolling = decelerate
         // Allowing user to scroll again
         currentPage.enableInteraction()
@@ -1472,38 +1380,27 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
 extension FolioReaderCenter: FolioReaderPageDelegate {
     
     func pageDidLoad(_ page: FolioReaderPage) {
-//        print("\n### pageDidLoad ###")
-        
         var currentOffset = page.webView.scrollView.contentOffset
         if let position = FolioReader.defaults.value(forKey: kBookId) as? NSDictionary {
             let pageNumber = position["pageNumber"]! as! Int
             let offset = isDirection(position["pageOffsetY"], position["pageOffsetX"]) as? CGFloat
             let pageOffset = offset
-//            
-//            print("Using offset saved on UserDefaults")
-//            print("Page offset: \(pageOffset)")
             
             if isFirstLoad {
-//                print("It's first time load, updating current page")
                 updateCurrentPage(page)
                 isFirstLoad = false
                 
                 if currentPageNumber == pageNumber && pageOffset! > CGFloat(0) {
                     page.scrollPageToOffset(pageOffset!, animated: false)
                     currentOffset = page.webView.scrollView.contentOffset
-//                    print("Scrolled to page offset. Webview's offset is \(currentOffset)")
                 }
             } else if !isScrolling {
                 let position = FolioReader.sharedInstance.readerContainer.getChapterPosition(chapter: page.pageNumber-1)
                 page.scrollPageToOffset(CGFloat(position), animated: false)
                 currentOffset = page.webView.scrollView.contentOffset
-//                print("Scrolled to page offset. Webview's offset is \(currentOffset)")
-//                page.scrollPageToBottom()
             }
             
         } else if isFirstLoad {
-//            print("No offset saved on UserDefaults")
-//            print("It's first time load, updating current page")
             updateCurrentPage(page)
             isFirstLoad = false
         }
@@ -1522,23 +1419,18 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         if let chapterName = getCurrentChapterName() {
             title = chapterName
             delegate?.center?(chapter: currentPage, nameDidChanged: chapterName)
-        } else { title = ""}
+        } else { title = "" }
         
         if let width = page.webView.js("document.body.scrollWidth"), let height = page.webView.js("document.body.scrollHeight") {
             let pageSize = isDirection(pageHeight, pageWidth)
             
             let jsContentSizeWidth = CGFloat(NumberFormatter().number(from: width)!)
             let jsContentSizeHeight = CGFloat(NumberFormatter().number(from: height)!)
-//            print("Got content size from javascript: (W:\(jsContentSizeWidth), H:\(jsContentSizeHeight))")
-//            
-//            print("javascript offset: \(currentOffset)")
-//            print("iOS webview offset: \(page.webView.scrollView.contentOffset)")
             
             let webViewContentSize = CGSize(width: jsContentSizeWidth, height: jsContentSizeHeight)
             
             let totalWebviewPages = Int(ceil(webViewContentSize.forDirection()/pageSize!))
             let webViewPage = pageForOffset(currentOffset.forDirection(), pageHeight: pageSize!)
-//            print("The page for the currentOffset in the chapter is \(webViewPage)/\(totalWebviewPages)")
             
             var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
             var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
@@ -1548,7 +1440,6 @@ extension FolioReaderCenter: FolioReaderPageDelegate {
         }
         
         isFirstLoadOrientation = false
-//        print("### pageDidLoad ###\n")
         
         if let finally = onChangePageDelayed {
             finally(self)

@@ -56,11 +56,14 @@ enum MediaOverlayStyle: Int {
 *  Main Library class with some useful constants and methods
 */
 open class FolioReader : NSObject {
+    
     static let sharedInstance = FolioReader()
     open static let defaults = UserDefaults.standard
+    
     weak var readerCenter: FolioReaderCenter!
     weak var readerContainer: FolioReaderBaseContainer!
     weak var readerAudioPlayer: FolioReaderAudioPlayer!
+    
     var isReaderOpen = false
     var isReaderReady = false
     
