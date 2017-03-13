@@ -23,6 +23,19 @@ var nextBtn = $("button[data-search='next']");
 
 document.addEventListener("DOMContentLoaded", function(event) {
     markInstance = new Mark(document.querySelector("body"));
+    
+    // Replace <p> for <br> to work highlight between paragraphs
+    var ps = document.getElementsByTagName('p');
+    while (ps.length) {
+        var p = ps[0];
+        while (p.firstChild) {
+            p.parentNode.insertBefore(p.firstChild, p);
+        }
+                          
+        p.parentNode.insertBefore(document.createElement('br'), p);
+        p.parentNode.insertBefore(document.createElement('br'), p);
+        p.parentNode.removeChild(p);
+    }
 });
 
 function performMark(keyword) {
