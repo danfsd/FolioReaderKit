@@ -43,10 +43,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     fileprivate var currentHtml: NSString!
     fileprivate var selectedHighlight: Highlight?
     
-    // TODO: Essa lógica está quebrada, para fazer funcionar precisamos fazer com que inicie como false (pois lá na frente forçamos if annotationsSync então insere lista de annotationsToSync, que pode estar nil.
-    var annotationSync : Bool = true
-    
     var didInsertedAnnotations = false
+    
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
@@ -91,6 +89,12 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    override open func prepareForReuse() {
+        super.prepareForReuse()
+        
+        webView.loadHTMLString("", baseURL: baseURL)
     }
     
     override open func layoutSubviews() {
@@ -142,28 +146,22 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         var didChanged = false
         
         for highlight in highlights {
-//            if Highlight.findByHighlightId(highlight.highlightId) == nil {
-                if highlight.page == pageNumber {
-                    var highlightTag: (tag: String, locator: String)
-                    
-                    if highlight.type == HighlightStyle.annotation.rawValue {
-                        highlightTag = createAnnotationTag(highlight)
-                    } else {
-                        highlightTag = createHighlightTag(highlight)
-                    }
-                    
-                    newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
-                    highlight.persist()
-                    
-                    didChanged = true
+            if highlight.page == pageNumber {
+                var highlightTag: (tag: String, locator: String)
+                
+                if highlight.type == HighlightStyle.annotation.rawValue {
+                    highlightTag = createAnnotationTag(highlight)
                 } else {
-                    print("Highlight with id \(highlight.highlightId) not persisted, but it's on another page")
+                    highlightTag = createHighlightTag(highlight)
                 }
-//            } else {
-//                // Caso achar aqui, não irá ser persistido repetidamente nem inserido no HTML neste momento
-//                // Será inserido no page.loadHTMLString chamado pelo FolioReaderCenter no cellForItemAt
-//                print("Found Highlight with id \(highlight.highlightId)")
-//            }
+                
+                newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
+                highlight.persist()
+                
+                didChanged = true
+            } else {
+                print("Highlight with id \(highlight.highlightId) not persisted, but it's on another page")
+            }
         }
         
         if didChanged {
@@ -243,8 +241,12 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         currentHtml = (string as NSString)
         self.baseURL = baseURL
         
+//        let highlights = Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?)
+//        insertHighlights(highlights)
         center.pendingHighlights.append(contentsOf: Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?))
         
+        webView.alpha = 0
+        disableInteraction()
         webView.loadHTMLString(currentHtml as String, baseURL: baseURL)
     }
     
@@ -294,6 +296,30 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     
     // MARK: - UIWebView interactions
+    
+    fileprivate func handleDiscussionInteraction(url: URL) {
+        let decoded = url.absoluteString.removingPercentEncoding!
+        
+        let location = "discussion://".characters.count
+        let length = decoded.characters.count - location
+        let id = (decoded as NSString).substring(with: NSRange(location: location, length: length))
+        
+        print("Open discussion with id: \(id)")
+        
+        centerDelegate?.center?(willOpenDiscussionWith: id)
+    }
+    
+    fileprivate func handleAnnotationInteraction(url: URL) {
+        let decoded = url.absoluteString.removingPercentEncoding!
+        
+        let location = "annotation://".characters.count
+        let length = decoded.characters.count - location
+        let id = (decoded as NSString).substring(with: NSRange(location: location, length: length))
+        
+        print("Open annotation with id: \(id)")
+        
+        centerDelegate?.center?(willOpenAnnotationWith: Int(id)!)
+    }
     
     fileprivate func handleHighlightInteraction(url: URL) {
         shouldShowBar = false
@@ -391,7 +417,13 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             return false
         }
         
-        if url.scheme == "highlight" {
+        if url.scheme == "discussion" {
+            handleDiscussionInteraction(url: url)
+            return false
+        } else if url.scheme == "annotation" {
+            handleAnnotationInteraction(url: url)
+            return false
+        } else if url.scheme == "highlight" {
             handleHighlightInteraction(url: url)
             return false
         } else if url.scheme == "play-audio" {

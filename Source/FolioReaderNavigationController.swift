@@ -109,13 +109,6 @@ open class FolioReaderNavigationController: UINavigationController {
     }
     
     open func setupNavigationBar() {
-//        if navigationConfig.shouldUseTitleWithImage {
-//            let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 172.0, height: 36.0))
-//            imageView.image = navigationConfig.titleViewImage
-//            imageView.contentMode = .scaleAspectFit
-//            navigationBar.topItem?.titleView = imageView
-//        }
-        
         navigationBar.tintColor = UIColor.white
         
         if navigationConfig.shouldUseGradient {

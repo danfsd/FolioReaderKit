@@ -70,6 +70,9 @@ public typealias ReaderState = (current: Int, total: Int)
     
     @objc optional func center(willHideBars page: FolioReaderPage)
     
+    @objc optional func center(willOpenDiscussionWith id: String)
+    
+    @objc optional func center(willOpenAnnotationWith id: Int)
 }
 
 open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
@@ -83,18 +86,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     var currentPage: FolioReaderPage!
     open var delegate: FolioReaderCenterDelegate?
-    
     open var pendingHighlights = [Highlight]()
-//    open var pendingDiscussions = [Highlight]() {
-//        didSet {
-//            pendingHighlights.append(contentsOf: pendingDiscussions)
-//        }
-//    }
-//    open var pendingAnnotations = [Highlight]() {
-//        didSet {
-//            pendingHighlights.append(contentsOf: pendingAnnotations)
-//        }
-//    }
     
     var animator: ZFModalTransitionAnimator!
     var pageIndicatorView: FolioReaderPageIndicator!
@@ -212,6 +204,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         super.viewWillAppear(animated)
         let navController = self.navigationController as! FolioReaderNavigationController
         navController.restoreNavigationBar()
+        navController.setNavigationBarHidden(true, animated: true)
         
         // Update pages
         pagesForCurrentPage(currentPage)
@@ -373,7 +366,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
     }
-
+    
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         let chapter = cell as! FolioReaderPage
         
@@ -429,14 +422,12 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
                     "<script type=\"text/javascript\">setMediaOverlayStyleColors(\(mediaOverlayStyleColors))</script>"
         
         let toInject = "\n\(cssTag)\n\(jsTag)\n</head>"
-//        let toInject = "\n\(cssTag)\n\(jsTag)\n</head><annotation id=\"10\"></annotation>A Imunologia faz parte do aprendizado em medicina há alguns anos,<annotation id=\"20\" data-type=\"discussion\"></annotation> mas o conhecimento e o aprofundamento tornaram-se essenciais no século 21 para qualquer médico. <annotation id=\"30\"></annotation>As aplicações são inúmeras, e para citar alguns exemplos temos tratamentos com vacinas, imunomoduladores, terapia de supressão viral e uso de marcadores imunológicos para detecção precoce de doenças. Da mesma maneira, as áreas são diversas, como Infectologia, Reumatologia, Gastroenterologia, Dermatologia e Cirurgia do Aparelho Digestivo. O objetivo deste capítulo é relembrarnoções básicas de Imunologia e sua aplicabilidade prática, direcionando para os assuntos cobrados nas provas de Residência Médica.<br/><br/>"
         
         html = html?.replacingOccurrences(of: "</head>", with: toInject)
         
         let searchButtons = "<button id=\"previous_search_result_button\"data-search=\"prev\" style=\"visibility: hidden\">Anterior</button>" +
                             "<button id=\"next_search_result_button\"data-search=\"next\" style=\"visibility: hidden\">Próximo</button>"
         let annotationsTag = "<script type=\"text/javascript\">var annotationSvg = \"\(annotationSVGPath!)\"; var discussionSvg = \"\(discussionSVGPath!)\";</script>\n" + "<script type=\"text/javascript\" src=\"\(annotationsJsFilePath!)\"></script>"
-//        let annotationsTag = ""
 
         html = html?.replacingOccurrences(of: "</body>", with: "\(searchButtons)\n\(annotationsTag)\n</body>")
         
@@ -672,7 +663,6 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
             pagesForCurrentPage(currentPage)
             delegate?.pageDidAppear?(currentPage)
         }
-        currentPage.annotationSync = true
         completion?()
     }
     

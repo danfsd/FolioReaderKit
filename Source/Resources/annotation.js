@@ -43,8 +43,13 @@ function addMarkers(gap) {
         markerAnnotation.setAttribute('id', id);
         markerAnnotation.setAttribute('data-type', type);
         markerAnnotation.onclick = function () {
-            // Redirect
-            console.log(this.id + " " + this.dataset.type + "\n");
+            var schema = this.dataset.type == "discussion" ? "discussion://" : "annotation://";
+            var id = this.id.substr(0, this.id.length - 2);
+            
+            console.log(this.id);
+            console.log("Id length " + this.id.length);
+            
+            window.location = schema + id;
         }
         
         var position = annotations[i].offsetTop - 5;
