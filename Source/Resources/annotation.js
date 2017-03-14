@@ -7,6 +7,9 @@
 
 function addMarkers(gap) {
     var markersToRemove = document.getElementsByClassName('marker-annotation');
+    
+    console.log("removing " + markersToRemove.length + " markers");
+    
     for (var j = 0; j < markersToRemove.length; j++) {
         markersToRemove[j].parentNode.removeChild(markersToRemove[j]);
     }
@@ -72,7 +75,7 @@ function addMarkers(gap) {
 }
 
 var t = setInterval(function() {
-    if (document.readyState == 'complete') {
+    if (document.readyState === 'complete') {
         console.log("a");
         var timer = setTimeout(function() {
            console.log("b");
@@ -80,7 +83,7 @@ var t = setInterval(function() {
         },100);
         clearInterval(t);
     }
-},1);
+}, 1);
 
 // Exemplo com refresh
 window.onresize = function() {

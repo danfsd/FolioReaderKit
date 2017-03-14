@@ -167,6 +167,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         if didChanged {
             center.pendingHighlights.removeAll()
             currentHtml = newHtml
+            
+            webView.alpha = 0
             webView.loadHTMLString(newHtml as String, baseURL: baseURL)
         }
     }

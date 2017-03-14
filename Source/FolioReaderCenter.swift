@@ -202,6 +202,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     override open func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
         let navController = self.navigationController as! FolioReaderNavigationController
         navController.restoreNavigationBar()
         navController.setNavigationBarHidden(true, animated: true)
@@ -673,6 +674,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         let totalWebviewPages = Int(ceil(page.webView.scrollView.contentSize.forDirection()/pageSize!))
         let webViewPage = pageForOffset(currentPage.webView.scrollView.contentOffset.forDirection(), pageHeight: pageSize!)
         
+        refreshMarkers()
+        
         pageIndicatorView.totalPages = totalWebviewPages
         pageIndicatorView.currentPage = webViewPage
         
@@ -1034,12 +1037,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     
     // MARK: - Highlight & Annotations
     
+    open func refreshMarkers() {
+        guard let page = currentPage else { return }
+        
+        page.webView.js("addMarkers(15)")
+    }
+    
     open func insertIntoCurrentPage(highlights: [Highlight]) {
+        pendingHighlights.append(contentsOf: highlights)
         guard let page = currentPage else {
-            pendingHighlights.append(contentsOf: highlights)
             return
         }
-        
         page.insertHighlights(pendingHighlights)
     }
     
