@@ -142,7 +142,7 @@ open class FolioReaderWebView: UIWebView {
     func createDiscussion(_ sender: UIMenuController?) {
         if let selectedText = js("getSelectedText()") {
             // create highlight
-            if let highlight = createHighlight().highlight {
+            if let highlight = createHighlightHtml().highlight {
                 // create discussion
                 FolioReader.sharedInstance.readerContainer.createDiscussion(from: highlight)
             }
@@ -180,6 +180,50 @@ open class FolioReaderWebView: UIWebView {
         FolioReader.sharedInstance.readerContainer.createAnnotation(from: highlight)
     }
     
+    func createHighlightHtml() -> (highlight: Highlight?, rect: CGRect?) {
+        guard let highlightAndReturn = js("createHighlight('\(HighlightStyle.classForStyle(HighlightStyle.yellow.rawValue))')"), let jsonData = highlightAndReturn.data(using: String.Encoding.utf8) else {
+            return (highlight: nil, rect: nil)
+        }
+        
+        do {
+            let json = try JSONSerialization.jsonObject(with: jsonData) as! NSArray
+            let dic = json.firstObject as! [String:String]
+            
+            let id = dic["id"]
+            let preContent = dic["preContent"]!
+            let content = dic["content"]!
+            let postContent = dic["postContent"]!
+            let rect = CGRectFromString(dic["rect"]!)
+            let startOffset = dic["startOffset"]!
+            let endOffset = dic["endOffset"]!
+            
+            isUserInteractionEnabled = false
+            isUserInteractionEnabled = true
+            
+            let highlight = Highlight()
+            highlight.highlightId = id
+            highlight.type = HighlightStyle.styleForClass("highlight-yellow").rawValue
+            highlight.date = Foundation.Date()
+            highlight.contentPre = preContent
+            highlight.content = Highlight.removeSentenceSpam(content)
+            highlight.contentPost = postContent
+            highlight.page = currentPageNumber
+            highlight.bookId = (kBookId as NSString).deletingPathExtension
+            highlight.startOffset = Int(startOffset) ?? -1
+            highlight.endOffset = Int(endOffset) ?? -1
+            
+            highlight.persist()
+            
+            FolioReader.sharedInstance.readerContainer.highlightWasPersisted(highlight)
+            
+            return (highlight: highlight, rect: rect)
+        } catch {
+            print("Could not receive JSON")
+        }
+        
+        return (highlight: nil, rect: nil)
+    }
+    
     func createHighlight() -> (highlight: Highlight?, rect: CGRect?) {
         let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(FolioReader.sharedInstance.currentHighlightStyle))')")
         let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
@@ -211,7 +255,7 @@ open class FolioReaderWebView: UIWebView {
     }
     
     func highlight(_ sender: UIMenuController?) {
-        if let rect = createHighlight().rect {
+        if let rect = createHighlightHtml().rect {
             createMenu(options: true)
             setMenuVisible(true, andRect: rect)
         }

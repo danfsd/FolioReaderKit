@@ -187,7 +187,6 @@ function setTextAlignment(style) {
 function createAnnotation() {
     var selection = window.getSelection();
     var range = selection.getRangeAt(0);
-    var additionalRange = 30
     
     var selectedText = selection.toString();
     var selectedOffset = selection.focusOffset;
@@ -205,6 +204,52 @@ function createAnnotation() {
     params.push({content: selectedText, contentPre: pre, contentPost: post});
     
     return JSON.stringify(params);
+}
+
+function createHighlight(style) {
+    var selection = window.getSelection();
+    var id = guid();
+    
+    // Dealing with Content
+    var selectedText = selection.toString();
+    var selectedOffset = selectedOffset = selection.focusOffset;
+    var fullText = selection.focusNode.textContent;
+    
+    var preContent = fullText.substr(0, selectedOffset - selectedText.length);
+    var postContent = fullText.substr(selectedOffset, fullText.length);
+    
+    console.log("Texto selecionado: \"" + selectedText + "\"");
+    console.log("Texto completo: \"" + fullText + "\"");
+    console.log("Pré anotação: \"" + preContent + "\"");
+    console.log("Pós anotação: \"" + postContent + "\"");
+    
+    // Dealing with Range
+    var range = selection.getRangeAt(0);
+    var startOffset = range.startOffset;
+    var endOffset = range.endOffset;
+    
+    var selectionContents = range.extractContents();
+    var highlightElement = document.createElement("highlight");
+    
+    highlightElement.appendChild(selectionContents);
+    highlightElement.setAttribute("id", id);
+    highlightElement.setAttribute("onclick", "callHighlightURL(this);");
+    highlightElement.setAttribute("class", style);
+    
+    range.insertNode(highlightElement);
+    thisHighlight = highlightElement;
+    
+    var rect = getRectForSelectedText(highlightElement);
+    
+    return JSON.stringify([{
+        id: id,
+        preContent: preContent,
+        content: selectedText,
+        postContent: postContent,
+        rect: rect,
+        startOffset: startOffset.toString(),
+        endOffset: endOffset.toString()
+    }]);
 }
 
 /*
