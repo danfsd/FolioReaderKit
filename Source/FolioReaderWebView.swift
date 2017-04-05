@@ -139,8 +139,10 @@ open class FolioReaderWebView: UIWebView {
         }
     }
     
+    // MARK: Highlight Actions
+    
     func createDiscussion(_ sender: UIMenuController?) {
-        if let selectedText = js("getSelectedText()") {
+        if let _ = js("getSelectedText()") {
             // create highlight
             if let highlight = createHighlightHtml().highlight {
                 // create discussion
@@ -318,11 +320,11 @@ open class FolioReaderWebView: UIWebView {
     
     // MARK: - Create and show menu
     
-    open func createMenu(options options: Bool) {
+    open func createMenu(options: Bool) {
         isShare = options
             
         let colors = UIImage(readerImageNamed: "colors-marker")
-        let discussion = UIImage(readerImageNamed: "discussion-marker")
+//        let discussion = UIImage(readerImageNamed: "discussion-marker")
         let share = UIImage(readerImageNamed: "share-marker")
         let remove = UIImage(readerImageNamed: "no-marker")
         let yellow = UIImage(readerImageNamed: "yellow-marker")
@@ -338,8 +340,8 @@ open class FolioReaderWebView: UIWebView {
         let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(highlight(_:)))
         let discussionItem = UIMenuItem(title: readerConfig.localizedDiscussionMenu, action: #selector(createDiscussion(_:)))
         
-        let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(play(_:)))
-        let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(define(_:)))
+//        let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(play(_:)))
+//        let defineItem = UIMenuItem(title: readerConfig.localizedDefineMenu, action: #selector(define(_:)))
         let colorsItem = UIMenuItem(title: "C", image: colors) { [weak self] _ in
             self?.colors(menuController)
         }

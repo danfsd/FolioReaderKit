@@ -33,25 +33,39 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     
     weak var centerDelegate: FolioReaderCenterDelegate?
     weak var delegate: FolioReaderPageDelegate?
+    
     open var pageNumber: Int!
+    
     var webView: FolioReaderWebView!
     var baseURL: URL!
     var bottomOffset: CGPoint!
+    
     fileprivate var colorView: UIView!
     fileprivate var shouldShowBar = true
     fileprivate var menuIsVisible = false
     fileprivate var currentHtml: NSString!
+    
+    var insertedHighlights = [Highlight]()
     fileprivate var selectedHighlight: Highlight?
     
     var didInsertedAnnotations = false
+    
+    // MARK: - Initializers
+    
+    required public init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
     
     // MARK: - View life cicle
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.backgroundColor = UIColor.clear
+        backgroundColor = UIColor.clear
         
-        // TODO: Put the notification name in a Constants file
         NotificationCenter.default.addObserver(self, selector: #selector(refreshPageMode), name: NSNotification.Name(rawValue: "needRefreshPageMode"), object: nil)
         
         if webView == nil {
@@ -81,14 +95,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         doubleTapGestureRecognizer.numberOfTapsRequired = 2
         doubleTapGestureRecognizer.delegate = self
         webView.addGestureRecognizer(doubleTapGestureRecognizer)
-    }
-
-    required public init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
     
     override open func prepareForReuse() {
@@ -123,6 +129,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         )
     }
     
+    // MARK: - Interaction
+    
     func disableInteraction() {
         if readerConfig.scrollDirection == .horizontal {
         webView.scrollView.isUserInteractionEnabled = false
@@ -139,6 +147,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         }
     }
     
+    // MARK: - HTML String
+    
     open func insertHighlights(_ highlights: [Highlight]) {
         guard let center = FolioReader.sharedInstance.readerCenter else { return }
         
@@ -146,18 +156,28 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         var didChanged = false
         
         for highlight in highlights {
-            if highlight.page == pageNumber {
+            let inserted = insertedHighlights.contains(where: { $0.highlightId == highlight.highlightId })
+            
+            // If the highlight belongs to this page and IS NOT inserted, insert it.
+            if highlight.page == pageNumber && !inserted {
                 var highlightTag: (tag: String, locator: String)
                 
+                // Checking whether IT IS an Annotation or a Highlight
                 if highlight.type == HighlightStyle.annotation.rawValue {
                     highlightTag = createAnnotationTag(highlight)
                 } else {
                     highlightTag = createHighlightTag(highlight)
                 }
                 
-                newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
-                highlight.persist()
+                // If the highlight IS NOT persisted locally on the framework, persist it.
+                if Highlight.findByHighlightId(highlight.highlightId) == nil {
+                    highlight.persist()
+                }
                 
+                // Generating HTML with the current highlight tag inserted into it.
+                newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
+                
+                // Html did changed.
                 didChanged = true
             } else {
                 print("Highlight with id \(highlight.highlightId) not persisted, but it's on another page")
@@ -173,33 +193,8 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         }
     }
     
-    open func insertAnnotations(_ highlights: [Highlight]) {
-        var newHtml = NSString(string: currentHtml).copy() as! NSString
-        
-        var didChanged = false
-        
-        for highlight in highlights {
-            if highlight.page == pageNumber {
-                let highlightTag = createAnnotationTag(highlight)
-                
-                newHtml = insertTag(into: newHtml, from: highlight, tag: highlightTag.tag, locator: highlightTag.locator)
-                
-                didChanged = true
-            }
-        }
-        
-        if didChanged {
-            didInsertedAnnotations = true
-            webView.loadHTMLString(newHtml as String, baseURL: baseURL)
-        }
-    }
-    
-    func createAnnotationTag(_ highlight: Highlight) -> (tag: String, locator: String) {
-        let style = HighlightStyle.classForStyle(highlight.type)
-        let tag : String
-        let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlight.highlightId)
-        
-        tag = "<marker data-show=\"true\" id=\"\(highlight.highlightId!)-a\"></marker>\(highlight.content!)"
+    fileprivate func createAnnotationTag(_ highlight: Highlight) -> (tag: String, locator: String) {
+        let tag = "<marker data-show=\"true\" id=\"\(highlight.highlightId!)-a\"></marker>\(highlight.content!)"
         
         var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
         locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
@@ -207,22 +202,9 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         return (tag: tag, locator: locator)
     }
 
-    
-    func insertTag(into html: NSString, from highlight: Highlight, tag: String, locator: String) -> NSString {
-        var newHtml = html
-        let range: NSRange = newHtml.range(of: locator, options: .literal)
-        if range.location != NSNotFound {
-            let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
-            newHtml = html.replacingCharacters(in: newRange, with: tag) as NSString
-        }
-        
-        return newHtml
-    }
-
-    
-    func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
+    fileprivate func createHighlightTag(_ highlight: Highlight) -> (tag: String, locator: String) {
         let style = HighlightStyle.classForStyle(highlight.type)
-        let tag : String
+        let tag: String
         let isDiscussion = FolioReader.sharedInstance.readerContainer.isDiscussion(highlightWith: highlight.highlightId)
         
         if highlight.type == HighlightStyle.underline.rawValue || highlight.deleted {
@@ -237,15 +219,26 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         return (tag: tag, locator: locator)
     }
     
+    fileprivate func insertTag(into html: NSString, from highlight: Highlight, tag: String, locator: String) -> NSString {
+        var newHtml = html
+        let range: NSRange = newHtml.range(of: locator, options: .literal)
+        
+        if range.location != NSNotFound {
+            let newRange = NSRange(location: range.location + highlight.contentPre.characters.count, length: highlight.content.characters.count)
+            newHtml = html.replacingCharacters(in: newRange, with: tag) as NSString
+        }
+        
+        return newHtml
+    }
+    
     func loadHTMLString(_ string: String!, baseURL: URL!) {
         let center = FolioReader.sharedInstance.readerCenter!
         
         currentHtml = (string as NSString)
         self.baseURL = baseURL
         
-//        let highlights = Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?)
-//        insertHighlights(highlights)
-        center.pendingHighlights.append(contentsOf: Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?))
+        let bookHighlights = Highlight.allByBookId((kBookId as NSString).deletingPathExtension, andPage: pageNumber as NSNumber?)
+        center.pendingHighlights.append(contentsOf: bookHighlights)
         
         webView.alpha = 0
         disableInteraction()
@@ -256,7 +249,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         webView.highlightAllOccurrences(ofString: term)
     }
     
-    // MARK: - UIWebView Delegate
+    // MARK: - UIWebViewDelegate
     
     open func webViewDidFinishLoad(_ webView: UIWebView) {
         guard let webView = webView as? FolioReaderWebView, let center = FolioReader.sharedInstance.readerCenter else {
@@ -291,7 +284,6 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
             self.webView.createMenu(options: false)
         })
         
-        // TODO: insert pending annotations & discussions
         insertHighlights(center.pendingHighlights)
         
         delegate?.pageDidLoad?(self)

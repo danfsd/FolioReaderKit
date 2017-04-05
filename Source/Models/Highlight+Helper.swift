@@ -202,12 +202,11 @@ extension Highlight {
             }
             
             let highlight = Highlight()
+            let content = Highlight.removeSentenceSpam(str.substring(with: match.rangeAt(2)))
+            
             highlight.highlightId = id
             highlight.type = HighlightStyle.styleForClass(str.substring(with: match.rangeAt(1))).rawValue
             highlight.date = Foundation.Date()
-            var content = Highlight.removeSentenceSpam(str.substring(with: match.rangeAt(2)))
-//            content = Highlight.removeFrom(content, withPattern: "<em class=\"\\w?\">((.|\\s)*?)<\\/em>")
-//            print(content)
             highlight.content = content
             highlight.contentPre = Highlight.removeSentenceSpam(contentPre)
             highlight.contentPost = Highlight.removeSentenceSpam(contentPost)

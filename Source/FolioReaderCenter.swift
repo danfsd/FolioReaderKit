@@ -1044,10 +1044,17 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     open func insertIntoCurrentPage(highlights: [Highlight]) {
-        pendingHighlights.append(contentsOf: highlights)
+        // TODO: remove highligths that are already persisted
+        print("Highlights before filter: \(pendingHighlights.count) (trying to add \(highlights.count)")
+        pendingHighlights.append(contentsOf: highlights.filter {
+            Highlight.findByHighlightId($0.highlightId) == nil
+        })
+        print("Highlights after filter: \(pendingHighlights.count)")
+        
         guard let page = currentPage else {
             return
         }
+        
         page.insertHighlights(pendingHighlights)
     }
     
