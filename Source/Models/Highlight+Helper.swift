@@ -168,6 +168,57 @@ extension Highlight {
     
     // MARK: HTML Methods
     
+    public static func matchAnnotation(_ text: String!, andId id: String, contentLength: Int, startOffset: String, endOffset: String) -> Highlight? {
+        let pattern = "(<marker id=\"\(id)\" data-type=\".*?\" data-show=\".*?\"></marker>)((.|\\s){\(contentLength)}?)"
+        let regex = try! NSRegularExpression(pattern: pattern, options: [])
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: text.utf16.count))
+        let str = (text as NSString)
+        
+        let mapped = matches.map { match -> Highlight in
+            var contentPre = str.substring(with: NSRange(location: match.range.location - kHighlightRange, length: kHighlightRange))
+            var contentPost = str.substring(with: NSRange(location: match.range.location + match.range.length, length: kHighlightRange))
+            
+            // Normalize string before save
+            
+            if contentPre.range(of: ">") != nil {
+                let regex = try! NSRegularExpression(pattern: "((?=[^>]*$)(.|\\s)*$)", options: [])
+                let searchString = regex.firstMatch(in: contentPre, options: .reportProgress, range: NSRange(location: 0, length: contentPre.characters.count))
+                
+                if searchString!.range.location != NSNotFound {
+                    contentPre = (contentPre as NSString).substring(with: searchString!.range)
+                }
+            }
+            
+            if contentPost.range(of: "<") != nil {
+                let regex = try! NSRegularExpression(pattern: "^((.|\\s)*?)(?=<)", options: [])
+                let searchString = regex.firstMatch(in: contentPost, options: .reportProgress, range: NSRange(location: 0, length: contentPost.characters.count))
+                
+                if searchString!.range.location != NSNotFound {
+                    contentPost = (contentPost as NSString).substring(with: searchString!.range)
+                }
+            }
+
+            
+            let annotation = Highlight()
+            let content = Highlight.removeSentenceSpam(str.substring(with: match.rangeAt(2)))
+            
+            annotation.highlightId = id
+            annotation.type = HighlightStyle.annotation.rawValue
+            annotation.date = Foundation.Date()
+            annotation.content = content
+            annotation.contentPre = contentPre
+            annotation.contentPost = contentPost
+            annotation.page = currentPageNumber
+            annotation.bookId = (kBookId as NSString).deletingPathExtension
+            annotation.startOffset = Int(startOffset) ?? -1
+            annotation.endOffset = Int(endOffset) ?? -1
+            
+            return annotation
+        }
+        
+        return mapped.first
+    }
+    
     /**
      Match a highlight on string.
      */

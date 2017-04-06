@@ -48,25 +48,11 @@ public typealias ReaderState = (current: Int, total: Int)
      */
     @objc optional func center(chapter: FolioReaderPage, readingTimeDidChanged readingTime: Int)
     
-    // Refactored from pageDidChanged
     @objc optional func center(pageDidChanged page: FolioReaderPage, current: Int, total: Int)
     
-    // Refactored from chapterDidChanged
     @objc optional func center(chapterDidChanged page: FolioReaderPage, current: Int, total: Int)
     
-    // Refactored from chapterNameDidChanged
     @objc optional func center(chapter: FolioReaderPage, nameDidChanged name: String)
-    
-    // Refactored from highlightWasPersisted
-    @objc optional func center(chapter: FolioReaderPage, highlightWasPersisted highlight: Highlight)
-    
-    // Refactored from highlightWasUpdated
-    @objc optional func center(chapter: FolioReaderPage, highlightWasUpdated highlight: Highlight)
-    
-    // Refactored from highlightWasRemoved
-    @objc optional func center(chapter: FolioReaderPage, highlightWasRemoved highlight: Highlight)
-    
-    @objc optional func center(searchDidJumped toResult: Int, ofTotal total: Int)
     
     @objc optional func center(willHideBars page: FolioReaderPage)
     
@@ -75,17 +61,42 @@ public typealias ReaderState = (current: Int, total: Int)
     @objc optional func center(willOpenAnnotationWith id: Int)
 }
 
+public protocol FolioReaderCenterHighlightDelegate: class {
+    func highlight(wasPersisted highlight: Highlight)
+    func highlight(wasUpdated highlight: Highlight, withStyle style: HighlightStyle)
+    func highlight(wasRemovedWith id: String)
+}
+
+public protocol FolioReaderCenterAnnotationDelegate: class {
+    func annotation(createdFrom annotation: Highlight)
+}
+
+public protocol FolioReaderCenterSearchDelegate: class {
+    func search(didJumpedToResultAt index: Int, totalResults: Int)
+}
+
 open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
+    
+    // MARK: - Delegates
+    
+    open var annotationDelegate: FolioReaderCenterAnnotationDelegate?
+    open var highlightDelegate: FolioReaderCenterHighlightDelegate?
+    open var searchDelegate: FolioReaderCenterSearchDelegate?
+    open var delegate: FolioReaderCenterDelegate?
+    
+    // MARK: - Views
     
     var collectionView: UICollectionView!
     let collectionViewLayout = UICollectionViewFlowLayout()
     var loadingView: UIActivityIndicatorView!
+    
+    // MARK: - Variables
+    
     var pages: [String]!
     var totalPages: Int!
     var tempFragment: String?
     
     var currentPage: FolioReaderPage!
-    open var delegate: FolioReaderCenterDelegate?
     open var pendingHighlights = [Highlight]()
     
     var animator: ZFModalTransitionAnimator!
@@ -385,6 +396,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! FolioReaderPage
         
+        cell.searchDelegate = searchDelegate
         cell.centerDelegate = delegate
         cell.delegate = self
         cell.pageNumber = indexPath.row+1
@@ -1066,7 +1078,7 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         Highlight.removeById(highlightId)
         _ = Highlight.removeFromHTMLById(highlightId)
         
-        FolioReader.sharedInstance.readerContainer.highlightWasRemoved(highlightId)
+        highlightDelegate?.highlight(wasRemovedWith: highlightId)
     }
     
     // MARK: - Sharing

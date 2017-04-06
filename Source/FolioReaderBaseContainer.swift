@@ -327,32 +327,6 @@ open class FolioReaderBaseContainer: UIViewController {
     */
     open func readingTimeDidChanged(_ readingTime: Int) {}
     
-    // MARK: - Highlight callbacks
-    /**
-     Called when a highlight is persisted.
-    */
-    open func highlightWasPersisted(_ highlight: Highlight) {}
-    
-    /**
-     Called when a highlight is updated.
-     */
-    open func highlightWasUpdated(_ highlightId: String, style: Int) {}
-    
-    /**
-     Called when a highlight is removed.
-     */
-    open func highlightWasRemoved(_ highlightId: String) {}
-    
-    /**
-     Called to create a discussion from a highlight
-    */
-    open func createDiscussion(from highlight: Highlight) {}
-    
-    /**
-     Called to create a annotation from a highlight
-     */
-    open func createAnnotation(from highlight: Highlight) {}
-    
     /**
      Verifies if the highlight with the given Id is a discussion on the app namespace
     */

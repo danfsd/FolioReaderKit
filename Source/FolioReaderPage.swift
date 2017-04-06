@@ -31,6 +31,7 @@ var selectedHighlightId: String?
 
 open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRecognizerDelegate {
     
+    weak var searchDelegate: FolioReaderCenterSearchDelegate?
     weak var centerDelegate: FolioReaderCenterDelegate?
     weak var delegate: FolioReaderPageDelegate?
     
@@ -194,7 +195,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     
     fileprivate func createAnnotationTag(_ highlight: Highlight) -> (tag: String, locator: String) {
-        let tag = "<marker data-show=\"true\" id=\"\(highlight.highlightId!)-a\"></marker>\(highlight.content!)"
+        let tag = "<marker data-show=\"true\" id=\"\(highlight.highlightId!)\"></marker>\(highlight.content!)"
         
         var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
         locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights
@@ -402,12 +403,14 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
         let decodedSchemeless = decoded.substring(from: schemeIndex)
         
         let values = decodedSchemeless.components(separatedBy: ",")
+        let jumpIndex = Int(values[0])!
+        let totalResults = Int(values[1])!
         
-        centerDelegate?.center?(searchDidJumped: Int(values[0])!, ofTotal: Int(values[1])!)
+        searchDelegate?.search(didJumpedToResultAt: jumpIndex, totalResults: totalResults)
     }
     
     open func webView(_ webView: UIWebView, shouldStartLoadWith request: URLRequest, navigationType: UIWebViewNavigationType) -> Bool {
-        guard let webView = webView as? FolioReaderWebView, let url = request.url else {
+        guard let _ = webView as? FolioReaderWebView, let url = request.url else {
             return false
         }
         

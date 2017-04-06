@@ -184,7 +184,7 @@ function setTextAlignment(style) {
 
 // http://stackoverflow.com/questions/4811822/get-a-ranges-start-and-end-offsets-relative-to-its-parent-container
 
-function createAnnotation() {
+function createAnnotationOld() {
     var selection = window.getSelection();
     var range = selection.getRangeAt(0);
     
@@ -206,7 +206,75 @@ function createAnnotation() {
     return JSON.stringify(params);
 }
 
-function createHighlight(style) {
+function annotateString() {
+    console.log("annotating string");
+    
+    var range = window.getSelection().getRangeAt(0);
+    var nodes = range.cloneContents().childNodes;
+    var startOffset = range.startOffset;
+    var endOffset = range.endOffset;
+    var selectionContents = range.extractContents();
+//    var contentLength = selectionContents.textContent.length;
+    var elm = document.createElement("marker");
+    var id = guid();
+    
+    elm.setAttribute("id", id);
+    elm.setAttribute("data-type","annotation");
+    elm.setAttribute("data-show", "true");
+    
+    console.log(selectionContents.childNodes)
+    console.log(selectionContents.textContent);
+    console.log(selectionContents.textContent.length);
+    
+    range.insertNode(elm);
+    elm.parentNode.insertBefore(selectionContents, elm.nextSibling);
+    
+    var contentLength = 0;
+    
+    nodes.forEach(function(item, index, array) {
+        if (item.nodeType == 1) {
+          contentLength += item.outerHTML.length;
+        } else if (item.nodeType == 3) {
+          contentLength += item.length;
+        }
+    });
+    
+    var params = [{
+        id: id,
+        contentLength: "" + contentLength,
+        startOffset: startOffset.toString(),
+        endOffset: endOffset.toString()
+    }];
+    
+    console.log(params);
+    console.log(params[0].id, params[0].contentLength);
+    console.log(JSON.stringify(params));
+    
+    return JSON.stringify(params);
+}
+
+function highlightString(style) {
+    var range = window.getSelection().getRangeAt(0);
+    var startOffset = range.startOffset;
+    var endOffset = range.endOffset;
+    var selectionContents = range.extractContents();
+    var elm = document.createElement("highlight");
+    var id = guid();
+    
+    elm.appendChild(selectionContents);
+    elm.setAttribute("id", id);
+    elm.setAttribute("onclick","callHighlightURL(this);");
+    elm.setAttribute("class", style);
+    
+    range.insertNode(elm);
+    thisHighlight = elm;
+    
+    var params = [{id: id, rect: getRectForSelectedText(elm), startOffset: startOffset.toString(), endOffset: endOffset.toString()}];
+    
+    return JSON.stringify(params);
+}
+
+function createHighlightOld(style) {
     var selection = window.getSelection();
     var id = guid();
     

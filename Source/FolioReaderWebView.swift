@@ -47,12 +47,12 @@ open class FolioReaderWebView: UIWebView {
             
             if isDiscussion {
                 if action == #selector(copyText(_:))
-                    || action == #selector(createAnnotation(_:)) {
+                    || action == #selector(annotateText(_:)) {
                     return true
                 }
             } else {
                 if action == #selector(copyText(_:))
-                    || action == #selector(createAnnotation(_:))
+                    || action == #selector(annotateText(_:))
                     || action == #selector(createDiscussion(_:)) {
                     return true
                 }
@@ -66,8 +66,8 @@ open class FolioReaderWebView: UIWebView {
                 isOneWord = true
             }
 
-            if action == #selector(highlight(_:))
-                || action == #selector(createAnnotation(_:))
+            if action == #selector(highlightText(_:))
+                || action == #selector(annotateText(_:))
                 || action == #selector(createDiscussion(_:))
                 || (action == #selector(define(_:)) && isOneWord)
                 || (action == #selector(play(_:)) && (book.hasAudio() || readerConfig.enableTTS))
@@ -101,7 +101,6 @@ open class FolioReaderWebView: UIWebView {
     // MARK: - UIMenuController - Actions
     
     func share(_ sender: UIMenuController) {
-        
         if isShare {
             if let textToShare = js("getHighlightContent()") {
                 FolioReader.sharedInstance.readerCenter.shareHighlight(textToShare, rect: sender.menuFrame)
@@ -122,10 +121,11 @@ open class FolioReaderWebView: UIWebView {
     }
     
     func remove(_ sender: UIMenuController?) {
+        guard let delegate = FolioReader.sharedInstance.readerCenter.highlightDelegate else { return }
         if let removedId = js("removeThisHighlight()") {
             Highlight.removeById(removedId)
             
-            FolioReader.sharedInstance.readerContainer.highlightWasRemoved(removedId)
+            delegate.highlight(wasRemovedWith: removedId)
         }
         
         setMenuVisible(false)
@@ -142,133 +142,96 @@ open class FolioReaderWebView: UIWebView {
     // MARK: Highlight Actions
     
     func createDiscussion(_ sender: UIMenuController?) {
+        guard let delegate = FolioReader.sharedInstance.readerCenter.highlightDelegate else { return }
+        
         if let _ = js("getSelectedText()") {
             // create highlight
-            if let highlight = createHighlightHtml().highlight {
+            if let highlight = createHighlightHtml() {
                 // create discussion
-                FolioReader.sharedInstance.readerContainer.createDiscussion(from: highlight)
+                delegate.highlight(wasPersisted: highlight)
             }
         } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
-            FolioReader.sharedInstance.readerContainer.createDiscussion(from: selectedHighlight)
+            delegate.highlight(wasPersisted: selectedHighlight)
         }
     }
     
-    func createAnnotation(_ sender: UIMenuController?) {
-        var highlight: Highlight!
+    func annotateText(_ sender: UIMenuController?) {
+        guard let delegate = FolioReader.sharedInstance.readerCenter.annotationDelegate else { return }
         
-        if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
-            highlight = Highlight()
-            highlight.content = selectedHighlight.content
-            highlight.contentPre = selectedHighlight.contentPre
-            highlight.contentPost = selectedHighlight.contentPost
-            highlight.page = selectedHighlight.page
-        } else if let jsonString = js("createAnnotation()") {
-            let jsonData = jsonString.data(using: String.Encoding.utf8)
-            do {
-                let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
-                let dic = json.firstObject as! [String: String]
-                
-                highlight = Highlight()
-                highlight.content = dic["content"]!
-                highlight.contentPre = dic["contentPre"]!
-                highlight.contentPost = dic["contentPost"]!
-                highlight.page = currentPageNumber
-            } catch {
-                print("Could not receive JSON")
-            }
+        if let annotation = createAnnotationHtml() {
+            delegate.annotation(createdFrom: annotation)
         }
-        
-        highlight.date = Foundation.Date()
-        FolioReader.sharedInstance.readerContainer.createAnnotation(from: highlight)
     }
     
-    func createHighlightHtml() -> (highlight: Highlight?, rect: CGRect?) {
-        guard let highlightAndReturn = js("createHighlight('\(HighlightStyle.classForStyle(HighlightStyle.yellow.rawValue))')"), let jsonData = highlightAndReturn.data(using: String.Encoding.utf8) else {
-            return (highlight: nil, rect: nil)
-        }
+    @discardableResult fileprivate func createAnnotationHtml() -> Highlight? {
+        guard let annotationAndReturn = js("annotateString()"),
+            let jsonData = annotationAndReturn.data(using: String.Encoding.utf8) else { return nil }
         
         do {
             let json = try JSONSerialization.jsonObject(with: jsonData) as! NSArray
-            let dic = json.firstObject as! [String:String]
+            let dict = json.firstObject as! [String:String]
+            let contentLength = Int(dict["contentLength"]!)!
             
-            let id = dic["id"]
-            let preContent = dic["preContent"]!
-            let content = dic["content"]!
-            let postContent = dic["postContent"]!
-            let rect = CGRectFromString(dic["rect"]!)
-            let startOffset = dic["startOffset"]!
-            let endOffset = dic["endOffset"]!
+            let id = dict["id"]!
+            guard let startOffset = dict["startOffset"] else { return nil }
+            guard let endOffset = dict["endOffset"] else { return nil }
             
-            isUserInteractionEnabled = false
-            isUserInteractionEnabled = true
+            let html = js("getHTML()")
+            return Highlight.matchAnnotation(html, andId: id, contentLength: contentLength, startOffset: startOffset, endOffset: endOffset)
             
-            let highlight = Highlight()
-            highlight.highlightId = id
-            highlight.type = HighlightStyle.styleForClass("highlight-yellow").rawValue
-            highlight.date = Foundation.Date()
-            highlight.contentPre = preContent
-            highlight.content = Highlight.removeSentenceSpam(content)
-            highlight.contentPost = postContent
-            highlight.page = currentPageNumber
-            highlight.bookId = (kBookId as NSString).deletingPathExtension
-            highlight.startOffset = Int(startOffset) ?? -1
-            highlight.endOffset = Int(endOffset) ?? -1
-            
-            highlight.persist()
-            
-            FolioReader.sharedInstance.readerContainer.highlightWasPersisted(highlight)
-            
-            return (highlight: highlight, rect: rect)
         } catch {
             print("Could not receive JSON")
         }
         
-        return (highlight: nil, rect: nil)
+        return nil
     }
     
-    func createHighlight() -> (highlight: Highlight?, rect: CGRect?) {
-        let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(FolioReader.sharedInstance.currentHighlightStyle))')")
-        let jsonData = highlightAndReturn?.data(using: String.Encoding.utf8)
+    func highlightText(_ sender: UIMenuController?) {
+        guard let delegate = FolioReader.sharedInstance.readerCenter.highlightDelegate else { return }
+        
+        if let highlight = createHighlightHtml() {
+            delegate.highlight(wasPersisted: highlight)
+        }
+    }
+    
+    @discardableResult fileprivate func createHighlightHtml() -> Highlight? {
+        guard let highlightAndReturn = js("highlightString('\(HighlightStyle.classForStyle(HighlightStyle.yellow.rawValue))')"),
+            let jsonData = highlightAndReturn.data(using: String.Encoding.utf8) else { return nil }
         
         do {
-            let json = try JSONSerialization.jsonObject(with: jsonData!, options: []) as! NSArray
-            let dic = json.firstObject as! [String: String]
-            let rect = CGRectFromString(dic["rect"]!)
-            let startOffset = dic["startOffset"]!
-            let endOffset = dic["endOffset"]!
+            let json = try JSONSerialization.jsonObject(with: jsonData) as! NSArray
+            let dict = json.firstObject as! [String:String]
             
-            // Force remove text selection
-            isUserInteractionEnabled = false
-            isUserInteractionEnabled = true
+            let id = dict["id"]!
+            let rect = CGRectFromString(dict["rect"]!)
+            guard let startOffset = dict["startOffset"] else { return nil }
+            guard let endOffset = dict["endOffset"] else { return nil }
             
-            // Persist
+            // TODO: verify if is needed
+            clearTextSelection()
+            
+            createMenu(options: true)
+            setMenuVisible(true, andRect: rect)
+            
             let html = js("getHTML()")
-            if let highlight = Highlight.matchHighlight(html, andId: dic["id"]!, startOffset: startOffset, endOffset: endOffset) {
+            if let highlight = Highlight.matchHighlight(html, andId: id, startOffset: startOffset, endOffset: endOffset) {
                 highlight.persist()
-                
-                FolioReader.sharedInstance.readerContainer.highlightWasPersisted(highlight)
-                return (highlight: highlight, rect: rect)
+                return highlight
             }
-            return (highlight: nil, rect: nil)
+            
+            return nil
         } catch {
             print("Could not receive JSON")
         }
-        return (highlight: nil, rect: nil)
-    }
-    
-    func highlight(_ sender: UIMenuController?) {
-        if let rect = createHighlightHtml().rect {
-            createMenu(options: true)
-            setMenuVisible(true, andRect: rect)
-        }
+        
+        return nil
     }
     
     func define(_ sender: UIMenuController?) {
         let selectedText = js("getSelectedText()")
         
         setMenuVisible(false)
-        isUserInteractionEnabled = false
-        isUserInteractionEnabled = true
+        clearTextSelection()
         
         let vc = UIReferenceLibraryViewController(term: selectedText! )
         vc.view.tintColor = readerConfig.tintColor
@@ -278,6 +241,10 @@ open class FolioReaderWebView: UIWebView {
     func play(_ sender: UIMenuController?) {
         FolioReader.sharedInstance.readerAudioPlayer.play()
         
+        clearTextSelection()
+    }
+    
+    func clearTextSelection() {
         // Force remove text selection
         // @NOTE: this doesn't seem to always work
         isUserInteractionEnabled = false
@@ -308,12 +275,16 @@ open class FolioReaderWebView: UIWebView {
     }
     
     func changeHighlightStyle(_ sender: UIMenuController?, style: HighlightStyle) {
+        guard let delegate = FolioReader.sharedInstance.readerCenter.highlightDelegate else { return }
+        
         FolioReader.sharedInstance.currentHighlightStyle = style.rawValue
         
         if let updateId = js("setHighlightStyle('\(HighlightStyle.classForStyle(style.rawValue))')") {
             Highlight.updateById(updateId, type: style)
             
-            FolioReader.sharedInstance.readerContainer.highlightWasUpdated(updateId, style: style.hashValue)
+            if let highlight = Highlight.findByHighlightId(updateId) {
+                delegate.highlight(wasUpdated: highlight, withStyle: style)
+            }
         }
         colors(sender)
     }
@@ -336,8 +307,8 @@ open class FolioReaderWebView: UIWebView {
         let menuController = UIMenuController.shared
         
         let copyItem = UIMenuItem(title: readerConfig.localizedCopyMenu, action: #selector(copyText(_:)))
-        let annotationItem = UIMenuItem(title: readerConfig.localizedAnnotationMenu, action: #selector(self.createAnnotation(_:)))
-        let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(highlight(_:)))
+        let annotationItem = UIMenuItem(title: readerConfig.localizedAnnotationMenu, action: #selector(annotateText(_:)))
+        let highlightItem = UIMenuItem(title: readerConfig.localizedHighlightMenu, action: #selector(highlightText(_:)))
         let discussionItem = UIMenuItem(title: readerConfig.localizedDiscussionMenu, action: #selector(createDiscussion(_:)))
         
 //        let playAudioItem = UIMenuItem(title: readerConfig.localizedPlayMenu, action: #selector(play(_:)))
