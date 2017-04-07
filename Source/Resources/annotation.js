@@ -5,14 +5,31 @@
 //  Created by Renato Lovizotto on 19/01/17.
 //
 
-function addMarkers(gap) {
-    var markersToRemove = document.getElementsByClassName('marker-annotation');
+function removeMarkers() {
+    var markers = document.getElementsByClassName('marker-annotation');
+    var markersLength = markers.length;
     
-    console.log("removing " + markersToRemove.length + " markers");
+    console.log("removing " + markersLength + " .marker-annotations");
     
-    for (var j = 0; j < markersToRemove.length; j++) {
-        markersToRemove[j].parentNode.removeChild(markersToRemove[j]);
+    for (var j = 0; j < markersLength; j++) {
+        markers[0].parentNode.removeChild(markers[0]);
     }
+}
+
+function showMarker(id) {
+    var marker = document.getElementById(id);
+    marker.dataset.show = "true";
+    
+    addMarkers(15);
+}
+
+function removeMarker(id) {
+    var marker = document.getElementById(id);
+    marker.parentNode.removeChild(marker);
+}
+
+function addMarkers(gap) {
+    removeMarkers();
     
     var DEFAULT_GAP = 10;
     var BTN_TYPE_DISCUSSION = 'url(' + discussionSvg + ')';
@@ -22,17 +39,19 @@ function addMarkers(gap) {
     
     var height = 30;
     var lastPosition = 0;
-    var totalAnnotations = annotations.length
+    var totalAnnotations = annotations.length;
+    
+    console.log("adding " + totalAnnotations + " .marker-annotations");
+    
     for (var i = 0; i < totalAnnotations; i++) {
         
         // Id Attribute
         var id = annotations[i].getAttribute('id');
         var type = annotations[i].dataset.type;
-        
         var show = annotations[i].dataset.show;
         
-        if(show == "false"){
-            continue
+        if (show == "false") {
+            continue;
         }
         
         // Create Marker
@@ -47,7 +66,8 @@ function addMarkers(gap) {
         markerAnnotation.setAttribute('data-type', type);
         markerAnnotation.onclick = function () {
             var schema = this.dataset.type == "discussion" ? "discussion://" : "annotation://";
-            var id = this.id.substr(0, this.id.length - 2);
+            var id = this.id;
+//            var id = this.id.substr(0, this.id.length - 2);
             
             console.log(this.id);
             console.log("Id length " + this.id.length);

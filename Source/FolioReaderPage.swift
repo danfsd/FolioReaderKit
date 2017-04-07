@@ -195,7 +195,7 @@ open class FolioReaderPage: UICollectionViewCell, UIWebViewDelegate, UIGestureRe
     }
     
     fileprivate func createAnnotationTag(_ highlight: Highlight) -> (tag: String, locator: String) {
-        let tag = "<marker data-show=\"true\" id=\"\(highlight.highlightId!)\"></marker>\(highlight.content!)"
+        let tag = "<marker data-type=\"annotation\" data-show=\"true\" id=\"\(highlight.highlightId!)\"></marker>\(highlight.content!)"
         
         var locator = "\(highlight.contentPre!)\(highlight.content!)\(highlight.contentPost!)"
         locator = Highlight.removeSentenceSpam(locator) /// Fix for Highlights

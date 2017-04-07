@@ -181,31 +181,6 @@ function setTextAlignment(style) {
     html.style.textAlign = style
 }
 
-
-// http://stackoverflow.com/questions/4811822/get-a-ranges-start-and-end-offsets-relative-to-its-parent-container
-
-function createAnnotationOld() {
-    var selection = window.getSelection();
-    var range = selection.getRangeAt(0);
-    
-    var selectedText = selection.toString();
-    var selectedOffset = selection.focusOffset;
-    var fullText = selection.focusNode.textContent;
-    
-    var pre = fullText.substr(0, selectedOffset - selectedText.length);
-    var post = fullText.substr(selectedOffset, fullText.length);
-    
-    console.log("Texto selecionado: \"" + selectedText + "\"");
-    console.log("Texto completo: \"" + fullText + "\"");
-    console.log("Pré anotação: \"" + pre + "\"");
-    console.log("Pós anotação: \"" + post + "\"");
-    
-    var params = [];
-    params.push({content: selectedText, contentPre: pre, contentPost: post});
-    
-    return JSON.stringify(params);
-}
-
 function annotateString() {
     console.log("annotating string");
     
@@ -214,13 +189,12 @@ function annotateString() {
     var startOffset = range.startOffset;
     var endOffset = range.endOffset;
     var selectionContents = range.extractContents();
-//    var contentLength = selectionContents.textContent.length;
     var elm = document.createElement("marker");
     var id = guid();
     
     elm.setAttribute("id", id);
     elm.setAttribute("data-type","annotation");
-    elm.setAttribute("data-show", "true");
+    elm.setAttribute("data-show", "false");
     
     console.log(selectionContents.childNodes)
     console.log(selectionContents.textContent);
@@ -269,78 +243,12 @@ function highlightString(style) {
     range.insertNode(elm);
     thisHighlight = elm;
     
-    var params = [{id: id, rect: getRectForSelectedText(elm), startOffset: startOffset.toString(), endOffset: endOffset.toString()}];
-    
-    return JSON.stringify(params);
-}
-
-function createHighlightOld(style) {
-    var selection = window.getSelection();
-    var id = guid();
-    
-    // Dealing with Content
-    var selectedText = selection.toString();
-    var selectedOffset = selectedOffset = selection.focusOffset;
-    var fullText = selection.focusNode.textContent;
-    
-    var preContent = fullText.substr(0, selectedOffset - selectedText.length);
-    var postContent = fullText.substr(selectedOffset, fullText.length);
-    
-    console.log("Texto selecionado: \"" + selectedText + "\"");
-    console.log("Texto completo: \"" + fullText + "\"");
-    console.log("Pré anotação: \"" + preContent + "\"");
-    console.log("Pós anotação: \"" + postContent + "\"");
-    
-    // Dealing with Range
-    var range = selection.getRangeAt(0);
-    var startOffset = range.startOffset;
-    var endOffset = range.endOffset;
-    
-    var selectionContents = range.extractContents();
-    var highlightElement = document.createElement("highlight");
-    
-    highlightElement.appendChild(selectionContents);
-    highlightElement.setAttribute("id", id);
-    highlightElement.setAttribute("onclick", "callHighlightURL(this);");
-    highlightElement.setAttribute("class", style);
-    
-    range.insertNode(highlightElement);
-    thisHighlight = highlightElement;
-    
-    var rect = getRectForSelectedText(highlightElement);
-    
-    return JSON.stringify([{
+    var params = [{
         id: id,
-        preContent: preContent,
-        content: selectedText,
-        postContent: postContent,
-        rect: rect,
+        rect: getRectForSelectedText(elm),
         startOffset: startOffset.toString(),
         endOffset: endOffset.toString()
-    }]);
-}
-
-/*
- *	Native bridge Highlight text
- */
-function highlightString(style) {
-    var range = window.getSelection().getRangeAt(0);
-    var startOffset = range.startOffset;
-    var endOffset = range.endOffset;
-    var selectionContents = range.extractContents();
-    var elm = document.createElement("highlight");
-    var id = guid();
-    
-    elm.appendChild(selectionContents);
-    elm.setAttribute("id", id);
-    elm.setAttribute("onclick","callHighlightURL(this);");
-    elm.setAttribute("class", style);
-    
-    range.insertNode(elm);
-    thisHighlight = elm;
-    
-    var params = [];
-    params.push({id: id, rect: getRectForSelectedText(elm), startOffset: startOffset.toString(), endOffset: endOffset.toString()});
+    }];
     
     return JSON.stringify(params);
 }

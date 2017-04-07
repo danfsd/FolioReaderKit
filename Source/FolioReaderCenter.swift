@@ -691,8 +691,8 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         pageIndicatorView.totalPages = totalWebviewPages
         pageIndicatorView.currentPage = webViewPage
         
-        var chapterState = ReaderState(current: currentPageNumber, total: totalPages)
-        var pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
+        let chapterState = ReaderState(current: currentPageNumber, total: totalPages)
+        let pageState = ReaderState(current: webViewPage, total: totalWebviewPages)
 
         delegate?.center?(chapterDidChanged: currentPage, current: chapterState.current, total: chapterState.total)
         delegate?.center?(pageDidChanged: currentPage, current: pageState.current, total: pageState.total)
@@ -1053,6 +1053,23 @@ open class FolioReaderCenter: UIViewController, UICollectionViewDelegate, UIColl
         guard let page = currentPage else { return }
         
         page.webView.js("addMarkers(15)")
+    }
+    
+    open func showMarker(with id: String) {
+        guard let page = currentPage else { return }
+        
+        page.webView.js("showMarker(\"id\")")
+    }
+    
+    open func removeMarker(with id: String) {
+        guard let page = currentPage else { return }
+        
+        page.webView.js("removeMarker(\"\(id)\")")
+    }
+    
+    open func removeFromCurrentPage(highlight: Highlight) {
+        Highlight.removeById(highlight.highlightId)
+        removeMarker(with: highlight.highlightId)
     }
     
     open func insertIntoCurrentPage(highlights: [Highlight]) {
