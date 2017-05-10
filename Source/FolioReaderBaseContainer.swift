@@ -8,6 +8,8 @@
 
 import UIKit
 import FontBlaster
+import AVKit
+import AVFoundation
 
 var readerConfig: FolioReaderConfig!
 var epubPath: String?
@@ -22,6 +24,10 @@ open class FolioReaderBaseContainer: UIViewController {
     open var centerViewController: FolioReaderCenter?
     open var scrollDirection: FolioReaderScrollDirection!
     open var audioPlayer: FolioReaderAudioPlayer?
+    
+    let animatedCase = UIView()
+    var player: AVPlayer?
+    var playerLayer:AVPlayerLayer?
     
     /**
      Indicates whether the `statusBar` will be visible.
@@ -111,15 +117,57 @@ open class FolioReaderBaseContainer: UIViewController {
 //        print("BaseContainer.\(#function)")
         super.viewDidLoad()
         
+        
+        
         setupReaderAndLoadBook()
     }
     
-    open func setupReaderAndLoadBook() {
+    @objc func openEpubWithAnimatedCover(){
+        self.animatedCase.removeFromSuperview()
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+    }
+    
+    open func setupReaderAndLoadBook(urlAnimatedCase:String? = nil) {
         setupReaderCenter()
         setupReaderNavigationController()
         if shouldUseDefaultNavigationBar {
             setupNavigationBar()
         }
+        
+    if let url = urlAnimatedCase {
+        
+        self.animatedCase.frame = self.view.frame
+        self.animatedCase.backgroundColor = UIColor.white
+        
+        let positionX = self.view.frame.width / 2
+        let positionY = self.view.frame.height / 2
+        let hudView = UIActivityIndicatorView(frame: CGRect(x: positionX, y: positionY, width: 30.0, height: 30.0))
+        hudView.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
+        self.animatedCase.addSubview(hudView)
+        hudView.startAnimating()
+        self.view.addSubview(self.animatedCase)
+        
+        player = AVPlayer(url: URL(string: url)!)
+        
+        player?.actionAtItemEnd = .none
+        player?.isMuted = true
+        
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
+        playerLayer.zPosition = 1
+        
+        playerLayer.frame = self.animatedCase.frame
+        
+        self.playerLayer = playerLayer
+        
+        self.animatedCase.layer.addSublayer(playerLayer)
+        
+        
+        player?.play()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(openEpubWithAnimatedCover), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+        
+    }
         loadEbook()
     }
     
