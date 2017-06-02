@@ -519,7 +519,9 @@ function getSentenceWithIndex(className) {
     var sel = getSelection();
     var node = null;
     var elements = document.querySelectorAll("span.sentence");
-
+    
+    console.log("elements", elements);
+    
     // Check for a selected text, if found start reading from it
     if (sel.toString() != "") {
         console.log(sel.anchorNode.parentNode);
@@ -538,8 +540,10 @@ function getSentenceWithIndex(className) {
             sentence = findSentenceWithIDInView(elements);
         }
     } else if (currentIndex < 0) {
+        console.log("Selection is empty string, currentIndex is lower than 0");
         sentence = findSentenceWithIDInView(elements);
     } else {
+        console.log("Selection is empty string, current index is greater than 0");
         sentence = findNextSentenceInArray(elements);
     }
 

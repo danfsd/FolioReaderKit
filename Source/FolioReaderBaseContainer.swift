@@ -134,40 +134,40 @@ open class FolioReaderBaseContainer: UIViewController {
             setupNavigationBar()
         }
         
-    if let url = urlAnimatedCase {
-        
-        self.animatedCase.frame = self.view.frame
-        self.animatedCase.backgroundColor = UIColor.white
-        
-        let positionX = self.view.frame.width / 2
-        let positionY = self.view.frame.height / 2
-        let hudView = UIActivityIndicatorView(frame: CGRect(x: positionX, y: positionY, width: 30.0, height: 30.0))
-        hudView.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
-        self.animatedCase.addSubview(hudView)
-        hudView.startAnimating()
-        self.view.addSubview(self.animatedCase)
-        
-        player = AVPlayer(url: URL(string: url)!)
-        
-        player?.actionAtItemEnd = .none
-        player?.isMuted = true
-        
-        let playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
-        playerLayer.zPosition = 1
-        
-        playerLayer.frame = self.animatedCase.frame
-        
-        self.playerLayer = playerLayer
-        
-        self.animatedCase.layer.addSublayer(playerLayer)
-        
-        
-        player?.play()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(openEpubWithAnimatedCover), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
-        
-    }
+        if let url = urlAnimatedCase, url.characters.count > 0 {
+            
+            self.animatedCase.frame = self.view.frame
+            self.animatedCase.backgroundColor = UIColor.white
+            
+            let positionX = self.view.frame.width / 2
+            let positionY = self.view.frame.height / 2
+            let hudView = UIActivityIndicatorView(frame: CGRect(x: positionX, y: positionY, width: 30.0, height: 30.0))
+            hudView.activityIndicatorViewStyle = UIActivityIndicatorViewStyle.gray
+            self.animatedCase.addSubview(hudView)
+            hudView.startAnimating()
+            self.view.addSubview(self.animatedCase)
+            
+            player = AVPlayer(url: URL(string: url)!)
+            
+            player?.actionAtItemEnd = .none
+            player?.isMuted = true
+            
+            let playerLayer = AVPlayerLayer(player: player)
+            playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
+            playerLayer.zPosition = 1
+            
+            playerLayer.frame = self.animatedCase.frame
+            
+            self.playerLayer = playerLayer
+            
+            self.animatedCase.layer.addSublayer(playerLayer)
+            
+            
+            player?.play()
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(openEpubWithAnimatedCover), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+            
+        }
         loadEbook()
     }
     
@@ -205,10 +205,10 @@ open class FolioReaderBaseContainer: UIViewController {
             
             if fileManager.fileExists(atPath: path, isDirectory: &isDir) {
                 if isDir.boolValue {
-//                    print("Epub loaded from dir")
+                    print("Epub loaded from dir")
                     book = FREpubParser().readEpub(epubPath: path)
                 } else {
-//                    print("Epub lodaded from file [shouldRemove=\(self.shouldRemoveEpub)]")
+                    print("Epub lodaded from file [shouldRemove=\(self.shouldRemoveEpub)]")
                     book = FREpubParser().readEpub(epubPath: path, removeEpub: self.shouldRemoveEpub)
                 }
             } else {
