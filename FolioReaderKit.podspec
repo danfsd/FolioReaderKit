@@ -22,7 +22,7 @@ Pod::Spec.new do |s|
     'Vendor/**/*.swift',
   ]
   s.resources = [
-    'Source/**/*.{js,css,xcdatamodeld}',
+    'Source/**/*.{js,css,xcdatamodeld,svg}',
     'Source/Resources/*.xcassets',
     'Source/Resources/Fonts/**/*.{otf,ttf}'
   ]

@@ -87,7 +87,6 @@ open class FolioReaderWebView: UIWebView {
     
     func highlightAllOccurrences(ofString string: String) {
         js("performMark(\"\(string)\")")
-        
     }
     
     func removeAllSearchResultsHighlights() {

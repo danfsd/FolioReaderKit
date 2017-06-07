@@ -96,9 +96,7 @@ function addMarkers(gap) {
 
 var t = setInterval(function() {
     if (document.readyState === 'complete') {
-        console.log("a");
         var timer = setTimeout(function() {
-           console.log("b");
            addMarkers(15);
         },100);
         clearInterval(t);

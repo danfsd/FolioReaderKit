@@ -25,17 +25,17 @@ document.addEventListener("DOMContentLoaded", function(event) {
     markInstance = new Mark(document.querySelector("body"));
     
     // Replace <p> for <br> to work highlight between paragraphs
-    var ps = document.getElementsByTagName('p');
-    while (ps.length) {
-        var p = ps[0];
-        while (p.firstChild) {
-            p.parentNode.insertBefore(p.firstChild, p);
-        }
-                          
-        p.parentNode.insertBefore(document.createElement('br'), p);
-        p.parentNode.insertBefore(document.createElement('br'), p);
-        p.parentNode.removeChild(p);
-    }
+//    var ps = document.getElementsByTagName('p');
+//    while (ps.length) {
+//        var p = ps[0];
+//        while (p.firstChild) {
+//            p.parentNode.insertBefore(p.firstChild, p);
+//        }
+//                          
+//        p.parentNode.insertBefore(document.createElement('br'), p);
+//        p.parentNode.insertBefore(document.createElement('br'), p);
+//        p.parentNode.removeChild(p);
+//    }
 });
 
 function performMark(keyword) {
@@ -699,9 +699,11 @@ function wrappingSentencesWithinPTags(){
         return "";
     }
     
-    function guessSenetences() {
+    function guessSentences() {
         var paragraphs = document.getElementsByTagName("p");
 
+        console.log("paragraphs", paragraphs);
+        
         Array.prototype.forEach.call(paragraphs, function (paragraph) {
             var html = paragraph.innerHTML,
                 length = html.length,
@@ -736,5 +738,5 @@ function wrappingSentencesWithinPTags(){
         });
     }
     
-    guessSenetences();
+    guessSentences();
 }
