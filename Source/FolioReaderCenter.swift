@@ -62,7 +62,7 @@ public typealias ReaderState = (current: Int, total: Int)
 }
 
 public protocol FolioReaderCenterHighlightDelegate: class {
-    func highlight(wasPersisted highlight: Highlight)
+    func highlight(wasPersisted highlight: Highlight, isDiscussion: Bool)
     func highlight(wasUpdated highlight: Highlight, withStyle style: HighlightStyle)
     func highlight(wasRemovedWith id: String)
 }

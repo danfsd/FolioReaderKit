@@ -147,10 +147,10 @@ open class FolioReaderWebView: UIWebView {
             // create highlight
             if let highlight = createHighlightHtml() {
                 // create discussion
-                delegate.highlight(wasPersisted: highlight)
+                delegate.highlight(wasPersisted: highlight, isDiscussion: true)
             }
         } else if let highlightId = selectedHighlightId, let selectedHighlight =  Highlight.findByHighlightId(highlightId) {
-            delegate.highlight(wasPersisted: selectedHighlight)
+            delegate.highlight(wasPersisted: selectedHighlight, isDiscussion: true)
         }
     }
     
@@ -189,7 +189,7 @@ open class FolioReaderWebView: UIWebView {
         guard let delegate = FolioReader.sharedInstance.readerCenter.highlightDelegate else { return }
         
         if let highlight = createHighlightHtml() {
-            delegate.highlight(wasPersisted: highlight)
+            delegate.highlight(wasPersisted: highlight, isDiscussion: false)
         }
     }
     
